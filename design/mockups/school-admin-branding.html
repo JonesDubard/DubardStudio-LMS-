@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>School Branding Setup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-[#E5E5E5] text-[#333333]">
+  <div class="min-h-screen flex">
+
+    <aside class="w-64 shrink-0 border-r border-[#999999] bg-white p-5">
+      <div class="mb-8">
+        <div class="h-10 w-10 bg-[#E5E5E5] border border-[#999999] flex items-center justify-center text-[#666666]">/</div>
+        <p class="mt-3 text-sm text-[#666666]">School Admin</p>
+        <p class="font-semibold">Pilot School #1</p>
+      </div>
+
+      <nav class="space-y-1 text-sm">
+        <a href="#" class="block px-4 py-3">Dashboard</a>
+        <a href="#" class="block border border-[#333333] bg-[#E5E5E5] rounded px-4 py-3 font-semibold">Setup</a>
+        <a href="#" class="block px-4 py-3">People</a>
+        <a href="#" class="block px-4 py-3">Academic</a>
+        <a href="#" class="block px-4 py-3">Content</a>
+        <a href="#" class="block px-4 py-3">Usage</a>
+      </nav>
+    </aside>
+
+    <main class="flex-1 min-w-0">
+      <header class="border-b border-[#999999] bg-white px-8 py-6">
+        <p class="text-sm text-[#666666]">Setup / Branding</p>
+        <h1 class="mt-1 text-2xl font-semibold">School Branding</h1>
+        <p class="mt-1 text-sm text-[#666666]">
+          Configure the visual identity students and teachers will see.
+        </p>
+      </header>
+
+      <div class="p-8">
+
+        <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] gap-8 max-w-7xl">
+
+          <!-- Form -->
+          <section class="border border-[#999999] bg-white p-6">
+            <h2 class="text-lg font-semibold">Branding Settings</h2>
+
+            <div class="mt-6 space-y-6">
+
+              <div>
+                <label class="block font-medium mb-2">School Logo</label>
+                <div class="border border-dashed border-[#999999] bg-[#E5E5E5] p-8 text-center">
+                  <div class="mx-auto h-12 w-12 border border-[#999999] flex items-center justify-center text-[#666666]">/</div>
+                  <p class="mt-3 font-medium">Upload School Logo</p>
+                  <p class="mt-1 text-sm text-[#666666]">PNG, JPG or SVG</p>
+                  <button type="button" class="mt-4 border border-[#999999] bg-white px-4 py-2">
+                    Choose File
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-medium mb-2">Header Logo</label>
+                <div class="border border-dashed border-[#999999] bg-[#E5E5E5] p-8 text-center">
+                  <div class="mx-auto h-12 w-12 border border-[#999999] flex items-center justify-center text-[#666666]">/</div>
+                  <p class="mt-3 font-medium">Upload Header Logo</p>
+                  <p class="mt-1 text-sm text-[#666666]">Used in the application header.</p>
+                  <button type="button" class="mt-4 border border-[#999999] bg-white px-4 py-2">
+                    Choose File
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-medium mb-2">Favicon</label>
+                <div class="border border-dashed border-[#999999] bg-[#E5E5E5] p-6">
+                  <div class="flex items-center justify-between gap-4">
+                    <div>
+                      <p class="font-medium">Upload Favicon</p>
+                      <p class="mt-1 text-sm text-[#666666]">Small browser tab image.</p>
+                    </div>
+                    <button type="button" class="border border-[#999999] bg-white px-4 py-2">
+                      Choose File
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Color swatches -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                <div>
+                  <label class="block font-medium mb-2">Primary Color</label>
+                  <div class="border border-[#999999] p-4 flex items-center gap-4">
+                    <div class="h-12 w-12 border border-[#666666] bg-[#E5E5E5]"></div>
+                    <div>
+                      <p class="font-medium">Primary</p>
+                      <p class="text-sm text-[#666666]">Neutral preview swatch</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block font-medium mb-2">Secondary Color</label>
+                  <div class="border border-[#999999] p-4 flex items-center gap-4">
+                    <div class="h-12 w-12 border border-[#666666] bg-[#999999]"></div>
+                    <div>
+                      <p class="font-medium">Secondary</p>
+                      <p class="text-sm text-[#666666]">Neutral preview swatch</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="mt-8 border-t border-[#999999] pt-5 flex justify-between">
+              <button
+                type="button"
+                class="border border-[#999999] bg-[#E5E5E5] px-5 py-3"
+              >
+                Skip for Now
+              </button>
+
+              <button
+                type="button"
+                class="border border-[#333333] bg-[#333333] text-white px-5 py-3"
+              >
+                Save Branding
+              </button>
+            </div>
+          </section>
+
+          <!-- Preview -->
+          <aside class="border border-[#999999] bg-white p-6 h-fit">
+            <p class="text-sm text-[#666666]">Live Preview</p>
+            <h2 class="mt-1 text-lg font-semibold">Student View</h2>
+
+            <div class="mt-6 border border-[#999999]">
+
+              <div class="border-b border-[#999999] p-4 flex items-center gap-3">
+                <div class="h-9 w-9 bg-[#E5E5E5] border border-[#999999] flex items-center justify-center text-[#666666]">/</div>
+                <div>
+                  <p class="font-semibold">Pilot School #1</p>
+                  <p class="text-xs text-[#666666]">Student Portal</p>
+                </div>
+              </div>
+
+              <div class="p-5">
+                <p class="text-sm text-[#666666]">Learning Feed</p>
+
+                <div class="mt-4 border border-[#999999] p-4">
+                  <p class="font-semibold">Mathematics — Week 3</p>
+                  <p class="mt-2 text-sm text-[#666666]">
+                    Adding and Subtracting Fractions
+                  </p>
+
+                  <button class="mt-4 bg-[#333333] text-white px-4 py-2 text-sm">
+                    Open Lesson
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

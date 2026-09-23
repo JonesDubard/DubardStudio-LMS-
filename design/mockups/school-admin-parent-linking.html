@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parent-Child Linking</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-[#E5E5E5] text-[#333333]">
+  <div class="min-h-screen flex">
+
+    <aside class="w-64 shrink-0 border-r border-[#999999] bg-white p-5">
+      <div class="mb-8">
+        <div class="h-10 w-10 bg-[#E5E5E5] border border-[#999999] flex items-center justify-center text-[#666666]">/</div>
+        <p class="mt-3 text-sm text-[#666666]">School Admin</p>
+        <p class="font-semibold">Pilot School #1</p>
+      </div>
+
+      <nav class="space-y-1 text-sm">
+        <a href="#" class="block px-4 py-3">Dashboard</a>
+        <a href="#" class="block px-4 py-3">Setup</a>
+        <a href="#" class="block border border-[#333333] bg-[#E5E5E5] rounded px-4 py-3 font-semibold">People</a>
+        <a href="#" class="block px-4 py-3">Academic</a>
+        <a href="#" class="block px-4 py-3">Content</a>
+        <a href="#" class="block px-4 py-3">Usage</a>
+      </nav>
+    </aside>
+
+    <main class="flex-1 min-w-0">
+      <header class="border-b border-[#999999] bg-white px-8 py-6">
+        <p class="text-sm text-[#666666]">People / Parents</p>
+        <h1 class="mt-1 text-2xl font-semibold">Parent-Child Linking</h1>
+        <p class="mt-1 text-sm text-[#666666]">
+          Select a parent and link them to one or more students.
+        </p>
+      </header>
+
+      <div class="p-8">
+
+        <div class="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-6 max-w-6xl">
+
+          <!-- Parent List -->
+          <section class="border border-[#999999] bg-white">
+            <div class="border-b border-[#999999] p-5">
+              <h2 class="font-semibold">Parents</h2>
+              <p class="mt-1 text-sm text-[#666666]">Select a parent.</p>
+            </div>
+
+            <div class="divide-y divide-[#E5E5E5]">
+
+              <button class="w-full text-left bg-[#E5E5E5] border-l-4 border-[#333333] p-5">
+                <p class="font-semibold">Mrs. Agnes Johnson</p>
+                <p class="mt-1 text-sm text-[#666666]">agnes.johnson@example.com</p>
+              </button>
+
+              <button class="w-full text-left p-5">
+                <p class="font-medium">Mr. Peter Cooper</p>
+                <p class="mt-1 text-sm text-[#666666]">peter.cooper@example.com</p>
+              </button>
+
+              <button class="w-full text-left p-5">
+                <p class="font-medium">Mrs. Sarah Kromah</p>
+                <p class="mt-1 text-sm text-[#666666]">sarah.kromah@example.com</p>
+              </button>
+
+            </div>
+          </section>
+
+          <!-- Selected Parent -->
+          <section class="border border-[#999999] bg-white">
+
+            <div class="border-b border-[#999999] p-6 flex items-start justify-between gap-6">
+              <div>
+                <p class="text-sm text-[#666666]">Selected Parent</p>
+                <h2 class="mt-1 text-xl font-semibold">Mrs. Agnes Johnson</h2>
+                <p class="mt-1 text-sm text-[#666666]">agnes.johnson@example.com</p>
+              </div>
+
+              <button class="border border-[#333333] bg-[#333333] text-white px-4 py-2">
+                + Link Child
+              </button>
+            </div>
+
+            <div class="p-6">
+
+              <h3 class="font-semibold">Linked Children</h3>
+
+              <div class="mt-4 border border-[#999999] divide-y divide-[#E5E5E5]">
+
+                <div class="p-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p class="font-medium">Amara Johnson</p>
+                    <p class="mt-1 text-sm text-[#666666]">JSS 2A · Student</p>
+                  </div>
+
+                  <span class="border border-[#999999] px-2 py-1 text-xs">LINKED</span>
+                </div>
+
+                <div class="p-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p class="font-medium">Daniel Johnson</p>
+                    <p class="mt-1 text-sm text-[#666666]">JSS 3A · Student</p>
+                  </div>
+
+                  <span class="border border-[#999999] px-2 py-1 text-xs">LINKED</span>
+                </div>
+
+              </div>
+
+              <!-- Link Child Panel -->
+              <div class="mt-6 border border-[#999999] bg-[#E5E5E5] p-5">
+
+                <p class="font-semibold">Link Child</p>
+                <p class="mt-1 text-sm text-[#666666]">
+                  Search for a student to link to this parent.
+                </p>
+
+                <div class="mt-4">
+                  <label class="block text-sm font-medium mb-2">Search Student</label>
+                  <input
+                    type="text"
+                    value="Martha"
+                    placeholder="Enter student name or email"
+                    class="w-full border border-[#999999] bg-white px-3 py-3"
+                  >
+                </div>
+
+                <div class="mt-4 border border-[#999999] bg-white">
+                  <div class="p-4 flex items-center justify-between">
+                    <div>
+                      <p class="font-medium">Martha Johnson</p>
+                      <p class="mt-1 text-sm text-[#666666]">
+                        martha.johnson@example.com · JSS 2B
+                      </p>
+                    </div>
+
+                    <input type="checkbox" checked class="h-4 w-4">
+                  </div>
+                </div>
+
+                <div class="mt-5 flex justify-end">
+                  <button class="border border-[#333333] bg-[#333333] text-white px-5 py-3">
+                    Confirm Link
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

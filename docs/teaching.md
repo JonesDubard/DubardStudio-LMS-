@@ -42,6 +42,8 @@ LearnGrid is a white-label LMS for Liberian schools. Each school is a tenant, re
 
 This session only built the shell: the Next.js app, empty route groups, Supabase client factories, hostname-to-subdomain resolution, a neutral branding token set, a service worker that caches nothing, and CI. There is no login, no database, and no persona screens.
 
+A later session on the same day added the four student P0 screens as server components fed by stubs. Login, database queries, and the other personas are still absent.
+
 ## File map
 
 ### Created
@@ -107,6 +109,31 @@ This session only built the shell: the Next.js app, empty route groups, Supabase
 | `Livedoc/` | Separate copy of the product docs. Not part of this scaffold |
 | `app/middleware.ts` | Not created. Next.js does not run middleware from `app/`. The working file is root `middleware.ts` |
 
+### Student P0 screens (2026-09-23)
+
+| File | Purpose |
+|---|---|
+| `app/(student)/layout.tsx` | Phone frame (`max-w-[390px]`) and `BottomNav` for the student routes |
+| `app/(student)/feed/page.tsx` | Student home. Reads `getStudentFeed()` |
+| `app/(student)/lessons/[lessonId]/page.tsx` | Lesson viewer. Reads `getLesson(lessonId)` |
+| `app/(student)/assignments/[assignmentId]/page.tsx` | Assignment detail. Reads `getAssignment(assignmentId)` |
+| `app/(student)/assignments/[assignmentId]/status/page.tsx` | Submission status. Reads `getSubmissionStatus(assignmentId)` |
+| `lib/stubs/get-student-feed.ts` | `getStudentFeed()` returns a `StudentFeed`. `items` is the today list: Mathematics — Fractions, then English — Reading Response. Also returns the greeting and the two recently viewed rows |
+| `lib/stubs/get-lesson.ts` | `getLesson(lessonId)` returns the Week 3 fractions lesson, including the two paragraphs, image caption, PDF, and external video |
+| `lib/stubs/get-assignment.ts` | `getAssignment(assignmentId)` returns English — Reading Response: due date, instructions, Reading Passage.pdf, and the empty answer/file area |
+| `lib/stubs/get-submission-status.ts` | `getSubmissionStatus(assignmentId)` returns the received submission: Sep 23, 1:42 PM, status SUBMITTED, written answer, and Reading Response.pdf |
+| `components/student/BottomNav.tsx` | Home / Classes / Grades bar. Used by `app/(student)/layout.tsx` on all four screens. Home is marked Current, matching the mockups |
+| `components/student/FeedCard.tsx` | Today card on the feed. Used twice: the new lesson and the due assignment |
+| `components/student/RecentlyViewedRow.tsx` | Compact lesson row. Used twice in the feed's recently viewed list |
+| `components/student/StatusBadge.tsx` | DUE SOON on the feed and assignment, READY on the lesson, SUBMITTED on the status page |
+| `components/student/MaterialRow.tsx` | Title, meta, and action. Used for the lesson PDF and video, the assignment PDF, and the submitted attachment |
+| `components/shared/PageHeader.tsx` | Greeting header on the feed. Section header (mark, subject, title) on the lesson, assignment, and status pages |
+| `components/shared/PrimaryButton.tsx` | Dark full-width action. Open Lesson, Back to Learning Feed, and Submit Work |
+
+Mockup matched by content: `design/mockups/student-assignment-submission-status.html` (the prompt name `student-submission-status.html` is not the filename on disk).
+
+Left in the page, not extracted, because each appears on only one screen: feed sections, lesson body, offline note, assignment instructions, answer box, file row, submission confirmation, assignment summary, and the waiting-for-review block.
+
 ## Request lifecycle
 
 1. The browser requests a host, for example `http://pilotschool.localhost:3000/` or `http://localhost:3000/`.
@@ -115,6 +142,16 @@ This session only built the shell: the Next.js app, empty route groups, Supabase
 4. `lib/supabase/middleware.ts` refreshes the Supabase session cookie when the URL and anon key are set. With empty env values it returns the request unchanged.
 5. `app/page.tsx` is a server component. It reads `x-tenant-subdomain` from `headers()` and renders `Tenant: pilotschool` or `Tenant: root`, plus `Foundation scaffold running`.
 6. The response is HTML. No database lookup happens.
+
+Student feed, after the same middleware step:
+
+1. The browser requests `http://pilotschool.localhost:3000/feed`.
+2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
+3. `app/(student)/feed/page.tsx` calls `getStudentFeed()` in `lib/stubs/get-student-feed.ts`.
+4. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
+5. The page renders `PageHeader`, two `FeedCard`s, the recently viewed rows, and `BottomNav` from the student layout.
+
+Lesson, assignment, and status follow the same path. The page awaits `params`, then calls `getLesson`, `getAssignment`, or `getSubmissionStatus` with that id. The stub still returns the one mockup record.
 
 ## If this breaks, look here
 
@@ -128,6 +165,9 @@ This session only built the shell: the Next.js app, empty route groups, Supabase
 | `npm run lint` warns that `next lint` is deprecated | Expected on Next.js 15. The command still exits 0. Next.js 16 removes it |
 | `npm run db:types` does not generate types | It is a stub until `supabase/migrations` has SQL |
 | CI fails on `npm run test:rls` | That step is commented out until migrations and RLS policies exist |
+| Feed shows wrong data | `lib/stubs/get-student-feed.ts`, `app/(student)/feed/page.tsx` |
+| Styling looks off | `components/student/*`, `components/shared/PageHeader.tsx`, `components/shared/PrimaryButton.tsx`, `tailwind.config.ts`. Mockup grays are arbitrary values (`#E5E5E5`, `#999999`, `#666666`, `#333333`), not `gray-*` utilities |
+| Tenant name wrong in header | `middleware.ts`. The prompt named `app/middleware.ts`; that file does not exist and Next.js would not run it. Student headers currently show the mockup labels (Student Home, Mathematics, English), not the subdomain |
 
 ## Key concepts
 
@@ -183,3 +223,13 @@ Items marked **Not in the prompt** need a human review. The others follow the se
 - **Two mockup folders.** The prompt asked for `design/mockups/`. The repo already had HTML mockups in `designs/mockups/`. Those files were not moved or overwritten. `design/mockups/` is an empty landing folder. Decide later whether to consolidate.
 - **Packages from the living doc that were not installed.** React Hook Form, Zod, TanStack Query, and Resend are decided in `docs/living-doc.md` but were outside this session’s package list.
 - **TypeScript 5.9, Vitest 3, ESLint 8.** Unpinned installs pulled TypeScript 6 and Vitest 5. They are pinned so they stay compatible with Next.js 15 and `.eslintrc.json`. `eslint-config-prettier` is v9 so it matches ESLint 8.
+
+### 2026-09-23 — Student screens. Not in the prompt
+
+- **Routes live in `app/(student)/`, not `app/(tenant)/(student)/`.** This session's table asked for `app/(student)/feed` and the other three paths. The empty foundation group `app/(tenant)/(student)/` was left as-is. Route groups do not appear in the URL, so the pages are `/feed`, `/lessons/1`, `/assignments/1`, and `/assignments/1/status`.
+- **`app/(student)/layout.tsx`.** The phone frame and bottom nav are shared by all four mockups. A student layout keeps that chrome off the foundation home page.
+- **`getStudentFeed()` returns an object, not only an array.** `items` is the today array. Greeting, date, and recently viewed rows are on the same object so the page does not hardcode mockup copy.
+- **Sample strings come from the HTML, not the prompt example.** The prompt mentioned "Mathematics — Week 3 Quiz". That sentence is not in the mockups. The feed lesson is "Mathematics — Fractions".
+- **Once-only blocks stayed in the page.** The extraction list named lesson body, instructions, answer field, and confirmation cards. Each is used on one screen, so they were not given their own files. `StatusBadge`, `MaterialRow`, and `RecentlyViewedRow` were extracted because the same markup is repeated.
+- **Submit Work does not navigate or save.** It is a button with no handler. Download, View Image, Watch Video, and Choose File are the same. Open Lesson, Open Assignment, and Back to Learning Feed are static links. Link versions add `block text-center` so the anchor fills the row the way the mockup button does.
+- **Checked with curl.** No in-editor browser was available. All four `pilotschool.localhost:3000` routes returned the mockup text. `npm run typecheck`, `npm run lint`, and `npm run build` passed.
