@@ -1,0 +1,7 @@
+node_modules
+.next
+public/sw.js
+public/swe-worker-*
+designs
+Livedoc
+package-lock.json

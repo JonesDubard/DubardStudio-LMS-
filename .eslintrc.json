@@ -1,0 +1,10 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript", "prettier"],
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "public/sw.js",
+    "public/swe-worker-*.js",
+    "next-env.d.ts"
+  ]
+}

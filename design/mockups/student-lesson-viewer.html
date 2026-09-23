@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson Viewer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-[#E5E5E5] text-[#333333]">
+  <div class="mx-auto min-h-screen w-full max-w-[390px] bg-white pb-20">
+
+    <!-- Header -->
+    <header class="border-b border-[#E5E5E5] bg-white px-4 py-4">
+      <div class="flex items-center gap-3">
+        <div class="h-9 w-9 border border-[#999999] bg-[#E5E5E5]">
+          <div class="flex h-full items-center justify-center text-xs text-[#666666]">
+            /
+          </div>
+        </div>
+
+        <div>
+          <p class="text-xs text-[#999999]">Mathematics</p>
+          <h1 class="text-base font-bold">Lesson</h1>
+        </div>
+      </div>
+    </header>
+
+    <main class="space-y-5 px-4 py-5">
+
+      <!-- Lesson Title -->
+      <section>
+        <p class="text-xs font-semibold uppercase text-[#666666]">
+          Week 3
+        </p>
+
+        <h2 class="mt-1 text-xl font-bold leading-7">
+          Adding and Subtracting Fractions
+        </h2>
+
+        <p class="mt-2 text-sm text-[#666666]">
+          Mathematics · Published Sep 23
+        </p>
+      </section>
+
+      <!-- Progressive Content -->
+      <section class="space-y-4">
+
+        <div>
+          <p class="mb-2 text-xs font-bold uppercase text-[#666666]">
+            Lesson Content
+          </p>
+
+          <div class="border border-[#999999] p-4">
+            <p class="text-sm leading-6 text-[#333333]">
+              To add or subtract fractions with different denominators,
+              first find a common denominator. Then convert each fraction
+              before completing the calculation.
+            </p>
+
+            <p class="mt-4 text-sm leading-6 text-[#333333]">
+              Example: 1/2 + 1/4 becomes 2/4 + 1/4, which equals 3/4.
+            </p>
+          </div>
+        </div>
+
+        <!-- Structure Loaded -->
+        <div class="border border-[#E5E5E5] bg-[#E5E5E5] p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-[#333333]">
+                Lesson structure
+              </p>
+              <p class="mt-1 text-xs text-[#666666]">
+                Examples and key points available
+              </p>
+            </div>
+
+            <span class="border border-[#999999] bg-white px-2 py-1 text-[10px] font-bold text-[#666666]">
+              READY
+            </span>
+          </div>
+        </div>
+
+        <!-- Compressed Image Affordance -->
+        <div>
+          <p class="mb-2 text-xs font-bold uppercase text-[#666666]">
+            Lesson Image
+          </p>
+
+          <div class="border border-[#999999]">
+            <div class="flex h-36 items-center justify-center bg-[#E5E5E5] text-xs text-[#666666]">
+              Compressed image preview
+            </div>
+
+            <div class="flex items-center justify-between p-3">
+              <span class="text-xs text-[#666666]">
+                Fractions diagram
+              </span>
+
+              <button
+                class="min-h-10 border border-[#333333] bg-white px-3 text-xs font-semibold text-[#333333]"
+                type="button"
+              >
+                View Image
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Heavy Attachments -->
+        <div>
+          <p class="mb-2 text-xs font-bold uppercase text-[#666666]">
+            Materials
+          </p>
+
+          <div class="space-y-2">
+
+            <div class="flex items-center justify-between border border-[#999999] p-3">
+              <div>
+                <p class="text-sm font-semibold">Fractions Practice.pdf</p>
+                <p class="mt-1 text-xs text-[#666666]">
+                  PDF · Available on demand
+                </p>
+              </div>
+
+              <button
+                class="min-h-10 border border-[#333333] bg-[#333333] px-3 text-xs font-semibold text-white"
+                type="button"
+              >
+                Download PDF
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between border border-[#999999] p-3">
+              <div>
+                <p class="text-sm font-semibold">Lesson Video</p>
+                <p class="mt-1 text-xs text-[#666666]">
+                  External video link
+                </p>
+              </div>
+
+              <button
+                class="min-h-10 border border-[#333333] bg-white px-3 text-xs font-semibold text-[#333333]"
+                type="button"
+              >
+                Watch Video ↗
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Offline indicator -->
+      <section class="border border-[#999999] bg-[#E5E5E5] p-3">
+        <p class="text-xs font-bold text-[#333333]">
+          Recently Viewed
+        </p>
+        <p class="mt-1 text-xs leading-5 text-[#666666]">
+          This lesson is available in your recently viewed lessons for
+          offline access.
+        </p>
+      </section>
+
+      <!-- Primary Action -->
+      <button
+        class="min-h-12 w-full bg-[#333333] px-4 py-3 text-sm font-bold text-white"
+        type="button"
+      >
+        Back to Learning Feed
+      </button>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-1/2 z-10 w-full max-w-[390px] -translate-x-1/2 border-t border-[#999999] bg-white">
+      <div class="grid grid-cols-3">
+
+        <div class="flex min-h-16 flex-col items-center justify-center bg-[#333333] text-white">
+          <span class="text-sm font-bold">Home</span>
+          <span class="mt-1 text-[10px]">Current</span>
+        </div>
+
+        <div class="flex min-h-16 flex-col items-center justify-center text-[#666666]">
+          <span class="text-sm font-semibold">Classes</span>
+        </div>
+
+        <div class="flex min-h-16 flex-col items-center justify-center text-[#666666]">
+          <span class="text-sm font-semibold">Grades</span>
+        </div>
+
+      </div>
+    </nav>
+
+  </div>
+</body>
+</html>
