@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { MaterialRow } from "@/components/student/MaterialRow";
-import { StatusBadge } from "@/components/student/StatusBadge";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { getAssignment } from "@/lib/stubs/get-assignment";
 
 export const metadata: Metadata = {
@@ -99,12 +100,12 @@ export default async function AssignmentPage({
                 {assignment.attachLabel}
               </label>
 
-              <div className="flex min-h-12 items-center justify-between border border-dashed border-[#999999] bg-[#E5E5E5] px-3">
-                <span className="text-xs text-[#666666]">
+              <div className="flex min-h-12 items-center justify-between gap-3 border border-dashed border-[#999999] bg-[#E5E5E5] px-3">
+                <span className="min-w-0 flex-1 truncate text-xs text-[#666666]">
                   {assignment.attachEmpty}
                 </span>
 
-                <button className={outlineButtonClass} type="button">
+                <button className={`shrink-0 ${outlineButtonClass}`} type="button">
                   {assignment.attachAction}
                 </button>
               </div>
@@ -114,13 +115,12 @@ export default async function AssignmentPage({
 
         <PrimaryButton>{assignment.submitLabel}</PrimaryButton>
 
-        <button
-          className="min-h-11 w-full cursor-not-allowed border border-[#999999] bg-[#E5E5E5] px-4 py-2 text-sm font-semibold text-[#999999]"
-          type="button"
-          disabled
+        <Link
+          href={`/assignments/${assignmentId}/status`}
+          className="flex min-h-11 w-full items-center justify-center border border-[#999999] bg-[#E5E5E5] px-4 py-2 text-sm font-semibold text-[#333333]"
         >
           {assignment.statusLabel}
-        </button>
+        </Link>
       </main>
     </>
   );

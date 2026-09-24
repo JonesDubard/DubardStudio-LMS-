@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Platform Admin — Create Tenant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-white text-[#333333]">
+  <div class="flex min-h-screen">
+    <aside class="w-64 shrink-0 border-r border-[#E5E5E5] bg-white p-6">
+      <div class="mb-8">
+        <div class="mb-1 text-xs uppercase tracking-widest text-[#999999]">Platform Console</div>
+        <div class="text-lg font-semibold">LMS Administration</div>
+      </div>
+
+      <nav class="space-y-1 text-sm">
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]"><span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>Dashboard</a>
+        <a href="#" class="flex items-center gap-3 rounded-md bg-[#E5E5E5] px-3 py-2 font-medium"><span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>Tenants</a>
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]"><span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>Subscriptions</a>
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]"><span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>Usage</a>
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]"><span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>Audit</a>
+      </nav>
+    </aside>
+
+    <main class="min-w-0 flex-1">
+      <div class="mx-auto max-w-[1100px] p-8">
+        <header class="mb-8">
+          <div class="text-sm text-[#666666]">Tenants</div>
+          <h1 class="mt-1 text-2xl font-semibold">Create Tenant</h1>
+          <p class="mt-2 text-sm text-[#666666]">
+            Provision a new school on the LMS platform.
+          </p>
+        </header>
+
+        <form>
+          <section class="border border-[#E5E5E5]">
+            <div class="border-b border-[#E5E5E5] px-6 py-5">
+              <h2 class="font-semibold">Tenant Information</h2>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
+              <div>
+                <label class="mb-2 block text-sm font-medium">School Name</label>
+                <input
+                  type="text"
+                  value="Pilot School #1"
+                  class="w-full border border-[#999999] px-3 py-3 text-sm"
+                >
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium">Contact Person</label>
+                <input
+                  type="text"
+                  value="Mrs. Abena Kollie"
+                  class="w-full border border-[#999999] px-3 py-3 text-sm"
+                >
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium">Contact Email</label>
+                <input
+                  type="email"
+                  value="admin@pilotschool.edu.lr"
+                  class="w-full border border-[#999999] px-3 py-3 text-sm"
+                >
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium">Subdomain</label>
+                <input
+                  type="text"
+                  value="pilotschool"
+                  class="w-full border border-[#999999] px-3 py-3 text-sm"
+                >
+                <div class="mt-2 text-xs text-[#666666]">
+                  Preview:
+                  <span class="font-medium text-[#333333]">pilotschool.ourlms.com</span>
+                </div>
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium">Subscription Status</label>
+                <select class="w-full border border-[#999999] bg-white px-3 py-3 text-sm">
+                  <option selected>Trial</option>
+                  <option>Active</option>
+                  <option>Suspended</option>
+                  <option>Cancelled</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium">Grade Range</label>
+                <select class="w-full border border-[#999999] bg-white px-3 py-3 text-sm">
+                  <option>Primary</option>
+                  <option>Secondary</option>
+                  <option selected>Both</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section class="mt-6 border border-[#E5E5E5] bg-[#E5E5E5] p-6">
+            <h2 class="font-semibold">What happens on creation?</h2>
+            <p class="mt-2 text-sm text-[#666666]">
+              On creation, the system will automatically:
+            </p>
+
+            <ul class="mt-4 space-y-3 text-sm">
+              <li class="flex gap-3">
+                <span class="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">/</span>
+                Create the tenant record
+              </li>
+              <li class="flex gap-3">
+                <span class="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">/</span>
+                Provision default branding
+              </li>
+              <li class="flex gap-3">
+                <span class="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">/</span>
+                Generate a School Admin invite email
+              </li>
+              <li class="flex gap-3">
+                <span class="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">/</span>
+                Set up default academic term structure
+              </li>
+            </ul>
+          </section>
+
+          <div class="mt-6 flex items-center justify-end gap-3">
+            <button type="button" class="border border-[#999999] px-5 py-3 text-sm">
+              Cancel
+            </button>
+            <button type="submit" class="bg-[#333333] px-5 py-3 text-sm font-medium text-white">
+              Create Tenant
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

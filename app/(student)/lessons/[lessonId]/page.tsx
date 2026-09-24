@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { MaterialRow } from "@/components/student/MaterialRow";
-import { StatusBadge } from "@/components/student/StatusBadge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { getLesson } from "@/lib/stubs/get-lesson";
@@ -65,8 +65,8 @@ export default async function LessonPage({
           </div>
 
           <div className="border border-[#E5E5E5] bg-[#E5E5E5] p-4">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-[#333333]">
                   {lesson.structureTitle}
                 </p>
@@ -89,12 +89,15 @@ export default async function LessonPage({
                 {lesson.imagePreview}
               </div>
 
-              <div className="flex items-center justify-between p-3">
-                <span className="text-xs text-[#666666]">
+              <div className="flex items-center justify-between gap-3 p-3">
+                <span className="min-w-0 flex-1 truncate text-xs text-[#666666]">
                   {lesson.imageCaption}
                 </span>
 
-                <button className={outlineButtonClass} type="button">
+                <button
+                  className={`shrink-0 ${outlineButtonClass}`}
+                  type="button"
+                >
                   {lesson.imageAction}
                 </button>
               </div>

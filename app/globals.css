@@ -4,8 +4,8 @@
 
 /* Neutral gray fallback when a school has not configured branding (FR-2.3.5). */
 :root {
-  --brand-primary: #525252;
-  --brand-secondary: #737373;
-  --brand-bg: #f5f5f5;
-  --brand-text: #171717;
+  --brand-primary: #333333;
+  --brand-secondary: #666666;
+  --brand-bg: #e5e5e5;
+  --brand-text: #333333;
 }

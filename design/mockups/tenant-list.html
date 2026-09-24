@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Platform Admin — Tenants</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-white text-[#333333]">
+  <div class="flex min-h-screen">
+    <aside class="w-64 shrink-0 border-r border-[#E5E5E5] bg-white p-6">
+      <div class="mb-8">
+        <div class="mb-1 text-xs uppercase tracking-widest text-[#999999]">Platform Console</div>
+        <div class="text-lg font-semibold">LMS Administration</div>
+      </div>
+
+      <nav class="space-y-1 text-sm">
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]"><span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>Dashboard</a>
+        <a href="#" class="flex items-center gap-3 rounded-md bg-[#E5E5E5] px-3 py-2 font-medium"><span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>Tenants</a>
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]"><span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>Subscriptions</a>
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]"><span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>Usage</a>
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]"><span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>Audit</a>
+      </nav>
+    </aside>
+
+    <main class="min-w-0 flex-1">
+      <div class="mx-auto max-w-[1440px] p-8">
+        <header class="mb-8 flex items-end justify-between gap-6">
+          <div>
+            <div class="text-sm text-[#666666]">Platform Admin</div>
+            <h1 class="mt-1 text-2xl font-semibold">Tenants</h1>
+            <p class="mt-2 text-sm text-[#666666]">Manage tenant records and access status.</p>
+          </div>
+
+          <button class="shrink-0 bg-[#333333] px-5 py-3 text-sm font-medium text-white">
+            + Create Tenant
+          </button>
+        </header>
+
+        <!-- Filters -->
+        <section class="mb-5 border border-[#E5E5E5] p-4">
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr_auto_auto]">
+            <div>
+              <label class="mb-2 block text-xs font-medium uppercase tracking-wide text-[#666666]">
+                Status
+              </label>
+              <select class="w-full border border-[#999999] bg-white px-3 py-2.5 text-sm">
+                <option>All</option>
+                <option>Trial</option>
+                <option>Active</option>
+                <option>Suspended</option>
+                <option>Cancelled</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-xs font-medium uppercase tracking-wide text-[#666666]">
+                Search by name or subdomain
+              </label>
+              <input
+                type="text"
+                value=""
+                placeholder="Search tenants..."
+                class="w-full border border-[#999999] px-3 py-2.5 text-sm outline-none"
+              >
+            </div>
+
+            <button class="self-end border border-[#999999] px-4 py-2.5 text-sm">
+              Suspend
+            </button>
+
+            <button class="self-end border border-[#999999] px-4 py-2.5 text-sm">
+              Export
+            </button>
+          </div>
+        </section>
+
+        <!-- Tenant table -->
+        <section class="overflow-x-auto border border-[#E5E5E5]">
+          <table class="w-full min-w-[1050px] border-collapse text-sm">
+            <thead class="bg-[#E5E5E5] text-left">
+              <tr>
+                <th class="px-4 py-3 font-medium">Tenant Name</th>
+                <th class="px-4 py-3 font-medium">Subdomain</th>
+                <th class="px-4 py-3 font-medium">Subscription Status</th>
+                <th class="px-4 py-3 font-medium">Onboarding Progress</th>
+                <th class="px-4 py-3 font-medium">Created</th>
+                <th class="px-4 py-3 font-medium">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr class="border-t border-[#E5E5E5]">
+                <td class="px-4 py-4 font-medium">Pilot School #1</td>
+                <td class="px-4 py-4 text-[#666666]">pilotschool.ourlms.com</td>
+                <td class="px-4 py-4">
+                  <span class="rounded-full border border-[#999999] px-2 py-1 text-xs">Trial</span>
+                </td>
+                <td class="px-4 py-4">3 / 4 complete</td>
+                <td class="px-4 py-4 text-[#666666]">2026-09-10</td>
+                <td class="px-4 py-4">
+                  <button class="border border-[#999999] px-3 py-2 text-xs">View Tenant</button>
+                </td>
+              </tr>
+
+              <tr class="border-t border-[#E5E5E5]">
+                <td class="px-4 py-4 font-medium">Monrovia Academy</td>
+                <td class="px-4 py-4 text-[#666666]">monroviaacademy.ourlms.com</td>
+                <td class="px-4 py-4">
+                  <span class="rounded-full bg-[#333333] px-2 py-1 text-xs text-white">Active</span>
+                </td>
+                <td class="px-4 py-4">4 / 4 complete</td>
+                <td class="px-4 py-4 text-[#666666]">2026-08-22</td>
+                <td class="px-4 py-4">
+                  <button class="border border-[#999999] px-3 py-2 text-xs">View Tenant</button>
+                </td>
+              </tr>
+
+              <tr class="border-t border-[#E5E5E5]">
+                <td class="px-4 py-4 font-medium">St. Paul's Learning Center</td>
+                <td class="px-4 py-4 text-[#666666]">stpauls.ourlms.com</td>
+                <td class="px-4 py-4">
+                  <span class="rounded-full bg-[#333333] px-2 py-1 text-xs text-white">Active</span>
+                </td>
+                <td class="px-4 py-4">4 / 4 complete</td>
+                <td class="px-4 py-4 text-[#666666]">2026-07-18</td>
+                <td class="px-4 py-4">
+                  <button class="border border-[#999999] px-3 py-2 text-xs">View Tenant</button>
+                </td>
+              </tr>
+
+              <tr class="border-t border-[#E5E5E5]">
+                <td class="px-4 py-4 font-medium">Brewerville Community School</td>
+                <td class="px-4 py-4 text-[#666666]">brewerville.ourlms.com</td>
+                <td class="px-4 py-4">
+                  <span class="rounded-full border border-dashed border-[#666666] px-2 py-1 text-xs">Suspended</span>
+                </td>
+                <td class="px-4 py-4">2 / 4 complete</td>
+                <td class="px-4 py-4 text-[#666666]">2026-06-30</td>
+                <td class="px-4 py-4">
+                  <button class="border border-[#999999] px-3 py-2 text-xs">View Tenant</button>
+                </td>
+              </tr>
+
+              <tr class="border-t border-[#E5E5E5]">
+                <td class="px-4 py-4 font-medium">Hope International School</td>
+                <td class="px-4 py-4 text-[#666666]">hopeintl.ourlms.com</td>
+                <td class="px-4 py-4">
+                  <span class="bg-[#E5E5E5] px-2 py-1 text-xs line-through text-[#666666]">Cancelled</span>
+                </td>
+                <td class="px-4 py-4">1 / 4 complete</td>
+                <td class="px-4 py-4 text-[#666666]">2026-05-14</td>
+                <td class="px-4 py-4">
+                  <button class="border border-[#999999] px-3 py-2 text-xs">View Tenant</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Empty state example -->
+        <section class="mt-6 hidden border border-[#E5E5E5] p-12 text-center">
+          <div class="mx-auto mb-4 flex h-10 w-10 items-center justify-center border border-[#999999] text-sm">/</div>
+          <h2 class="font-medium">No tenants found</h2>
+          <p class="mt-2 text-sm text-[#666666]">
+            No tenant matches the selected filters.
+          </p>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { MaterialRow } from "@/components/student/MaterialRow";
-import { StatusBadge } from "@/components/student/StatusBadge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { getSubmissionStatus } from "@/lib/stubs/get-submission-status";

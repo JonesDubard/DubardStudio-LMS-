@@ -1,6 +1,6 @@
 # Teaching notes — foundation scaffold
 
-Last updated: 2026-09-23
+Last updated: 2026-09-24
 
 This file is the running developer guide. Future sessions should append what changed, what was skipped, and why.
 
@@ -125,14 +125,176 @@ A later session on the same day added the four student P0 screens as server comp
 | `components/student/BottomNav.tsx` | Home / Classes / Grades bar. Used by `app/(student)/layout.tsx` on all four screens. Home is marked Current, matching the mockups |
 | `components/student/FeedCard.tsx` | Today card on the feed. Used twice: the new lesson and the due assignment |
 | `components/student/RecentlyViewedRow.tsx` | Compact lesson row. Used twice in the feed's recently viewed list |
-| `components/student/StatusBadge.tsx` | DUE SOON on the feed and assignment, READY on the lesson, SUBMITTED on the status page |
 | `components/student/MaterialRow.tsx` | Title, meta, and action. Used for the lesson PDF and video, the assignment PDF, and the submitted attachment |
 | `components/shared/PageHeader.tsx` | Greeting header on the feed. Section header (mark, subject, title) on the lesson, assignment, and status pages |
 | `components/shared/PrimaryButton.tsx` | Dark full-width action. Open Lesson, Back to Learning Feed, and Submit Work |
+| `components/shared/StatusBadge.tsx` | Student tones (`due`, `dueOnLight`, `submitted`, `ready`) plus generic Teacher/Admin chips. Student-only `components/student/StatusBadge.tsx` was merged here in the final verification audit |
 
 Mockup matched by content: `design/mockups/student-assignment-submission-status.html` (the prompt name `student-submission-status.html` is not the filename on disk).
 
 Left in the page, not extracted, because each appears on only one screen: feed sections, lesson body, offline note, assignment instructions, answer box, file row, submission confirmation, assignment summary, and the waiting-for-review block.
+
+### Teacher P0 screens (2026-09-24)
+
+| File | Purpose |
+|---|---|
+| `app/teacher/layout.tsx` | Side nav shell. Renders `TeacherSideNav` on the left and `{children}` on the right |
+| `app/teacher/home/page.tsx` | Teacher home. Reads `getTeacherHome()` |
+| `app/teacher/lessons/new/page.tsx` | Lesson editor. Reads `getLessonForEdit("new")`, renders `LessonEditorForm` |
+| `app/teacher/assignments/new/page.tsx` | Assignment creator. Reads `getAssignmentForEdit("new")`, renders `AssessmentForm` |
+| `app/teacher/assignments/[assignmentId]/submissions/page.tsx` | Submission grading. Reads `getSubmissionsForAssessment(assignmentId)` |
+| `app/teacher/assessments/[assessmentId]/grade-entry/page.tsx` | Score-only grade entry. Reads `getGradeEntryRoster(assessmentId)` |
+| `app/teacher/lessons/[lessonId]/reuse/page.tsx` | Lesson reuse panel. Reads `getLessonForReuse(lessonId)` |
+| `lib/stubs/get-teacher-home.ts` | `getTeacherHome()` returns classes, pending grading rows, and upcoming assignments |
+| `lib/stubs/get-lesson-for-edit.ts` | `getLessonForEdit(lessonId)` returns one lesson draft with class/subject/term options, materials, and video URL |
+| `lib/stubs/get-assignment-for-edit.ts` | `getAssignmentForEdit(assignmentId)` returns an `Assessment` (type assignment) plus linked lesson fields and one material |
+| `lib/stubs/get-submissions-for-assessment.ts` | `getSubmissionsForAssessment(assessmentId)` returns the assignment `Assessment`, submission list, and selected submission detail |
+| `lib/stubs/get-grade-entry-roster.ts` | `getGradeEntryRoster(assessmentId)` returns a quiz `Assessment` and roster rows for score entry |
+| `lib/stubs/get-lesson-for-reuse.ts` | `getLessonForReuse(lessonId)` returns the published lesson plus available terms and draft preview |
+| `components/teacher/TeacherSideNav.tsx` | Left nav. Used by `app/teacher/layout.tsx` on every Teacher page |
+| `components/teacher/ClassCard.tsx` | Class tile. Used three times on Teacher Home |
+| `components/teacher/GradingQueueRow.tsx` | Pending grading table row. Used twice on Teacher Home |
+| `components/teacher/SubmissionList.tsx` | Left column student list on submission grading |
+| `components/teacher/SubmissionDetail.tsx` | Right column grade + feedback form (client). Used on submission grading |
+| `components/teacher/GradeEntryTable.tsx` | Bulk score entry table (client). Used on grade entry |
+| `components/teacher/AssessmentForm.tsx` | Assignment create form (client). Used on `/teacher/assignments/new` |
+| `components/teacher/LessonEditorForm.tsx` | Lesson create form (client). Used on `/teacher/lessons/new` |
+| `components/shared/StatusBadge.tsx` | Status chip. Used on Teacher Home upcoming rows, lesson draft badge, submission pending badge, and submission list statuses |
+
+#### Final Teacher route map
+
+Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a route group). Student home remains `/feed`. Student lesson and assignment URLs (`/lessons/1`, `/assignments/1`, `/assignments/1/status`) stay unprefixed and do not collide with Teacher paths.
+
+| URL | Page |
+|---|---|
+| `/teacher/home` | Teacher Home |
+| `/teacher/lessons/new` | Create Lesson |
+| `/teacher/assignments/new` | Create Assignment |
+| `/teacher/assignments/1/submissions` | Submission grading |
+| `/teacher/assessments/1/grade-entry` | Score-only grade entry |
+| `/teacher/lessons/1/reuse` | Lesson reuse |
+
+`components/shared/PrimaryButton.tsx` already existed from the Student session. Teacher primary actions keep the mockup button classes (`border border-[#333333] bg-[#333333] text-white px-5 py-3`) instead of the Student full-width feed/page variants.
+
+`design/mockups/components-extraction-list.md` had no Teacher section (only Student and School Admin). Extraction followed the session expected component list and the six `teacher-*.html` mockups.
+
+### School Admin P0 screens (2026-09-24)
+
+| File | Purpose |
+|---|---|
+| `app/(admin)/layout.tsx` | Side nav shell. Renders `AdminSideNav` on the left and `{children}` on the right |
+| `app/(admin)/admin/dashboard/page.tsx` | School Admin dashboard. Reads `getAdminDashboard()` |
+| `app/(admin)/admin/branding/page.tsx` | School branding. Reads `getSchoolBranding()` |
+| `app/(admin)/admin/academic/page.tsx` | Academic setup. Reads `getAcademicStructure()` |
+| `app/(admin)/admin/people/teachers/page.tsx` | Teachers list + CSV import. Reads `getTeachers()` |
+| `app/(admin)/admin/people/students/page.tsx` | Students list + CSV import. Reads `getStudents()` |
+| `app/(admin)/admin/people/admins/page.tsx` | School Admins list. Reads `getSchoolAdmins()` |
+| `app/(admin)/admin/people/parents/page.tsx` | Parent-child linking. Reads `getParents()` |
+| `app/(admin)/admin/assignments/page.tsx` | Assignments overview. Reads `getAdminAssignments()` |
+| `lib/stubs/get-admin-dashboard.ts` | `getAdminDashboard()` returns setup progress, summary tiles, and usage metrics |
+| `lib/stubs/get-school-branding.ts` | `getSchoolBranding()` returns logo/favicon labels, color swatches, and student preview copy |
+| `lib/stubs/get-academic-structure.ts` | `getAcademicStructure()` returns progress steps, years, terms, classes, and subjects |
+| `lib/stubs/get-teachers.ts` | `getTeachers()` returns teacher rows and CSV preview (`TeachersList`) |
+| `lib/stubs/get-students.ts` | `getStudents()` returns student rows, CSV preview, and parent-linking note (`StudentsList`) |
+| `lib/stubs/get-school-admins.ts` | `getSchoolAdmins()` returns admin rows and access note (`SchoolAdminsList`) |
+| `lib/stubs/get-parents.ts` | `getParents()` returns parent list, selected parent, linked children, and search result (`ParentsData`) |
+| `lib/stubs/get-admin-assignments.ts` | `getAdminAssignments()` returns filter fields and assignment overview rows |
+| `components/admin/AdminSideNav.tsx` | Left nav. Used by `app/(admin)/layout.tsx` on every School Admin page |
+| `components/admin/SetupProgressCard.tsx` | Setup Progress widget on the dashboard |
+| `components/admin/BulkImportPanel.tsx` | CSV upload zone + preview table. Used on Teachers and Students |
+| `components/admin/BrandingPreviewPanel.tsx` | Live student-view preview on Branding |
+| `components/admin/AcademicSetupStepCard.tsx` | Year / Term / Class / Subject step card on Academic Setup |
+| `components/admin/ParentChildLinkPanel.tsx` | Selected parent + linked children + link-child form (client). Used on Parents |
+| `components/admin/PeopleSubNav.tsx` | Teachers / Students / Admins / Parents tab links. Used on all four People pages so none are orphans |
+| `components/shared/DataTable.tsx` | Generic striped table. Used on Teachers, Students, Admins, Assignments |
+| `components/shared/FilterRow.tsx` | Filter dropdown bar. Used on Assignments (Teachers/Students mockups have no filters) |
+| `components/shared/UploadZone.tsx` | Dashed upload area. Used on Branding and inside `BulkImportPanel` |
+| `components/shared/FormField.tsx` | Label + control slot. Used on Branding and Parent linking |
+
+Color swatches on Branding are inlined in `app/(admin)/admin/branding/page.tsx` (single use; `ColorSwatch` shared file removed in the final verification audit).
+
+#### Final School Admin route map
+
+School Admin routes use a route group `(admin)` plus a real `admin` segment, so URLs always start with `/admin/`. This avoids collisions with Teacher (`/teacher/`) and Student (`/feed`).
+
+| URL | Page |
+|---|---|
+| `/admin/dashboard` | School Admin Dashboard |
+| `/admin/branding` | School Branding |
+| `/admin/academic` | Academic Setup |
+| `/admin/people/teachers` | Teachers |
+| `/admin/people/students` | Students |
+| `/admin/people/admins` | School Admins |
+| `/admin/people/parents` | Parent-Child Linking |
+| `/admin/assignments` | Assignments Overview |
+
+`design/mockups/components-extraction-list.md` includes a School Admin component inventory (admin + shared tables) without an explicit "School Admin" heading. Extraction followed that inventory plus the session named component list and the eight `school-admin-*.html` mockups. `TabBar` and `EmptyState` were skipped because the mockups do not use them.
+
+### Platform Admin P0 screens (2026-09-24)
+
+| File | Purpose |
+|---|---|
+| `app/(platform)/layout.tsx` | Side nav shell. Renders `PlatformSideNav` on the left and `{children}` on the right |
+| `app/(platform)/platform/dashboard/page.tsx` | Platform dashboard. Reads `getPlatformDashboard()` |
+| `app/(platform)/platform/tenants/page.tsx` | Tenant list. Reads `getTenants()` |
+| `app/(platform)/platform/tenants/new/page.tsx` | Create tenant form (client). Visual only |
+| `app/(platform)/platform/tenants/[tenantId]/page.tsx` | Tenant detail / profile. Reads `getTenant(tenantId)` |
+| `app/(platform)/platform/tenants/[tenantId]/subscription/page.tsx` | Subscription control. Reads `getTenantSubscription(tenantId)` |
+| `app/(platform)/platform/audit/page.tsx` | Audit log. Reads `getAuditLog()` |
+| `lib/stubs/get-platform-dashboard.ts` | `getPlatformDashboard()` returns `PlatformDashboard`: summary tiles, onboarding rows, recent audit items |
+| `lib/stubs/get-tenants.ts` | `getTenants()` returns `TenantsList` with five tenants covering Trial / Active / Suspended / Cancelled |
+| `lib/stubs/get-tenant.ts` | `getTenant(tenantId)` returns `TenantDetail` (id `"1"` → Pilot School #1) |
+| `lib/stubs/get-tenant-subscription.ts` | `getTenantSubscription(tenantId)` returns `TenantSubscription`: status options, confirm copy, history |
+| `lib/stubs/get-audit-log.ts` | `getAuditLog()` returns `AuditLog`: filters + events (one with expanded `detail`) |
+| `components/platform/PlatformSideNav.tsx` | Left nav. Used by `app/(platform)/layout.tsx` on every Platform Admin page |
+| `components/platform/TenantStatusPill.tsx` | Subscription status pill by fill pattern (outline / solid / stripe / strikethrough) |
+| `components/platform/OnboardingProgressCell.tsx` | ✓ / ○ cell. Used on Platform Dashboard onboarding table |
+| `components/platform/TenantSummaryTile.tsx` | Summary tile. Used five times on Platform Dashboard |
+| `components/platform/SubscriptionRadioGroup.tsx` | Trial / Active / Suspended / Cancelled radios (client). Used on Subscription |
+| `components/platform/AuditLogRow.tsx` | Expandable audit table row (client) |
+| `components/platform/AuditLogDetail.tsx` | Expanded audit detail panel |
+| `components/shared/ElevatedAccessBanner.tsx` | "Acting as: [Tenant] — actions are logged." Used on Tenant Detail and Subscription |
+| `components/shared/TabBar.tsx` | Horizontal tab nav. Used on Tenant Detail and Subscription |
+
+The subscription confirm panel markup is inlined in `app/(platform)/platform/tenants/[tenantId]/subscription/page.tsx` (single use; `ConfirmPanel` shared file removed in the final verification audit).
+
+#### Final Platform Admin route map
+
+Platform Admin routes use a route group `(platform)` plus a real `platform` segment, so URLs always start with `/platform/`. This avoids collisions with Teacher (`/teacher/`), School Admin (`/admin/`), and Student (`/feed`).
+
+| URL | Page |
+|---|---|
+| `/platform/dashboard` | Platform Dashboard |
+| `/platform/tenants` | Tenant List |
+| `/platform/tenants/new` | Create Tenant |
+| `/platform/tenants/1` | Tenant Detail (Pilot School #1) |
+| `/platform/tenants/1/subscription` | Tenant Subscription |
+| `/platform/audit` | Audit Log |
+
+Filename mapping (exact `platform-*.html` names were mostly missing):
+
+| Expected | Used |
+|---|---|
+| `platform-dashboard.html` | `platform-dashboard.html` (existed) |
+| `platform-tenant-list.html` | `tenant-list.html` |
+| `platform-create-tenant.html` | `create-tenant.html` |
+| `platform-tenant-detail.html` | `tenant-detail-profile.html` |
+| `platform-tenant-subscription.html` | `tenant-detail-subscription.html` |
+| `platform-audit-log.html` | `audit-log.html` |
+
+`design/mockups/components-extraction-list.md` had no Platform Admin section. Extraction followed the session named component list and the six mockups. `EmptyState` was skipped (mockup empty state is `hidden`; empty states are out of scope). Tenant list onboarding uses text labels (`3 / 4 complete`), not checkmarks — `OnboardingProgressCell` is used on the dashboard only.
+
+Tenant names match the mockups (not the prompt's alternate set): Pilot School #1 (Trial), Monrovia Academy (Active), St. Paul's Learning Center (Active), Brewerville Community School (Suspended), Hope International School (Cancelled).
+
+### Route map — all personas
+
+| Route prefix | Persona | Layout |
+|---|---|---|
+| `/feed`, `/lessons/*`, `/assignments/*` | Student | `app/(student)/layout.tsx` |
+| `/teacher/*` | Teacher | `app/teacher/layout.tsx` |
+| `/admin/*` | School Admin | `app/(admin)/layout.tsx` |
+| `/platform/*` | Platform Admin | `app/(platform)/layout.tsx` |
+| `/login`, `/invite`, `/reset` | All | `app/(auth)/layout.tsx` (not built yet) |
 
 ## Request lifecycle
 
@@ -153,6 +315,36 @@ Student feed, after the same middleware step:
 
 Lesson, assignment, and status follow the same path. The page awaits `params`, then calls `getLesson`, `getAssignment`, or `getSubmissionStatus` with that id. The stub still returns the one mockup record.
 
+Teacher page, after the same middleware step:
+
+1. The browser requests a Teacher URL such as `http://pilotschool.localhost:3000/teacher/home`.
+2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
+3. Role check is a stub for now. There is no auth gate; the `teacher` layout always renders.
+4. `app/teacher/layout.tsx` wraps the page with `TeacherSideNav`.
+5. The page calls its stub (`getTeacherHome`, `getLessonForEdit`, `getAssignmentForEdit`, `getSubmissionsForAssessment`, `getGradeEntryRoster`, or `getLessonForReuse`).
+6. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
+7. The page renders Teacher and shared components. Client forms hold input state only; buttons do not save.
+
+School Admin page, after the same middleware step:
+
+1. The browser requests a School Admin URL such as `http://pilotschool.localhost:3000/admin/dashboard`.
+2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
+3. Role check is a stub for now. There is no auth gate; the `(admin)` layout always renders.
+4. `app/(admin)/layout.tsx` wraps the page with `AdminSideNav`.
+5. The page calls its stub (`getAdminDashboard`, `getSchoolBranding`, `getAcademicStructure`, `getTeachers`, `getStudents`, `getSchoolAdmins`, `getParents`, or `getAdminAssignments`).
+6. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
+7. The page renders admin and shared components. Client panels hold input state only; buttons do not save.
+
+Platform Admin page, after the same middleware step:
+
+1. The browser requests a Platform Admin URL such as `http://pilotschool.localhost:3000/platform/dashboard`.
+2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
+3. Role check is a stub for now. There is no auth gate; the `(platform)` layout always renders.
+4. `app/(platform)/layout.tsx` wraps the page with `PlatformSideNav`.
+5. The page calls its stub (`getPlatformDashboard`, `getTenants`, `getTenant`, `getTenantSubscription`, or `getAuditLog`).
+6. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
+7. The page renders platform and shared components. Client forms and expanders hold UI state only; buttons do not save or write audit events.
+
 ## If this breaks, look here
 
 | Symptom | Look here |
@@ -168,6 +360,78 @@ Lesson, assignment, and status follow the same path. The page awaits `params`, t
 | Feed shows wrong data | `lib/stubs/get-student-feed.ts`, `app/(student)/feed/page.tsx` |
 | Styling looks off | `components/student/*`, `components/shared/PageHeader.tsx`, `components/shared/PrimaryButton.tsx`, `tailwind.config.ts`. Mockup grays are arbitrary values (`#E5E5E5`, `#999999`, `#666666`, `#333333`), not `gray-*` utilities |
 | Tenant name wrong in header | `middleware.ts`. The prompt named `app/middleware.ts`; that file does not exist and Next.js would not run it. Student headers currently show the mockup labels (Student Home, Mathematics, English), not the subdomain |
+| Pending Grading list empty | `lib/stubs/get-teacher-home.ts` |
+| Grade Entry table missing students | `lib/stubs/get-grade-entry-roster.ts` |
+| Submission view shows wrong student | `components/teacher/SubmissionDetail.tsx` |
+| Form inputs don't hold state | confirm component has `"use client"` |
+| Teacher/Student table missing rows | `lib/stubs/get-teachers.ts` or `lib/stubs/get-students.ts` |
+| Branding preview blank | `components/admin/BrandingPreviewPanel.tsx` |
+| CSV import preview empty | `components/admin/BulkImportPanel.tsx` |
+| Status pills look identical | `components/platform/TenantStatusPill.tsx` (fill pattern props) |
+| Elevated banner missing | `components/shared/ElevatedAccessBanner.tsx` is not being rendered by the page |
+| Audit detail won't expand | `components/platform/AuditLogRow.tsx` needs `"use client"` |
+| Tenant list filters broken | `components/shared/FilterRow.tsx` |
+| People pages (Students / Admins / Parents) feel unreachable | `components/admin/PeopleSubNav.tsx` must render on each People page. Side nav "People" alone only opens Teachers |
+| Submission Status page has no in-app path | Assignment detail must link to `/assignments/[id]/status` in `app/(student)/assignments/[assignmentId]/page.tsx` |
+| Lesson Reuse page has no in-app path | Create Lesson header must link to `/teacher/lessons/1/reuse` in `app/teacher/lessons/new/page.tsx` |
+| Student Home tab does not return to the feed | `components/student/BottomNav.tsx` Home must be a `Link` to `/feed` (client; uses `usePathname`) |
+| Duplicate StatusBadge import errors after merge | Import `@/components/shared/StatusBadge` only. Pass `tone` for Student chips; omit `tone` (use `className`) for Teacher/Admin |
+| Brand fallback colors look off-palette | `app/globals.css` `--brand-*` vars must stay on `#333333` / `#666666` / `#E5E5E5` |
+
+## Shared components inventory
+
+| Component | Path | Personas using it | Platform Admin reuse candidate |
+|---|---|---|---|
+| `PageHeader` | `components/shared/PageHeader.tsx` | Student | No (phone greeting / section mark) |
+| `PrimaryButton` | `components/shared/PrimaryButton.tsx` | Student (Teacher / Platform keep mockup button classes inline) | Yes |
+| `StatusBadge` | `components/shared/StatusBadge.tsx` | Student, Teacher, School Admin (optional `tone` for Student) | Yes (subscription pills use `TenantStatusPill` instead) |
+| `DataTable` | `components/shared/DataTable.tsx` | School Admin, Platform Admin | In use |
+| `FilterRow` | `components/shared/FilterRow.tsx` | School Admin, Platform Admin | In use (optional className / textFields) |
+| `UploadZone` | `components/shared/UploadZone.tsx` | School Admin | Yes |
+| `FormField` | `components/shared/FormField.tsx` | School Admin, Platform Admin | In use (Create Tenant) |
+| `ElevatedAccessBanner` | `components/shared/ElevatedAccessBanner.tsx` | Platform Admin | — |
+| `TabBar` | `components/shared/TabBar.tsx` | Platform Admin | — |
+
+Removed in the final verification audit (one call site each, inlined): `ColorSwatch`, `ConfirmPanel`. Student `StatusBadge` merged into shared.
+
+## Current state — all personas
+
+Counts after the 2026-09-24 final verification audit (page routes only; layouts excluded). Parent persona portal is not built.
+
+| Persona | Page routes | Notes |
+|---|---|---|
+| Student | 4 | `/feed`, `/lessons/[lessonId]`, `/assignments/[assignmentId]`, `/assignments/[assignmentId]/status` |
+| Teacher | 6 | Under `/teacher/*` |
+| School Admin | 8 | Under `/admin/*` |
+| Platform Admin | 6 | Under `/platform/*` |
+| Root scaffold | 1 | `/` foundation placeholder |
+| **Total page routes** | **25** | |
+
+| Inventory | Count |
+|---|---|
+| Shared components (`components/shared/*.tsx`) | 9 |
+| Persona-specific components (`components/{student,teacher,admin,platform}/*.tsx`) | 26 |
+| **Total components** | **35** |
+| Stub modules (`lib/stubs/*.ts`) | 23 |
+
+**Known issues / tech debt (flagged, not changed unless noted):**
+
+- Parent persona screens are absent (only `app/(tenant)/(parent)/.gitkeep`).
+- Auth, Supabase data, RLS, and real form submission are not wired.
+- Student BottomNav Classes / Grades are non-links (no built routes). Teacher Classes, Admin Usage, Platform Subscriptions / Usage are `#` placeholders.
+- Stub structural duplication: `AssignmentMaterial` defined in two stubs; teachers/students list+CSV shapes are near-clones; tenant profile/subscription `tabs` arrays are copied; lesson content repeated across three lesson stubs; audit snippets overlap dashboard and audit-log.
+- Stub content flag for human review: `get-lesson-for-edit` uses `https://www.example.com/...` as `videoUrl` (placeholder domain). Stub sample strings were not rewritten.
+- Brand CSS variables in `app/globals.css` were aligned to the allowed gray palette in this audit; they are still unused by persona screens (mockups use hex classes).
+
+## Two grading paths
+
+The Teacher IA has two grading workflows. Both write to the same `grades` table (`docs/data-model.md`). `grades.submission_id` is nullable: assignment grades link a submission; quiz/test/exam grades stand alone.
+
+**Submission-based (assignments).** The student submitted digital work. The teacher opens the assessment, picks a student from the list, reads the work, and enters a score plus feedback. Components: `SubmissionList` (left column) and `SubmissionDetail` (right column). Route: `/teacher/assignments/[assignmentId]/submissions`. Stub: `getSubmissionsForAssessment`.
+
+**Score-only (quizzes / tests / exams).** There is no digital submission. The teacher opens a roster table and enters scores inline for the whole class. Component: `GradeEntryTable`. Route: `/teacher/assessments/[assessmentId]/grade-entry`. Stub: `getGradeEntryRoster`.
+
+Both paths use the same `Assessment` type from `lib/stubs/get-assignment-for-edit.ts` (`type: "assignment" | "quiz" | "test" | "exam"`). Do not merge the two UIs into one component. Pending Grading on Teacher Home links to both: "Grade" for assignments, "Enter Scores" for quizzes.
 
 ## Key concepts
 
@@ -189,6 +453,77 @@ Lesson, assignment, and status follow the same path. The page awaits `params`, t
 | `http://pilotschool.localhost:3000` | `Tenant: pilotschool` and `Foundation scaffold running` |
 
 Checked with curl against the dev server. No in-editor browser tool was available.
+
+## Verification on 2026-09-24 — Teacher screens
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | Passed |
+| `npm run lint` | Passed. Deprecation warning for `next lint`. No ESLint errors |
+| `npm run build` | Passed. Teacher routes listed: `/teacher/home`, `/teacher/lessons/new`, `/teacher/assignments/new`, `/teacher/assignments/[assignmentId]/submissions`, `/teacher/assessments/[assessmentId]/grade-entry`, `/teacher/lessons/[lessonId]/reuse` |
+| `/teacher/home` | Mockup copy present (Mrs. Johnson greeting, classes, pending grading, upcoming) |
+| `/teacher/lessons/new` | Mockup copy present |
+| `/teacher/assignments/new` | Mockup copy present |
+| `/teacher/assignments/1/submissions` | Mockup copy present |
+| `/teacher/assessments/1/grade-entry` | Mockup copy present |
+| `/teacher/lessons/1/reuse` | Mockup copy present |
+| `/home` | Does not serve Teacher Home (old unprefixed path removed) |
+
+Verified with `Invoke-WebRequest` to `127.0.0.1:3000` and `Host: pilotschool.localhost:3000` (Windows could not resolve `pilotschool.localhost` via DNS). No in-editor browser tool was available.
+
+## Verification on 2026-09-24 — School Admin screens
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | Passed |
+| `npm run lint` | Passed. Deprecation warning for `next lint`. No ESLint errors |
+| `npm run build` | Passed. Admin routes listed: `/admin/dashboard`, `/admin/branding`, `/admin/academic`, `/admin/people/teachers`, `/admin/people/students`, `/admin/people/admins`, `/admin/people/parents`, `/admin/assignments` |
+| `/admin/dashboard` | 200 — needle `Setup Progress` |
+| `/admin/branding` | 200 — needle `School Branding` |
+| `/admin/academic` | 200 — needle `Academic Setup` |
+| `/admin/people/teachers` | 200 — needle `Mrs. Abena Kollie` |
+| `/admin/people/students` | 200 — needle `Amara Johnson` |
+| `/admin/people/admins` | 200 — needle `Edith Johnson` |
+| `/admin/people/parents` | 200 — needle `Mrs. Agnes Johnson` |
+| `/admin/assignments` | 200 — needle `Reading Response` |
+| `/feed` | 200 — needle `Mathematics` (no regression) |
+| `/teacher/home` | 200 — needle `Mrs. Johnson` (no regression) |
+
+Verified with `Invoke-WebRequest` to `127.0.0.1:3000` and `Host: pilotschool.localhost:3000`. Visual/browser verification was not done.
+
+## Verification on 2026-09-24 — Platform Admin screens
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | Passed |
+| `npm run lint` | Passed. Deprecation warning for `next lint`. No ESLint errors |
+| `npm run build` | Passed. Platform routes listed: `/platform/dashboard`, `/platform/tenants`, `/platform/tenants/new`, `/platform/tenants/[tenantId]`, `/platform/tenants/[tenantId]/subscription`, `/platform/audit` |
+| `/platform/dashboard` | 200 — needle `Total Tenants` |
+| `/platform/tenants` | 200 — needle `Pilot School #1`; all four status labels present with distinct fill patterns |
+| `/platform/tenants/new` | 200 — needle `Mrs. Abena Kollie` |
+| `/platform/tenants/1` | 200 — needles `Acting as:` and `Pilot School #1` |
+| `/platform/tenants/1/subscription` | 200 — needles `Acting as:` and `Pilot School #1` |
+| `/platform/audit` | 200 — needle `Audit Log` |
+| `/feed` | 200 — needle `Mathematics` (no regression) |
+| `/teacher/home` | 200 — needle `Mrs. Johnson` (no regression) |
+| `/admin/dashboard` | 200 — needle `Setup Progress` (no regression) |
+
+Verified with `Invoke-WebRequest` to `127.0.0.1:3002` (port 3000 was already occupied) and `Host: pilotschool.localhost:3002`. Visual/browser verification was not done.
+
+## Verification on 2026-09-24 — Final verification audit
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | Passed |
+| `npm run lint` | Passed. Deprecation warning for `next lint`. No ESLint errors |
+| `npm run build` | Passed. All 25 page routes present after orphan-link and component cleanup |
+| `/feed` | 200 — needle `Mathematics` |
+| `/teacher/home` | 200 — needle `Mrs. Johnson` |
+| `/admin/dashboard` | 200 — needle `Setup Progress` |
+| `/platform/dashboard` | 200 — needle `Total Tenants` |
+| Orphan fixes | Assignment links to status; Create Lesson links to reuse; PeopleSubNav reaches Students/Admins/Parents |
+
+Verified with `Invoke-WebRequest` to `127.0.0.1:3010` (ports 3000/3002 were busy or stale) and `Host: pilotschool.localhost:3010`. Visual/browser verification was not done.
 
 ## Decisions log
 
@@ -233,3 +568,40 @@ Items marked **Not in the prompt** need a human review. The others follow the se
 - **Once-only blocks stayed in the page.** The extraction list named lesson body, instructions, answer field, and confirmation cards. Each is used on one screen, so they were not given their own files. `StatusBadge`, `MaterialRow`, and `RecentlyViewedRow` were extracted because the same markup is repeated.
 - **Submit Work does not navigate or save.** It is a button with no handler. Download, View Image, Watch Video, and Choose File are the same. Open Lesson, Open Assignment, and Back to Learning Feed are static links. Link versions add `block text-center` so the anchor fills the row the way the mockup button does.
 - **Checked with curl.** No in-editor browser was available. All four `pilotschool.localhost:3000` routes returned the mockup text. `npm run typecheck`, `npm run lint`, and `npm run build` passed.
+
+### 2026-09-24 — Teacher screens. Followed the prompt
+
+- Six Teacher mockups converted to App Router pages under `app/teacher/` with a shared `TeacherSideNav` layout.
+- Teacher URLs use a `/teacher` path prefix (e.g. `/teacher/home`). Student home remains `/feed`.
+- Two grading paths kept separate: submission UI vs `GradeEntryTable`, shared `Assessment` type, same future `grades` table.
+- `components-extraction-list.md` had no Teacher section; expected component list from the session brief was used.
+- Client forms hold input state only. Buttons do not save. No Supabase, auth, uploads, or empty/loading states.
+- Route checks used `127.0.0.1` plus `Host: pilotschool.localhost:3000` because this Windows host did not resolve `*.localhost`.
+
+### 2026-09-24 — School Admin screens. Followed the prompt
+
+- Eight School Admin mockups converted under `app/(admin)/admin/` with `AdminSideNav` layout.
+- URLs always start with `/admin/` (route group + real segment). Teacher and Student routes unchanged.
+- Shared table/filter/upload/form pieces live in `components/shared/` for later Platform Admin reuse.
+- `TabBar` and `EmptyState` skipped — not present in the mockups. FilterRow used on Assignments only (Teachers/Students HTML has no filter bar).
+- Client only where needed (`AdminSideNav`, `ParentChildLinkPanel`). Forms are visual; buttons do not save.
+- No Supabase, auth, real uploads, CSV parsing, or empty/loading states.
+
+### 2026-09-24 — Platform Admin screens. Followed the prompt
+
+- Six Platform Admin mockups converted under `app/(platform)/platform/` with `PlatformSideNav` layout.
+- URLs always start with `/platform/` (route group + real segment). Teacher, School Admin, and Student routes unchanged.
+- Exact `platform-*.html` filenames were mostly missing; used the known 1:1 equivalents listed in the Platform Admin file map.
+- `components-extraction-list.md` had no Platform Admin section; session expected component list + mockups drove extraction.
+- Subscription pills use fill pattern only (`TenantStatusPill`), not color. Suspended uses a repeating stripe gradient.
+- `TabBar` and `ElevatedAccessBanner` added to `components/shared/`. `EmptyState` skipped. `ConfirmPanel` was later inlined into the subscription page (single use).
+- Client only where needed (`PlatformSideNav`, Create Tenant form, `SubscriptionRadioGroup`, `AuditLogRow`). Forms and confirms are visual; no audit writes.
+- No Supabase, auth, elevated-path enforcement, or empty/loading states.
+
+### 2026-09-24 — Final verification audit. Followed the prompt
+
+- Audited routes, shared components, styles, stubs, navigation, and Student mobile. Parent portal absent.
+- Fixed orphans: assignment → status Link; Create Lesson → reuse Link; PeopleSubNav on all four People pages.
+- Merged student `StatusBadge` into shared (optional `tone`). Inlined one-use `ColorSwatch` and `ConfirmPanel`, then deleted those shared files.
+- Aligned unused brand CSS vars to the allowed gray palette. Softened Student MaterialRow / flex rows for 390px overflow.
+- Did not rewrite stub sample content. No auth/database work.

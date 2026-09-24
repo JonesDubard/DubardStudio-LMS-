@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Platform Admin — Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-white text-[#333333]">
+  <div class="flex min-h-screen">
+    <!-- Side Navigation -->
+    <aside class="w-64 shrink-0 border-r border-[#E5E5E5] bg-white p-6">
+      <div class="mb-8">
+        <div class="mb-1 text-xs uppercase tracking-widest text-[#999999]">
+          Platform Console
+        </div>
+        <div class="text-lg font-semibold">LMS Administration</div>
+      </div>
+
+      <nav class="space-y-1 text-sm">
+        <a href="#" class="flex items-center gap-3 rounded-md bg-[#E5E5E5] px-3 py-2 font-medium">
+          <span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>
+          Dashboard
+        </a>
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]">
+          <span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>
+          Tenants
+        </a>
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]">
+          <span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>
+          Subscriptions
+        </a>
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]">
+          <span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>
+          Usage
+        </a>
+        <a href="#" class="flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]">
+          <span class="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">/</span>
+          Audit
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="min-w-0 flex-1">
+      <div class="mx-auto max-w-[1440px] p-8">
+        <header class="mb-8">
+          <div class="text-sm text-[#666666]">Platform Admin</div>
+          <h1 class="mt-1 text-2xl font-semibold">Dashboard</h1>
+          <p class="mt-2 text-sm text-[#666666]">
+            Overview of tenants, subscriptions, and onboarding status.
+          </p>
+        </header>
+
+        <!-- Summary -->
+        <section class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div class="border border-[#E5E5E5] p-5">
+            <div class="text-sm text-[#666666]">Total Tenants</div>
+            <div class="mt-3 text-3xl font-semibold">5</div>
+          </div>
+
+          <div class="border border-[#E5E5E5] p-5">
+            <div class="text-sm text-[#666666]">Active</div>
+            <div class="mt-3 text-3xl font-semibold">2</div>
+          </div>
+
+          <div class="border border-[#E5E5E5] p-5">
+            <div class="text-sm text-[#666666]">Trial</div>
+            <div class="mt-3 text-3xl font-semibold">1</div>
+          </div>
+
+          <div class="border border-[#E5E5E5] p-5">
+            <div class="text-sm text-[#666666]">Suspended</div>
+            <div class="mt-3 text-3xl font-semibold">1</div>
+          </div>
+
+          <div class="border border-[#E5E5E5] p-5">
+            <div class="text-sm text-[#666666]">Cancelled</div>
+            <div class="mt-3 text-3xl font-semibold">1</div>
+          </div>
+        </section>
+
+        <!-- Onboarding -->
+        <section class="mb-8">
+          <div class="mb-4 flex items-end justify-between">
+            <div>
+              <h2 class="text-lg font-semibold">Onboarding Status</h2>
+              <p class="mt-1 text-sm text-[#666666]">
+                Current setup progress across all tenants.
+              </p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto border border-[#E5E5E5]">
+            <table class="w-full min-w-[900px] border-collapse text-sm">
+              <thead class="bg-[#E5E5E5] text-left">
+                <tr>
+                  <th class="px-4 py-3 font-medium">Tenant</th>
+                  <th class="px-4 py-3 font-medium">Subscription</th>
+                  <th class="px-4 py-3 font-medium">Branding</th>
+                  <th class="px-4 py-3 font-medium">Academic</th>
+                  <th class="px-4 py-3 font-medium">Teachers Invited</th>
+                  <th class="px-4 py-3 font-medium">First Lesson</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-t border-[#E5E5E5]">
+                  <td class="px-4 py-4 font-medium">Pilot School #1</td>
+                  <td class="px-4 py-4">
+                    <span class="rounded-full border border-[#999999] px-2 py-1 text-xs">Trial</span>
+                  </td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4 text-[#999999]">○</td>
+                </tr>
+                <tr class="border-t border-[#E5E5E5]">
+                  <td class="px-4 py-4 font-medium">Monrovia Academy</td>
+                  <td class="px-4 py-4">
+                    <span class="rounded-full bg-[#333333] px-2 py-1 text-xs text-white">Active</span>
+                  </td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4">✓</td>
+                </tr>
+                <tr class="border-t border-[#E5E5E5]">
+                  <td class="px-4 py-4 font-medium">St. Paul's Learning Center</td>
+                  <td class="px-4 py-4">
+                    <span class="rounded-full bg-[#333333] px-2 py-1 text-xs text-white">Active</span>
+                  </td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4">✓</td>
+                </tr>
+                <tr class="border-t border-[#E5E5E5]">
+                  <td class="px-4 py-4 font-medium">Brewerville Community School</td>
+                  <td class="px-4 py-4">
+                    <span class="rounded-full border border-dashed border-[#666666] px-2 py-1 text-xs">
+                      Suspended
+                    </span>
+                  </td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4 text-[#999999]">○</td>
+                  <td class="px-4 py-4 text-[#999999]">○</td>
+                </tr>
+                <tr class="border-t border-[#E5E5E5]">
+                  <td class="px-4 py-4 font-medium">Hope International School</td>
+                  <td class="px-4 py-4">
+                    <span class="bg-[#E5E5E5] px-2 py-1 text-xs line-through text-[#666666]">
+                      Cancelled
+                    </span>
+                  </td>
+                  <td class="px-4 py-4">✓</td>
+                  <td class="px-4 py-4 text-[#999999]">○</td>
+                  <td class="px-4 py-4 text-[#999999]">○</td>
+                  <td class="px-4 py-4 text-[#999999]">○</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Recent Audit -->
+        <section class="border border-[#E5E5E5]">
+          <div class="border-b border-[#E5E5E5] px-5 py-4">
+            <h2 class="font-semibold">Recent Audit Activity</h2>
+          </div>
+
+          <div class="divide-y divide-[#E5E5E5]">
+            <div class="flex items-center justify-between px-5 py-4">
+              <div>
+                <div class="text-sm font-medium">Changed subscription status</div>
+                <div class="mt-1 text-xs text-[#666666]">
+                  Pilot School #1 · Trial → Active
+                </div>
+              </div>
+              <div class="text-xs text-[#666666]">2026-09-24 14:32 UTC</div>
+            </div>
+
+            <div class="flex items-center justify-between px-5 py-4">
+              <div>
+                <div class="text-sm font-medium">Viewed tenant usage</div>
+                <div class="mt-1 text-xs text-[#666666]">Monrovia Academy</div>
+              </div>
+              <div class="text-xs text-[#666666]">2026-09-24 13:51 UTC</div>
+            </div>
+
+            <div class="flex items-center justify-between px-5 py-4">
+              <div>
+                <div class="text-sm font-medium">Created tenant</div>
+                <div class="mt-1 text-xs text-[#666666]">Hope International School</div>
+              </div>
+              <div class="text-xs text-[#666666]">2026-09-24 12:18 UTC</div>
+            </div>
+
+            <div class="flex items-center justify-between px-5 py-4">
+              <div>
+                <div class="text-sm font-medium">Suspended tenant</div>
+                <div class="mt-1 text-xs text-[#666666]">Brewerville Community School</div>
+              </div>
+              <div class="text-xs text-[#666666]">2026-09-23 16:07 UTC</div>
+            </div>
+
+            <div class="flex items-center justify-between px-5 py-4">
+              <div>
+                <div class="text-sm font-medium">Viewed tenant profile</div>
+                <div class="mt-1 text-xs text-[#666666]">St. Paul's Learning Center</div>
+              </div>
+              <div class="text-xs text-[#666666]">2026-09-23 11:42 UTC</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

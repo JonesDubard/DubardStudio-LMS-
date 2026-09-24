@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { StatusBadge } from "@/components/student/StatusBadge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 
 type FeedCardProps = {
   eyebrow: string;
