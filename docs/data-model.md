@@ -123,7 +123,7 @@ avoids dangerous RLS bypasses in the tenant-scoped profiles table.
 
 **Access:** Platform admins authenticate via Supabase Auth, but their
 `profiles` row does not exist. The custom_access_token_hook (§10) checks
-this table and emits a `role: 'platform_admin'` claim with no `tenant_id`.
+this table and emits an `app_role: 'platform_admin'` claim with no `tenant_id`.
 
 ### profiles (shared, self-scoped RLS)
 
@@ -409,7 +409,7 @@ CREATE POLICY profile_self_read ON profiles
 CREATE POLICY profile_school_admin_read ON profiles
   FOR SELECT
   USING (
-    (auth.jwt() ->> 'role') = 'school_admin'
+    (auth.jwt() ->> 'app_role') = 'school_admin'
     AND tenant_id = (auth.jwt() ->> 'tenant_id')::uuid
   );
 
@@ -427,3 +427,89 @@ due date.
 
 Platform Admin: Elevated path via service role, bypasses tenant RLS.
 Every access logged to audit_log.
+
+---
+
+## 10. JWT tenant claim — custom_access_token_hook
+
+Supabase reserves the `role` JWT claim for the Postgres role (anon / authenticated / service_role). Application roles MUST use a separate claim name (`app_role`). Overwriting `role` causes every query to fail with 'role X does not exist'.
+
+The hook runs at Supabase token issuance and injects `tenant_id` and `app_role`
+into the JWT. RLS policies then read those claims via `auth.jwt()`. The
+`profiles.role` column name is unchanged; only the claim written into the
+token is `app_role`.
+
+### Hook function
+
+```sql
+CREATE OR REPLACE FUNCTION public.custom_access_token_hook(event jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+AS $$
+DECLARE
+  claims jsonb;
+  user_tenant_id uuid;
+  user_role text;
+  is_platform_admin boolean;
+BEGIN
+  claims := event->'claims';
+
+  -- Check platform_admins first (no tenant, no profiles row)
+  SELECT EXISTS(
+    SELECT 1 FROM public.platform_admins
+    WHERE id = (event->>'user_id')::uuid
+  ) INTO is_platform_admin;
+
+  IF is_platform_admin THEN
+    claims := jsonb_set(claims, '{app_role}', '"platform_admin"');
+    RETURN jsonb_set(event, '{claims}', claims);
+  END IF;
+
+  -- Otherwise resolve tenant + role from profiles
+  SELECT tenant_id, role INTO user_tenant_id, user_role
+  FROM public.profiles
+  WHERE id = (event->>'user_id')::uuid;
+
+  IF user_tenant_id IS NOT NULL THEN
+    claims := jsonb_set(claims, '{tenant_id}', to_jsonb(user_tenant_id));
+  END IF;
+
+  IF user_role IS NOT NULL THEN
+    claims := jsonb_set(claims, '{app_role}', to_jsonb(user_role));
+  END IF;
+
+  RETURN jsonb_set(event, '{claims}', claims);
+END;
+$$;
+```
+
+### Registration (manual, one-time)
+
+Supabase requires the hook to be registered in the dashboard — it cannot be
+automated via migration.
+
+1. Supabase Dashboard → Authentication → Hooks
+2. Find "Custom Access Token"
+3. Select `public.custom_access_token_hook`
+4. Save
+
+After registration, every issued JWT contains the `tenant_id` and `app_role`
+claims (or `app_role: platform_admin` for platform admins). The reserved
+`role` claim stays `authenticated`.
+
+### RLS policies read the claim
+
+```sql
+tenant_id = (auth.jwt() ->> 'tenant_id')::uuid
+```
+
+### Proof test cases
+
+These must pass before the spike is considered complete:
+
+1. Login as a tenant user → JWT contains correct `tenant_id`
+2. Same user queries another tenant's rows → RLS denies (empty result)
+3. Login as platform admin → JWT has `app_role: platform_admin`, no `tenant_id`
+4. Refresh token preserves claims
+5. Invited user (no profiles row yet) → no `tenant_id` → RLS denies (fail-safe)

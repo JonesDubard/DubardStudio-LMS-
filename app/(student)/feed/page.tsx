@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { FeedCard } from "@/components/student/FeedCard";
 import { RecentlyViewedRow } from "@/components/student/RecentlyViewedRow";
@@ -10,11 +11,29 @@ export const metadata: Metadata = {
   title: "Student Feed",
 };
 
-export default function StudentFeedPage() {
+async function readDevAuthBanner() {
+  const headerStore = await headers();
+  return {
+    appRole: headerStore.get("x-app-role") ?? "(none)",
+    tenantId: headerStore.get("x-tenant-id") ?? "(none)",
+  };
+}
+
+export default async function StudentFeedPage() {
   const feed = getStudentFeed();
+  const devAuth =
+    process.env.NODE_ENV === "development" ? await readDevAuthBanner() : null;
 
   return (
     <>
+      {devAuth ? (
+        <p
+          data-testid="auth-dev-banner"
+          className="border-b border-[#E5E5E5] bg-[#E5E5E5] px-4 py-2 font-mono text-xs text-[#333333]"
+        >
+          app_role={devAuth.appRole} tenant_id={devAuth.tenantId}
+        </p>
+      ) : null}
       <PageHeader
         variant="greeting"
         eyebrow={feed.eyebrow}

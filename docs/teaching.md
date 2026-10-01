@@ -1,6 +1,6 @@
 # Teaching notes — foundation scaffold
 
-Last updated: 2026-09-24
+Last updated: 2026-10-01
 
 This file is the running developer guide. Future sessions should append what changed, what was skipped, and why.
 
@@ -32,7 +32,8 @@ Other commands:
 | `npm run lint` | ESLint through `next lint` |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run test` | Vitest unit tests |
-| `npm run test:e2e` | Playwright. No tests yet, so this passes with no tests |
+| `npm run test:e2e` | Playwright. `tests/e2e/auth-jwt.spec.ts` is the JWT → RLS spike |
+| `npm run seed:dev` | Creates the pilot tenant and one user per persona. Prints passwords |
 | `npm run format` | Prettier |
 | `npm run db:types` | Stub. Prints a message until migrations exist |
 
@@ -41,6 +42,8 @@ Other commands:
 LearnGrid is a white-label LMS for Liberian schools. Each school is a tenant, reached by a subdomain such as `pilotschool.ourlms.com`. The product docs in `docs/ia.md`, `docs/flows.md`, `docs/data-model.md`, and `docs/living-doc.md` describe five personas (platform admin, school admin, teacher, student, parent) sharing one academic data model. Isolation will be Postgres row-level security on `tenant_id`, not application filters.
 
 This session only built the shell: the Next.js app, empty route groups, Supabase client factories, hostname-to-subdomain resolution, a neutral branding token set, a service worker that caches nothing, and CI. There is no login, no database, and no persona screens.
+
+The 2026-10-01 auth spike added real sign-in, invite, and reset pages, session middleware, and the JWT hook migration. The claim chain is not proven yet. See "What the auth spike proved".
 
 A later session on the same day added the four student P0 screens as server components fed by stubs. Login, database queries, and the other personas are still absent.
 
@@ -286,6 +289,27 @@ Filename mapping (exact `platform-*.html` names were mostly missing):
 
 Tenant names match the mockups (not the prompt's alternate set): Pilot School #1 (Trial), Monrovia Academy (Active), St. Paul's Learning Center (Active), Brewerville Community School (Suspended), Hope International School (Cancelled).
 
+### Auth spike (2026-10-01)
+
+| File | Purpose |
+|---|---|
+| `app/(auth)/layout.tsx` | Centered card. No persona nav |
+| `app/(auth)/login/page.tsx` | Email and password sign-in |
+| `app/(auth)/invite/[token]/page.tsx` | Accept an invite and set a password |
+| `app/(auth)/reset/page.tsx` | Request a reset email |
+| `app/(auth)/reset/confirm/page.tsx` | Set a new password from the email link |
+| `app/api/health/route.ts` | Public `{ ok: true }` health check |
+| `components/auth/*` | The four forms plus shared field, error, and submit |
+| `lib/auth/public-paths.ts` | Login redirect allowlist |
+| `lib/auth/claims.ts` | Reads `role` and `tenant_id` from an access token |
+| `lib/supabase/middleware.ts` | Session refresh, login redirect, claim headers |
+| `supabase/migrations/0001_custom_access_token_hook.sql` | Auth tables, the §10 hook, and the spike DDL helper |
+| `scripts/enable-auth-hook.ts` | Prints the manual dashboard registration steps |
+| `scripts/seed-dev.ts` | Pilot tenant and one user per persona |
+| `scripts/load-env.ts` | Loads `.env.local` for the scripts and the e2e test |
+| `tests/e2e/auth-jwt.spec.ts` | Proves the JWT claim reaches RLS. This is the spike |
+| `app/(student)/feed/page.tsx` | Dev-only banner for `x-app-role` and `x-tenant-id` |
+
 ### Route map — all personas
 
 | Route prefix | Persona | Layout |
@@ -294,7 +318,8 @@ Tenant names match the mockups (not the prompt's alternate set): Pilot School #1
 | `/teacher/*` | Teacher | `app/teacher/layout.tsx` |
 | `/admin/*` | School Admin | `app/(admin)/layout.tsx` |
 | `/platform/*` | Platform Admin | `app/(platform)/layout.tsx` |
-| `/login`, `/invite`, `/reset` | All | `app/(auth)/layout.tsx` (not built yet) |
+| `/login`, `/invite/*`, `/reset`, `/reset/confirm` | All | `app/(auth)/layout.tsx` |
+| `/api/health` | Public | No persona layout |
 
 ## Request lifecycle
 
@@ -345,10 +370,77 @@ Platform Admin page, after the same middleware step:
 6. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
 7. The page renders platform and shared components. Client forms and expanders hold UI state only; buttons do not save or write audit events.
 
+## Auth flow
+
+Browser → `middleware.ts` → session refresh → `x-app-role` and `x-tenant-id` → page.
+
+1. The browser requests any page except the public allowlist: `/login`, `/invite/*`, `/reset/*`, `/_next/*`, `/api/health`.
+2. Root `middleware.ts` still resolves the hostname to `x-tenant-subdomain`. Next.js does not run `app/middleware.ts`.
+3. `lib/supabase/middleware.ts` calls `supabase.auth.getUser()`, which refreshes the session cookie when the access token is due.
+4. If there is no user, the response is a redirect to `/login`. `/login` is on the allowlist, so this is not a loop.
+5. If there is a user, the middleware reads `app_role` and `tenant_id` from the access-token payload (the hook writes those claims; they are not on the user object) and sets request headers `x-app-role` and `x-tenant-id`. Incoming copies of those headers are deleted first so a browser cannot spoof them. The reserved JWT `role` claim stays `authenticated` and is not copied onto a header.
+6. There is no role-based route gate yet. A signed-in student can still open `/admin` or `/platform`.
+7. In development, `app/(student)/feed/page.tsx` prints those headers in a banner. Production builds omit the banner. Remove the banner before the pilot.
+8. After a successful password sign-in, the login form navigates to `/feed`. That is a temporary landing, not role routing.
+
+Sign-in, invite, and reset call Supabase Auth from the browser. They are not stubs.
+
+- `/login` uses `signInWithPassword`. A bad password surfaces the Auth error (`Invalid login credentials` when Auth is reachable).
+- `/invite/[token]` treats the path segment as an invite `token_hash`, calls `verifyOtp({ type: 'invite' })`, then `updateUser({ password })`.
+- `/reset` calls `resetPasswordForEmail` with `redirectTo` set to `/reset/confirm`.
+- `/reset/confirm` exchanges a `code` or a recovery `token_hash`, then sets the new password. A link with neither shows "This reset link is invalid or has expired."
+
+## JWT claim hook
+
+`public.custom_access_token_hook` runs when Supabase Auth issues an access token. The function body is the one in `docs/data-model.md` §10, copied into `supabase/migrations/0001_custom_access_token_hook.sql`. It reads `platform_admins` first. A platform admin gets `app_role: platform_admin` and no `tenant_id`. Everyone else gets `tenant_id` and `app_role` from `profiles.role`. The JWT `role` claim is left as `authenticated`.
+
+The same migration creates `tenants`, `platform_admins`, and `profiles`, because the hook selects from those tables. It does not create the academic tables. RLS is enabled on the three auth tables. `supabase_auth_admin` has a SELECT policy on `profiles` and `platform_admins`, because the hook is `SECURITY INVOKER` and runs as that role. Without that policy the hook would see zero rows and the token would have no `tenant_id`.
+
+Registration is manual. `scripts/enable-auth-hook.ts` only prints the steps. It does not call the Management API.
+
+1. Run the migration SQL in the Supabase SQL editor.
+2. Dashboard → Authentication → Hooks.
+3. Custom Access Token → `public.custom_access_token_hook` → Save.
+4. Sign in again. Old tokens do not grow the new claims.
+
+How to test: `tests/e2e/auth-jwt.spec.ts` creates a student, signs in through `/login`, decodes the access token, builds a throwaway table whose policy is `tenant_id = (auth.jwt() ->> 'tenant_id')::uuid`, and asserts the user can read only their own row. DDL for that table goes through `public.auth_spike_exec`, which is granted only to `service_role`. Drop that function before the pilot.
+
+## How to seed the dev environment
+
+Apply `supabase/migrations/0001_custom_access_token_hook.sql` first. Then:
+
+```bash
+npm run seed:dev
+```
+
+The script creates tenant "Pilot School #1" (`subdomain` `pilotschool`), one `platform_admins` user, and one `profiles` row each for school admin, teacher, student, and parent. The platform admin is not inserted into `profiles`. Passwords are printed in the terminal. Re-running the script resets those passwords and reuses the existing tenant.
+
+## What the auth spike proved
+
+The spike did not pass. Stop here. Do not build role gates or replace stubs until this test is green.
+
+`npx playwright test tests/e2e/auth-jwt.spec.ts` fails in `auth.admin.listUsers` with `AuthRetryableFetchError: fetch failed`. No access token is issued, so nothing was decoded.
+
+What the JWT actually contains: nothing. The login form shows `Failed to fetch`. The browser request to `https://<project-ref>.supabase.co/auth/v1/health` returns `ERR_NAME_NOT_RESOLVED`. `https://supabase.com` loads, so this machine can reach Supabase's website and cannot resolve the project host in `.env.local`.
+
+What the RLS policy actually reads: the policy was never created. The test would have installed `tenant_id = (auth.jwt() ->> 'tenant_id')::uuid` on `public.auth_spike_rows`. That SQL did not run.
+
+The exact SQL query that failed: none. The call that failed is the Auth Admin HTTP request, before any SQL. `npm run seed:dev` fails on the same unreachable host.
+
+Hypothesis: `NEXT_PUBLIC_SUPABASE_URL` does not name a project DNS is publishing. Auth never mints a JWT, so the hook never runs and RLS never evaluates `auth.jwt()`. This is not evidence that the hook SQL is wrong, and it is not a reason to bypass RLS. Copy the project URL from the dashboard Connect dialog, apply the migration, register the hook, then run the same test again. The application role claim is `app_role`.
+
+The dashboard sign-in page was shown for this project. The hook was not registered, because that click requires a signed-in dashboard session and a database the host can reach.
+
 ## If this breaks, look here
 
 | Symptom | Look here |
 |---|---|
+| Login fails | Supabase dashboard → Authentication → Users, and the email confirmation setting. Dev should have "Confirm email" off. The login page shows the Auth error text |
+| JWT has no `tenant_id` claim | The hook is not registered. Dashboard → Authentication → Hooks → Custom Access Token → `public.custom_access_token_hook`. Sign in again after saving |
+| Queries fail with 'role X does not exist' | JWT claim collision with Supabase's reserved `role` claim. The app role must be `app_role`. The `profiles.role` column stays `role` |
+| RLS blocks everything including own-tenant rows | The hook is reading the wrong column. `0001_custom_access_token_hook.sql` must select `profiles.tenant_id` and `profiles.role` |
+| Redirect loop on `/login` | `lib/auth/public-paths.ts`. `/login`, `/invite/*`, `/reset/*`, `/_next/*`, and `/api/health` must stay public |
+| `Failed to fetch` on sign-in, or `npm run seed:dev` says the URL did not resolve | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`. The project host must resolve. `https://supabase.com` loading does not mean the project host exists |
 | `Tenant: root` on `pilotschool.localhost` | `middleware.ts` must read the `Host` header. `nextUrl.hostname` is rewritten to `localhost` in dev. Then check `lib/tenant/resolve.ts` |
 | Page fails before any school exists | Supabase URL or anon key is empty. Middleware skips refresh on purpose. Calling `createClient()` throws until `.env.local` is filled |
 | `npm run build` says it cannot find `self.__SW_MANIFEST` | `app/sw.ts` must contain that identifier so Serwist can compile. Do not pass it to `precacheEntries` until lesson caching is real |
@@ -417,7 +509,7 @@ Counts after the 2026-09-24 final verification audit (page routes only; layouts 
 **Known issues / tech debt (flagged, not changed unless noted):**
 
 - Parent persona screens are absent (only `app/(tenant)/(parent)/.gitkeep`).
-- Auth, Supabase data, RLS, and real form submission are not wired.
+- Auth pages and session middleware are wired. Persona screens still read stubs. The JWT `tenant_id` claim is not proven. See "What the auth spike proved".
 - Student BottomNav Classes / Grades are non-links (no built routes). Teacher Classes, Admin Usage, Platform Subscriptions / Usage are `#` placeholders.
 - Stub structural duplication: `AssignmentMaterial` defined in two stubs; teachers/students list+CSV shapes are near-clones; tenant profile/subscription `tabs` arrays are copied; lesson content repeated across three lesson stubs; audit snippets overlap dashboard and audit-log.
 - Stub content flag for human review: `get-lesson-for-edit` uses `https://www.example.com/...` as `videoUrl` (placeholder domain). Stub sample strings were not rewritten.
@@ -605,3 +697,11 @@ Items marked **Not in the prompt** need a human review. The others follow the se
 - Merged student `StatusBadge` into shared (optional `tone`). Inlined one-use `ColorSwatch` and `ConfirmPanel`, then deleted those shared files.
 - Aligned unused brand CSS vars to the allowed gray palette. Softened Student MaterialRow / flex rows for 390px overflow.
 - Did not rewrite stub sample content. No auth/database work.
+
+### 2026-10-01 — Auth spike. Followed the prompt
+
+- Login, invite, reset, and reset confirm call Supabase Auth. No role-based route protection. No academic migrations. Stubs were not replaced.
+- Middleware stays at the repository root. `app/middleware.ts` would not run.
+- The hook function body matches `docs/data-model.md` §10. Grants for `supabase_auth_admin`, the three auth tables, and `auth_spike_exec` are in the same migration because the function cannot run without them.
+- Post-login navigation goes to `/feed` so the dev banner is the next screen. That is not role routing.
+- The RLS test did not pass. The project host in `.env.local` does not resolve, so no JWT was issued. See "What the auth spike proved". The hook was not registered.
