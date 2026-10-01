@@ -49,7 +49,7 @@ export function InviteForm({ token }: { token: string }) {
   }
 
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
+    <form className="space-y-4" method="post" onSubmit={onSubmit}>
       <h1 className="text-xl font-bold">Accept invitation</h1>
       <p className="text-sm text-[#666666]">Set a password for this account.</p>
       {error ? <AuthError>{error}</AuthError> : null}

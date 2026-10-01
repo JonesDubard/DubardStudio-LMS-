@@ -310,6 +310,14 @@ Tenant names match the mockups (not the prompt's alternate set): Pilot School #1
 | `tests/e2e/auth-jwt.spec.ts` | Proves the JWT claim reaches RLS. This is the spike |
 | `app/(student)/feed/page.tsx` | Dev-only banner for `x-app-role` and `x-tenant-id` |
 
+### Academic structure (2026-10-01)
+
+| File | Purpose |
+|---|---|
+| `supabase/migrations/0002_academic_structure.sql` | Years, terms, classes, subjects, class_subjects, each with tenant RLS |
+| `tests/e2e/rls-academic.spec.ts` | Proves academic_years returns only the signed-in tenant |
+| `scripts/seed-dev.ts` | Also seeds the 2026–2027 year, three terms, four classes, five subjects, and Mathematics / English / Science on every class |
+
 ### Route map — all personas
 
 | Route prefix | Persona | Layout |
@@ -440,6 +448,7 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | Queries fail with 'role X does not exist' | JWT claim collision with Supabase's reserved `role` claim. The app role must be `app_role`. The `profiles.role` column stays `role` |
 | RLS blocks everything including own-tenant rows | The hook is reading the wrong column. `0001_custom_access_token_hook.sql` must select `profiles.tenant_id` and `profiles.role` |
 | Redirect loop on `/login` | `lib/auth/public-paths.ts`. `/login`, `/invite/*`, `/reset/*`, `/_next/*`, and `/api/health` must stay public |
+| Academic Setup shows no rows | `scripts/seed-dev.ts` must have run after `0002_academic_structure.sql`. The seed `tenant_id` must match the JWT `tenant_id` claim |
 | `Failed to fetch` on sign-in, or `npm run seed:dev` says the URL did not resolve | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`. The project host must resolve. `https://supabase.com` loading does not mean the project host exists |
 | `Tenant: root` on `pilotschool.localhost` | `middleware.ts` must read the `Host` header. `nextUrl.hostname` is rewritten to `localhost` in dev. Then check `lib/tenant/resolve.ts` |
 | Page fails before any school exists | Supabase URL or anon key is empty. Middleware skips refresh on purpose. Calling `createClient()` throws until `.env.local` is filled |

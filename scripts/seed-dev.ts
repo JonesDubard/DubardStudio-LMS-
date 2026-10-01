@@ -2,7 +2,8 @@
  * Creates the local pilot tenant and one user per persona.
  * Run: npm run seed:dev
  *
- * Requires 0001_custom_access_token_hook.sql to be applied first.
+ * Requires 0001_custom_access_token_hook.sql and
+ * 0002_academic_structure.sql to be applied first.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
@@ -154,6 +155,12 @@ async function main() {
     if (profileError) throw profileError;
   }
 
+  if (!tenantId) {
+    throw new Error("Pilot tenant was not created");
+  }
+
+  await seedAcademicStructure(admin, tenantId);
+
   console.log("Dev seed ready");
   console.log("");
   console.log("Tenant: Pilot School #1");
@@ -167,6 +174,143 @@ async function main() {
       `${person.email.padEnd(35)}${person.role.padEnd(17)}${PASSWORD}`,
     );
   }
+}
+
+const YEAR_NAME = "2026–2027";
+const TERM_ROWS = [
+  {
+    name: "First Term",
+    start_date: "2026-09-01",
+    end_date: "2026-12-18",
+    is_current: true,
+  },
+  {
+    name: "Second Term",
+    start_date: "2027-01-04",
+    end_date: "2027-04-02",
+    is_current: false,
+  },
+  {
+    name: "Third Term",
+    start_date: "2027-04-19",
+    end_date: "2027-06-30",
+    is_current: false,
+  },
+] as const;
+const CLASS_NAMES = ["JSS 1", "JSS 2", "JSS 3", "SSS 1"] as const;
+const SUBJECT_NAMES = [
+  "Mathematics",
+  "English",
+  "Science",
+  "Social Studies",
+  "Computer Studies",
+] as const;
+const LINKED_SUBJECTS = ["Mathematics", "English", "Science"] as const;
+
+async function ensureByName(
+  admin: AdminClient,
+  table: "academic_years" | "terms" | "classes" | "subjects",
+  match: Record<string, string>,
+  values: Record<string, unknown>,
+): Promise<string> {
+  let query = admin.from(table).select("id");
+  for (const [column, value] of Object.entries(match)) {
+    query = query.eq(column, value);
+  }
+  const { data, error } = await query.maybeSingle();
+  if (error) {
+    throw new Error(
+      `${error.message}. Apply supabase/migrations/0002_academic_structure.sql in the Supabase SQL editor first.`,
+    );
+  }
+  if (data?.id) {
+    const { error: updateError } = await admin.from(table).update(values).eq("id", data.id);
+    if (updateError) throw updateError;
+    return data.id;
+  }
+  const created = await admin
+    .from(table)
+    .insert({ ...match, ...values })
+    .select("id")
+    .single();
+  if (created.error) throw created.error;
+  return created.data.id;
+}
+
+async function seedAcademicStructure(admin: AdminClient, tenantId: string) {
+  const yearId = await ensureByName(
+    admin,
+    "academic_years",
+    { tenant_id: tenantId, name: YEAR_NAME },
+    {
+      start_date: "2026-09-01",
+      end_date: "2027-06-30",
+      is_current: true,
+    },
+  );
+
+  for (const term of TERM_ROWS) {
+    await ensureByName(
+      admin,
+      "terms",
+      { tenant_id: tenantId, name: term.name },
+      {
+        academic_year_id: yearId,
+        start_date: term.start_date,
+        end_date: term.end_date,
+        is_current: term.is_current,
+      },
+    );
+  }
+
+  const classIds: Record<string, string> = {};
+  for (const name of CLASS_NAMES) {
+    classIds[name] = await ensureByName(
+      admin,
+      "classes",
+      { tenant_id: tenantId, name },
+      { grade_level: name },
+    );
+  }
+
+  const subjectIds: Record<string, string> = {};
+  for (const name of SUBJECT_NAMES) {
+    subjectIds[name] = await ensureByName(
+      admin,
+      "subjects",
+      { tenant_id: tenantId, name },
+      {},
+    );
+  }
+
+  for (const className of CLASS_NAMES) {
+    for (const subjectName of LINKED_SUBJECTS) {
+      const classId = classIds[className];
+      const subjectId = subjectIds[subjectName];
+      const { data: existing, error: lookupError } = await admin
+        .from("class_subjects")
+        .select("id")
+        .eq("class_id", classId)
+        .eq("subject_id", subjectId)
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+      if (existing) continue;
+      const { error } = await admin.from("class_subjects").insert({
+        tenant_id: tenantId,
+        class_id: classId,
+        subject_id: subjectId,
+      });
+      if (error) throw error;
+    }
+  }
+
+  console.log("Academic structure seeded");
+  console.log(`  year: ${YEAR_NAME} (2026-09-01 → 2027-06-30, current)`);
+  console.log(`  terms: ${TERM_ROWS.map((term) => term.name).join(", ")}`);
+  console.log(`  classes: ${CLASS_NAMES.join(", ")}`);
+  console.log(`  subjects: ${SUBJECT_NAMES.join(", ")}`);
+  console.log(`  class_subjects: ${LINKED_SUBJECTS.join(", ")} on every class`);
+  console.log("");
 }
 
 main().catch((error: unknown) => {

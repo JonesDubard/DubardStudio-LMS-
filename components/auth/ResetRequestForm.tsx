@@ -33,7 +33,7 @@ export function ResetRequestForm() {
   }
 
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
+    <form className="space-y-4" method="post" onSubmit={onSubmit}>
       <h1 className="text-xl font-bold">Reset password</h1>
       {error ? <AuthError>{error}</AuthError> : null}
       {sent ? (

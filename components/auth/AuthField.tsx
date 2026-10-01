@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useEffect, useState, type ReactNode } from "react";
 
 export function AuthField({
   id,
@@ -51,10 +53,15 @@ export function AuthSubmit({
   label: string;
   pendingLabel: string;
 }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    setReady(true);
+  }, []);
+
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || !ready}
       className="min-h-12 w-full bg-[#333333] px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
     >
       {pending ? pendingLabel : label}

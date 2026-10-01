@@ -79,7 +79,7 @@ export function ResetConfirmForm() {
   }
 
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
+    <form className="space-y-4" method="post" onSubmit={onSubmit}>
       <h1 className="text-xl font-bold">Set a new password</h1>
       {error ? <AuthError>{error}</AuthError> : null}
       {ready ? (
