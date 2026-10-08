@@ -318,6 +318,14 @@ Tenant names match the mockups (not the prompt's alternate set): Pilot School #1
 | `tests/e2e/rls-academic.spec.ts` | Proves academic_years returns only the signed-in tenant |
 | `scripts/seed-dev.ts` | Also seeds the 2026–2027 year, three terms, four classes, five subjects, and Mathematics / English / Science on every class |
 
+### Content tables (2026-10-05)
+
+| File | Purpose |
+|---|---|
+| `supabase/migrations/0003_content.sql` | Courses, lessons, lesson_materials, gradebook_categories, and the lesson_status enum, each table with tenant RLS |
+| `tests/e2e/rls-content.spec.ts` | Proves lessons and lesson_materials return only the signed-in tenant |
+| `scripts/seed-dev.ts` | Also seeds the JSS 2A Mathematics course on the existing JSS 2 Mathematics class_subject, three lessons, two materials, and three gradebook categories |
+
 ### Route map — all personas
 
 | Route prefix | Persona | Layout |
@@ -415,7 +423,7 @@ How to test: `tests/e2e/auth-jwt.spec.ts` creates a student, signs in through `/
 
 ## How to seed the dev environment
 
-Apply `supabase/migrations/0001_custom_access_token_hook.sql` first. Then:
+Apply `supabase/migrations/0001_custom_access_token_hook.sql`, then `0002_academic_structure.sql`, then `0003_content.sql`. Then:
 
 ```bash
 npm run seed:dev
@@ -449,6 +457,8 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | RLS blocks everything including own-tenant rows | The hook is reading the wrong column. `0001_custom_access_token_hook.sql` must select `profiles.tenant_id` and `profiles.role` |
 | Redirect loop on `/login` | `lib/auth/public-paths.ts`. `/login`, `/invite/*`, `/reset/*`, `/_next/*`, and `/api/health` must stay public |
 | Academic Setup shows no rows | `scripts/seed-dev.ts` must have run after `0002_academic_structure.sql`. The seed `tenant_id` must match the JWT `tenant_id` claim |
+| Lesson editor shows no courses | `scripts/seed-dev.ts` ran after `0003_content.sql`. Check `class_subject_id` linkage on the course |
+| Lesson materials don't load | `mime_type` is in the allowlist, and `storage_path` or `external_url` is set |
 | `Failed to fetch` on sign-in, or `npm run seed:dev` says the URL did not resolve | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`. The project host must resolve. `https://supabase.com` loading does not mean the project host exists |
 | `Tenant: root` on `pilotschool.localhost` | `middleware.ts` must read the `Host` header. `nextUrl.hostname` is rewritten to `localhost` in dev. Then check `lib/tenant/resolve.ts` |
 | Page fails before any school exists | Supabase URL or anon key is empty. Middleware skips refresh on purpose. Calling `createClient()` throws until `.env.local` is filled |

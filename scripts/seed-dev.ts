@@ -2,8 +2,8 @@
  * Creates the local pilot tenant and one user per persona.
  * Run: npm run seed:dev
  *
- * Requires 0001_custom_access_token_hook.sql and
- * 0002_academic_structure.sql to be applied first.
+ * Requires 0001_custom_access_token_hook.sql,
+ * 0002_academic_structure.sql, and 0003_content.sql to be applied first.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
@@ -160,6 +160,7 @@ async function main() {
   }
 
   await seedAcademicStructure(admin, tenantId);
+  await seedContent(admin, tenantId);
 
   console.log("Dev seed ready");
   console.log("");
@@ -310,6 +311,275 @@ async function seedAcademicStructure(admin: AdminClient, tenantId: string) {
   console.log(`  classes: ${CLASS_NAMES.join(", ")}`);
   console.log(`  subjects: ${SUBJECT_NAMES.join(", ")}`);
   console.log(`  class_subjects: ${LINKED_SUBJECTS.join(", ")} on every class`);
+  console.log("");
+}
+
+const COURSE_NAME = "JSS 2A Mathematics \u2014 First Term 2026";
+const PUBLISHED_AT = "2026-09-08T08:00:00.000Z";
+
+const CONTENT_LESSONS = [
+  {
+    title: "Introduction to Fractions",
+    status: "published",
+    published_at: PUBLISHED_AT,
+  },
+  {
+    title: "Adding and Subtracting Fractions",
+    status: "published",
+    published_at: PUBLISHED_AT,
+  },
+  {
+    title: "Multiplying Fractions",
+    status: "draft",
+    published_at: null,
+  },
+] as const;
+
+const GRADEBOOK_CATEGORIES = [
+  { name: "Quizzes", weight: 30.0, display_order: 1 },
+  { name: "Assignments", weight: 30.0, display_order: 2 },
+  { name: "Exams", weight: 40.0, display_order: 3 },
+] as const;
+
+function contentSetupError(error: { message: string }): Error {
+  if (/schema cache|does not exist|could not find the table/i.test(error.message)) {
+    return new Error(
+      `${error.message}. Apply supabase/migrations/0003_content.sql in the Supabase SQL editor first.`,
+    );
+  }
+  return new Error(error.message);
+}
+
+async function seedContent(admin: AdminClient, tenantId: string) {
+  const { data: teacher, error: teacherError } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("email", "teacher@pilotschool.test")
+    .maybeSingle();
+  if (teacherError) throw teacherError;
+  if (!teacher) {
+    throw new Error("Pilot School teacher profile was not found");
+  }
+
+  const { data: classRow, error: classError } = await admin
+    .from("classes")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("name", "JSS 2")
+    .maybeSingle();
+  if (classError) throw classError;
+  if (!classRow) {
+    throw new Error('Class "JSS 2" was not found. Academic seed must run first.');
+  }
+
+  const { data: subjectRow, error: subjectError } = await admin
+    .from("subjects")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("name", "Mathematics")
+    .maybeSingle();
+  if (subjectError) throw subjectError;
+  if (!subjectRow) {
+    throw new Error('Subject "Mathematics" was not found. Academic seed must run first.');
+  }
+
+  const { data: classSubject, error: classSubjectError } = await admin
+    .from("class_subjects")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("class_id", classRow.id)
+    .eq("subject_id", subjectRow.id)
+    .maybeSingle();
+  if (classSubjectError) throw classSubjectError;
+  if (!classSubject) {
+    throw new Error(
+      "JSS 2 Mathematics class_subject was not found. The course links to class JSS 2, not a class named JSS 2A.",
+    );
+  }
+
+  const { data: term, error: termError } = await admin
+    .from("terms")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("name", "First Term")
+    .maybeSingle();
+  if (termError) throw termError;
+  if (!term) {
+    throw new Error('Term "First Term" was not found. Academic seed must run first.');
+  }
+
+  const courseLookup = await admin
+    .from("courses")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("name", COURSE_NAME)
+    .maybeSingle();
+  if (courseLookup.error) throw contentSetupError(courseLookup.error);
+
+  let courseId = courseLookup.data?.id as string | undefined;
+  if (courseId) {
+    const { error } = await admin
+      .from("courses")
+      .update({
+        class_subject_id: classSubject.id,
+        term_id: term.id,
+      })
+      .eq("id", courseId);
+    if (error) throw error;
+  } else {
+    const created = await admin
+      .from("courses")
+      .insert({
+        tenant_id: tenantId,
+        class_subject_id: classSubject.id,
+        term_id: term.id,
+        name: COURSE_NAME,
+      })
+      .select("id")
+      .single();
+    if (created.error) throw created.error;
+    courseId = created.data.id;
+  }
+
+  const lessonIds: Record<string, string> = {};
+  for (const lesson of CONTENT_LESSONS) {
+    const existing = await admin
+      .from("lessons")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("course_id", courseId)
+      .eq("title", lesson.title)
+      .maybeSingle();
+    if (existing.error) throw existing.error;
+
+    if (existing.data?.id) {
+      const { error } = await admin
+        .from("lessons")
+        .update({
+          status: lesson.status,
+          published_at: lesson.published_at,
+          created_by: teacher.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.data.id);
+      if (error) throw error;
+      lessonIds[lesson.title] = existing.data.id;
+      continue;
+    }
+
+    const created = await admin
+      .from("lessons")
+      .insert({
+        tenant_id: tenantId,
+        course_id: courseId,
+        title: lesson.title,
+        status: lesson.status,
+        published_at: lesson.published_at,
+        created_by: teacher.id,
+      })
+      .select("id")
+      .single();
+    if (created.error) throw created.error;
+    lessonIds[lesson.title] = created.data.id;
+  }
+
+  const fractionsLessonId = lessonIds["Introduction to Fractions"];
+  if (!fractionsLessonId) {
+    throw new Error("Introduction to Fractions was not seeded");
+  }
+
+  const pdfLookup = await admin
+    .from("lesson_materials")
+    .select("id")
+    .eq("lesson_id", fractionsLessonId)
+    .eq("storage_path", "seed/sample.pdf")
+    .maybeSingle();
+  if (pdfLookup.error) throw pdfLookup.error;
+  const pdfValues = {
+    tenant_id: tenantId,
+    lesson_id: fractionsLessonId,
+    kind: "pdf",
+    storage_path: "seed/sample.pdf",
+    external_url: null,
+    file_size: 100000,
+    mime_type: "application/pdf",
+  };
+  if (pdfLookup.data?.id) {
+    const { error } = await admin
+      .from("lesson_materials")
+      .update(pdfValues)
+      .eq("id", pdfLookup.data.id);
+    if (error) throw error;
+  } else {
+    const { error } = await admin.from("lesson_materials").insert(pdfValues);
+    if (error) throw error;
+  }
+
+  const videoLookup = await admin
+    .from("lesson_materials")
+    .select("id")
+    .eq("lesson_id", fractionsLessonId)
+    .eq("external_url", "https://www.youtube.com/watch?v=example")
+    .maybeSingle();
+  if (videoLookup.error) throw videoLookup.error;
+  const videoValues = {
+    tenant_id: tenantId,
+    lesson_id: fractionsLessonId,
+    kind: "external_video",
+    storage_path: null,
+    external_url: "https://www.youtube.com/watch?v=example",
+    file_size: null,
+    mime_type: null,
+  };
+  if (videoLookup.data?.id) {
+    const { error } = await admin
+      .from("lesson_materials")
+      .update(videoValues)
+      .eq("id", videoLookup.data.id);
+    if (error) throw error;
+  } else {
+    const { error } = await admin.from("lesson_materials").insert(videoValues);
+    if (error) throw error;
+  }
+
+  for (const category of GRADEBOOK_CATEGORIES) {
+    const existing = await admin
+      .from("gradebook_categories")
+      .select("id")
+      .eq("course_id", courseId)
+      .eq("name", category.name)
+      .maybeSingle();
+    if (existing.error) throw existing.error;
+    if (existing.data?.id) {
+      const { error } = await admin
+        .from("gradebook_categories")
+        .update({
+          tenant_id: tenantId,
+          weight: category.weight,
+          display_order: category.display_order,
+        })
+        .eq("id", existing.data.id);
+      if (error) throw error;
+      continue;
+    }
+    const { error } = await admin.from("gradebook_categories").insert({
+      tenant_id: tenantId,
+      course_id: courseId,
+      name: category.name,
+      weight: category.weight,
+      display_order: category.display_order,
+    });
+    if (error) throw error;
+  }
+
+  console.log("Content seeded");
+  console.log(`  course: ${COURSE_NAME}`);
+  console.log(
+    "  lessons: Introduction to Fractions (published), Adding and Subtracting Fractions (published), Multiplying Fractions (draft)",
+  );
+  console.log("  materials: pdf + external video on Introduction to Fractions");
+  console.log("  gradebook: Quizzes 30, Assignments 30, Exams 40");
   console.log("");
 }
 
