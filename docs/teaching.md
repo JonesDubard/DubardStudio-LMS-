@@ -188,7 +188,7 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | `app/(admin)/layout.tsx` | Side nav shell. Renders `AdminSideNav` on the left and `{children}` on the right |
 | `app/(admin)/admin/dashboard/page.tsx` | School Admin dashboard. Reads `getAdminDashboard()` |
 | `app/(admin)/admin/branding/page.tsx` | School branding. Reads `getSchoolBranding()` |
-| `app/(admin)/admin/academic/page.tsx` | Academic setup. Reads `getAcademicStructure()` |
+| `app/(admin)/admin/academic/page.tsx` | Academic setup overview. Reads years, current-year terms, classes, and subjects through `lib/queries/academic.ts` |
 | `app/(admin)/admin/people/teachers/page.tsx` | Teachers list + CSV import. Reads `getTeachers()` |
 | `app/(admin)/admin/people/students/page.tsx` | Students list + CSV import. Reads `getStudents()` |
 | `app/(admin)/admin/people/admins/page.tsx` | School Admins list. Reads `getSchoolAdmins()` |
@@ -196,7 +196,14 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | `app/(admin)/admin/assignments/page.tsx` | Assignments overview. Reads `getAdminAssignments()` |
 | `lib/stubs/get-admin-dashboard.ts` | `getAdminDashboard()` returns setup progress, summary tiles, and usage metrics |
 | `lib/stubs/get-school-branding.ts` | `getSchoolBranding()` returns logo/favicon labels, color swatches, and student preview copy |
-| `lib/stubs/get-academic-structure.ts` | `getAcademicStructure()` returns progress steps, years, terms, classes, and subjects |
+| `lib/types/academic.ts` | Row types for years, terms, classes, subjects, and class_subjects. Column names match migration 0002 |
+| `lib/queries/academic.ts` | Read functions `getAcademicYears`, `getTerms`, `getClasses`, `getSubjects`, `getClassSubjects`. The caller passes a Supabase client. RLS scopes rows. No `tenant_id` filter |
+| `app/(admin)/admin/academic/years/page.tsx` | Academic years list |
+| `app/(admin)/admin/academic/terms/page.tsx` | Terms for the academic year with `is_current` |
+| `app/(admin)/admin/academic/classes/page.tsx` | Classes list |
+| `app/(admin)/admin/academic/subjects/page.tsx` | Subjects list, with class names from `class_subjects` |
+| `components/admin/AcademicSubNav.tsx` | Overview / Years / Terms / Classes / Subjects links |
+| `scripts/spike-second-tenant.ts` | Manual cross-tenant fixture. Tenant "Other Tenant School" (`other-tenant`) and year "Other Tenant Year". Not production seed. See "Manual test fixtures" |
 | `lib/stubs/get-teachers.ts` | `getTeachers()` returns teacher rows and CSV preview (`TeachersList`) |
 | `lib/stubs/get-students.ts` | `getStudents()` returns student rows, CSV preview, and parent-linking note (`StudentsList`) |
 | `lib/stubs/get-school-admins.ts` | `getSchoolAdmins()` returns admin rows and access note (`SchoolAdminsList`) |
@@ -225,6 +232,10 @@ School Admin routes use a route group `(admin)` plus a real `admin` segment, so 
 | `/admin/dashboard` | School Admin Dashboard |
 | `/admin/branding` | School Branding |
 | `/admin/academic` | Academic Setup |
+| `/admin/academic/years` | Academic Years |
+| `/admin/academic/terms` | Terms |
+| `/admin/academic/classes` | Classes |
+| `/admin/academic/subjects` | Subjects |
 | `/admin/people/teachers` | Teachers |
 | `/admin/people/students` | Students |
 | `/admin/people/admins` | School Admins |
@@ -310,6 +321,10 @@ Tenant names match the mockups (not the prompt's alternate set): Pilot School #1
 | `tests/e2e/auth-jwt.spec.ts` | Proves the JWT claim reaches RLS. This is the spike |
 | `app/(student)/feed/page.tsx` | Dev-only banner for `x-app-role` and `x-tenant-id` |
 
+### Academic structure reads (2026-10-09)
+
+School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts`. That stub was removed. The five `/admin/academic` routes are server components. They call `lib/queries/academic.ts` with the cookie Supabase client. Row types live in `lib/types/academic.ts` and use the migration 0002 column names. Terms are the rows for the academic year with `is_current`. There are no insert forms. `scripts/spike-second-tenant.ts` leaves tenant "Other Tenant School" and the year "Other Tenant Year" in place. See "Manual test fixtures".
+
 ### Academic structure (2026-10-01)
 
 | File | Purpose |
@@ -372,7 +387,7 @@ School Admin page, after the same middleware step:
 2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
 3. Role check is a stub for now. There is no auth gate; the `(admin)` layout always renders.
 4. `app/(admin)/layout.tsx` wraps the page with `AdminSideNav`.
-5. The page calls its stub (`getAdminDashboard`, `getSchoolBranding`, `getAcademicStructure`, `getTeachers`, `getStudents`, `getSchoolAdmins`, `getParents`, or `getAdminAssignments`).
+5. People, branding, dashboard, and assignments pages still call their stubs (`getAdminDashboard`, `getSchoolBranding`, `getTeachers`, `getStudents`, `getSchoolAdmins`, `getParents`, or `getAdminAssignments`). Academic setup does not. See "Server data flow".
 6. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
 7. The page renders admin and shared components. Client panels hold input state only; buttons do not save.
 
@@ -406,6 +421,19 @@ Sign-in, invite, and reset call Supabase Auth from the browser. They are not stu
 - `/reset` calls `resetPasswordForEmail` with `redirectTo` set to `/reset/confirm`.
 - `/reset/confirm` exchanges a `code` or a recovery `token_hash`, then sets the new password. A link with neither shows "This reset link is invalid or has expired."
 
+## Server data flow
+
+Academic setup pages (`/admin/academic`, `/admin/academic/years`, `/admin/academic/terms`, `/admin/academic/classes`, `/admin/academic/subjects`):
+
+browser → middleware (sets `x-tenant-id` from the JWT) → server component → Supabase query (RLS applies via the user JWT on the cookie session) → render.
+
+1. The browser requests an academic setup URL with the session cookie.
+2. Root `middleware.ts` refreshes the session and sets `x-tenant-id` and `x-app-role` from the access token. It does not query academic tables.
+3. The server component calls `createClient()` in `lib/supabase/server.ts`. That client sends the user JWT. It does not use the service role.
+4. The page calls a function in `lib/queries/academic.ts`. Those functions do not filter `tenant_id`. Postgres RLS compares `tenant_id` to `auth.jwt() ->> 'tenant_id'`.
+5. An empty list renders the empty-state sentence inside the table. A PostgREST error is thrown and is not turned into an empty list.
+6. Terms are loaded for the academic year whose `is_current` is true.
+
 ## JWT claim hook
 
 `public.custom_access_token_hook` runs when Supabase Auth issues an access token. The function body is the one in `docs/data-model.md` §10, copied into `supabase/migrations/0001_custom_access_token_hook.sql`. It reads `platform_admins` first. A platform admin gets `app_role: platform_admin` and no `tenant_id`. Everyone else gets `tenant_id` and `app_role` from `profiles.role`. The JWT `role` claim is left as `authenticated`.
@@ -430,6 +458,10 @@ npm run seed:dev
 ```
 
 The script creates tenant "Pilot School #1" (`subdomain` `pilotschool`), one `platform_admins` user, and one `profiles` row each for school admin, teacher, student, and parent. The platform admin is not inserted into `profiles`. Passwords are printed in the terminal. Re-running the script resets those passwords and reuses the existing tenant.
+
+## Manual test fixtures
+
+- `scripts/spike-second-tenant.ts` creates a second tenant "Other Tenant School" (subdomain `other-tenant`) with one academic year "Other Tenant Year". Kept in the DB as a permanent cross-tenant testing fixture. Do not seed from this script in production.
 
 ## What the auth spike proved
 
@@ -457,6 +489,8 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | RLS blocks everything including own-tenant rows | The hook is reading the wrong column. `0001_custom_access_token_hook.sql` must select `profiles.tenant_id` and `profiles.role` |
 | Redirect loop on `/login` | `lib/auth/public-paths.ts`. `/login`, `/invite/*`, `/reset/*`, `/_next/*`, and `/api/health` must stay public |
 | Academic Setup shows no rows | `scripts/seed-dev.ts` must have run after `0002_academic_structure.sql`. The seed `tenant_id` must match the JWT `tenant_id` claim |
+| Academic pages show empty list | Check the RLS policy, the JWT `tenant_id` claim in dev tools, and seed data. Do not add a `tenant_id` filter in the page query |
+| Query returns data from wrong tenant | This is a security bug. Stop and report |
 | Lesson editor shows no courses | `scripts/seed-dev.ts` ran after `0003_content.sql`. Check `class_subject_id` linkage on the course |
 | Lesson materials don't load | `mime_type` is in the allowlist, and `storage_path` or `external_url` is set |
 | `Failed to fetch` on sign-in, or `npm run seed:dev` says the URL did not resolve | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`. The project host must resolve. `https://supabase.com` loading does not mean the project host exists |
