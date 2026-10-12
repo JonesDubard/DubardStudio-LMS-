@@ -16,13 +16,16 @@
     "db:types": "node -e \"console.log('supabase gen types is stubbed until migrations exist')\""
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
     "@serwist/next": "^9.5.12",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.1",
     "dexie": "^4.4.6",
     "next": "^15.5.26",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "react-hook-form": "^7.90.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

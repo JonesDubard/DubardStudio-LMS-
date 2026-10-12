@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AcademicSetupStepCard } from "@/components/admin/AcademicSetupStepCard";
 import { AcademicSubNav } from "@/components/admin/AcademicSubNav";
+import { SaveStructureButton } from "./_components/SaveStructureButton";
+import { AddClassButton } from "./classes/_components/AddClassButton";
+import { AddSubjectButton } from "./subjects/_components/AddSubjectButton";
+import { AddTermButton } from "./terms/_components/AddTermButton";
+import { AddYearButton } from "./years/_components/AddYearButton";
 import {
   academicYearStatus,
   classNamesBySubjectId,
@@ -132,6 +137,7 @@ export default async function AdminAcademicPage() {
             title="Academic Years"
             description="School academic years."
             href="/admin/academic/years"
+            headerAction={<AddYearButton />}
           >
             <table className="w-full text-sm">
               <thead className="bg-[#E5E5E5] text-left">
@@ -159,6 +165,17 @@ export default async function AdminAcademicPage() {
             title="Terms"
             description="Terms within the current year."
             href="/admin/academic/terms"
+            headerAction={
+              <AddTermButton
+                years={years.map((year) => ({
+                  id: year.id,
+                  name: year.name,
+                  start_date: year.start_date,
+                  end_date: year.end_date,
+                }))}
+                defaultYearId={currentYear?.id ?? ""}
+              />
+            }
           >
             <table className="w-full text-sm">
               <thead className="bg-[#E5E5E5] text-left">
@@ -190,6 +207,7 @@ export default async function AdminAcademicPage() {
             title="Classes"
             description="Classes and grade levels."
             href="/admin/academic/classes"
+            headerAction={<AddClassButton />}
           >
             <table className="w-full text-sm">
               <thead className="bg-[#E5E5E5] text-left">
@@ -217,6 +235,7 @@ export default async function AdminAcademicPage() {
             title="Subjects"
             description="Subjects available to classes."
             href="/admin/academic/subjects"
+            headerAction={<AddSubjectButton />}
           >
             <table className="w-full text-sm">
               <thead className="bg-[#E5E5E5] text-left">
@@ -244,12 +263,7 @@ export default async function AdminAcademicPage() {
         </div>
 
         <div className="flex justify-end">
-          <button
-            type="button"
-            className="border border-[#333333] bg-[#333333] px-5 py-3 text-white"
-          >
-            Save Academic Structure
-          </button>
+          <SaveStructureButton />
         </div>
       </div>
     </main>

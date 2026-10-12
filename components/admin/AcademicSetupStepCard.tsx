@@ -5,7 +5,7 @@ type AcademicSetupStepCardProps = {
   title: string;
   description: string;
   href?: string;
-  addLabel?: string;
+  headerAction?: ReactNode;
   children: ReactNode;
 };
 
@@ -13,7 +13,7 @@ export function AcademicSetupStepCard({
   title,
   description,
   href,
-  addLabel = "+ Add",
+  headerAction,
   children,
 }: AcademicSetupStepCardProps) {
   return (
@@ -31,12 +31,7 @@ export function AcademicSetupStepCard({
           </h2>
           <p className="mt-1 text-sm text-[#666666]">{description}</p>
         </div>
-        <button
-          type="button"
-          className="border border-[#333333] px-3 py-2 text-sm"
-        >
-          {addLabel}
-        </button>
+        {headerAction}
       </div>
 
       <div className="mt-4 overflow-x-auto border border-[#999999]">

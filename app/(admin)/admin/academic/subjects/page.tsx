@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { AcademicSubNav } from "@/components/admin/AcademicSubNav";
 import {
-  classNamesBySubjectId,
   getClasses,
   getClassSubjects,
   getSubjects,
 } from "@/lib/queries/academic";
 import { createClient } from "@/lib/supabase/server";
+import { SubjectsPanel, type SubjectRow } from "./_components/SubjectsPanel";
 
 export const metadata: Metadata = {
   title: "Subjects",
@@ -21,7 +21,22 @@ export default async function AcademicSubjectsPage() {
   const linkGroups = await Promise.all(
     classes.map((row) => getClassSubjects(supabase, row.id)),
   );
-  const classesBySubject = classNamesBySubjectId(classes, linkGroups.flat());
+  const classNameById = new Map(classes.map((row) => [row.id, row.name]));
+  const linksBySubject = new Map<string, SubjectRow["links"]>();
+  for (const link of linkGroups.flat()) {
+    const className = classNameById.get(link.class_id);
+    if (!className) continue;
+    const rows = linksBySubject.get(link.subject_id) ?? [];
+    rows.push({ id: link.id, className });
+    linksBySubject.set(link.subject_id, rows);
+  }
+  const subjectRows: SubjectRow[] = subjects.map((row) => ({
+    id: row.id,
+    name: row.name,
+    links: (linksBySubject.get(row.id) ?? []).sort((left, right) =>
+      left.className.localeCompare(right.className),
+    ),
+  }));
 
   return (
     <main className="min-w-0 flex-1">
@@ -36,34 +51,10 @@ export default async function AcademicSubjectsPage() {
       <div className="space-y-6 p-8">
         <AcademicSubNav />
 
-        <div className="overflow-x-auto border border-[#999999] bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-[#E5E5E5] text-left">
-              <tr>
-                <th className="px-4 py-3">Subject</th>
-                <th className="px-4 py-3">Classes</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5E5E5]">
-              {subjects.length === 0 ? (
-                <tr>
-                  <td className="px-4 py-6 text-sm text-[#666666]" colSpan={2}>
-                    No subjects yet.
-                  </td>
-                </tr>
-              ) : (
-                subjects.map((row) => (
-                  <tr key={row.id}>
-                    <td className="px-4 py-3">{row.name}</td>
-                    <td className="px-4 py-3">
-                      {classesBySubject.get(row.id)?.join(", ") || "—"}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <SubjectsPanel
+          subjects={subjectRows}
+          classes={classes.map((row) => ({ id: row.id, name: row.name }))}
+        />
       </div>
     </main>
   );

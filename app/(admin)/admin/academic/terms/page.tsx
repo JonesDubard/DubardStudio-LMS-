@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { AcademicSubNav } from "@/components/admin/AcademicSubNav";
-import { getAcademicYears, getTerms, termStatus } from "@/lib/queries/academic";
+import { getAcademicYears, getTerms } from "@/lib/queries/academic";
 import { createClient } from "@/lib/supabase/server";
+import { TermsPanel } from "./_components/TermsPanel";
 
 export const metadata: Metadata = {
   title: "Terms",
@@ -28,38 +29,25 @@ export default async function AcademicTermsPage() {
       <div className="space-y-6 p-8">
         <AcademicSubNav />
 
-        <div className="overflow-x-auto border border-[#999999] bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-[#E5E5E5] text-left">
-              <tr>
-                <th className="px-4 py-3">Term</th>
-                <th className="px-4 py-3">Start</th>
-                <th className="px-4 py-3">End</th>
-                <th className="px-4 py-3">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5E5E5]">
-              {terms.length === 0 ? (
-                <tr>
-                  <td className="px-4 py-6 text-sm text-[#666666]" colSpan={4}>
-                    {currentYear
-                      ? "No terms for the current academic year."
-                      : "No current academic year."}
-                  </td>
-                </tr>
-              ) : (
-                terms.map((row) => (
-                  <tr key={row.id}>
-                    <td className="px-4 py-3">{row.name}</td>
-                    <td className="px-4 py-3">{row.start_date}</td>
-                    <td className="px-4 py-3">{row.end_date}</td>
-                    <td className="px-4 py-3">{termStatus(row)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <TermsPanel
+          years={years.map((year) => ({
+            id: year.id,
+            name: year.name,
+            start_date: year.start_date,
+            end_date: year.end_date,
+          }))}
+          currentYear={
+            currentYear
+              ? {
+                  id: currentYear.id,
+                  name: currentYear.name,
+                  start_date: currentYear.start_date,
+                  end_date: currentYear.end_date,
+                }
+              : null
+          }
+          terms={terms}
+        />
       </div>
     </main>
   );
