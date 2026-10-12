@@ -142,13 +142,20 @@ Left in the page, not extracted, because each appears on only one screen: feed s
 | File                                                          | Purpose                                                                                                                          |
 | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `app/teacher/layout.tsx`                                      | Side nav shell. Renders `TeacherSideNav` on the left and `{children}` on the right                                               |
-| `app/teacher/home/page.tsx`                                   | Teacher home. Reads `getTeacherHome()`                                                                                           |
-| `app/teacher/lessons/new/page.tsx`                            | Lesson editor. Reads `getLessonForEdit("new")`, renders `LessonEditorForm`                                                       |
+| `app/teacher/home/page.tsx`                                   | Teacher home. My Classes and Recent Lessons read `lib/queries/lessons.ts`. Pending Grading and Upcoming Assignments still read `getTeacherHome()` |
+| `app/teacher/lessons/page.tsx`                                | My Lessons. Lists the signed-in teacher's lessons and filters by class, subject, term, and status                                |
+| `app/teacher/lessons/new/page.tsx`                            | Create Lesson. Cascades class, subject, and course, then saves a draft or publishes through the lesson Server Actions           |
+| `app/teacher/lessons/[lessonId]/page.tsx`                     | Lesson editor for one lesson. Title and description save. Publish sets `status` and `published_at`                               |
+| `app/teacher/lessons/actions.ts`                              | Server Actions for create and update. Inserts include `tenant_id` from the JWT and `created_by` from the auth user id           |
 | `app/teacher/assignments/new/page.tsx`                        | Assignment creator. Reads `getAssignmentForEdit("new")`, renders `AssessmentForm`                                                |
 | `app/teacher/assignments/[assignmentId]/submissions/page.tsx` | Submission grading. Reads `getSubmissionsForAssessment(assignmentId)`                                                            |
 | `app/teacher/assessments/[assessmentId]/grade-entry/page.tsx` | Score-only grade entry. Reads `getGradeEntryRoster(assessmentId)`                                                                |
 | `app/teacher/lessons/[lessonId]/reuse/page.tsx`               | Lesson reuse panel. Reads `getLessonForReuse(lessonId)`                                                                          |
-| `lib/stubs/get-teacher-home.ts`                               | `getTeacherHome()` returns classes, pending grading rows, and upcoming assignments                                               |
+| `lib/types/lessons.ts`                                        | `Lesson`, `LessonStatus`, `Course`, `TeacherCourse`, and `LessonListItem`. Column names match migration 0003                    |
+| `lib/queries/lessons.ts`                                      | `getTeacherCourses`, `getTeacherLessons`, `getLessonById`, `getLessonsForCourse`. No `tenant_id` filter. Empty lists return `[]` |
+| `lib/lessons/schema.ts`                                       | Zod schemas shared by the lesson form and Server Actions. Title required, max 200. Description optional, max 5000               |
+| `lib/teacher/assignment-stub.ts`                              | Until migration 0005, the pilot teacher is assigned to every course the session can read. Other teachers are assigned to none  |
+| `lib/stubs/get-teacher-home.ts`                               | `getTeacherHome()` still supplies Pending Grading and Upcoming Assignments. My Classes on the home page no longer read it       |
 | `lib/stubs/get-lesson-for-edit.ts`                            | `getLessonForEdit(lessonId)` returns one lesson draft with class/subject/term options, materials, and video URL                  |
 | `lib/stubs/get-assignment-for-edit.ts`                        | `getAssignmentForEdit(assignmentId)` returns an `Assessment` (type assignment) plus linked lesson fields and one material        |
 | `lib/stubs/get-submissions-for-assessment.ts`                 | `getSubmissionsForAssessment(assessmentId)` returns the assignment `Assessment`, submission list, and selected submission detail |
@@ -161,7 +168,7 @@ Left in the page, not extracted, because each appears on only one screen: feed s
 | `components/teacher/SubmissionDetail.tsx`                     | Right column grade + feedback form (client). Used on submission grading                                                          |
 | `components/teacher/GradeEntryTable.tsx`                      | Bulk score entry table (client). Used on grade entry                                                                             |
 | `components/teacher/AssessmentForm.tsx`                       | Assignment create form (client). Used on `/teacher/assignments/new`                                                              |
-| `components/teacher/LessonEditorForm.tsx`                     | Lesson create form (client). Used on `/teacher/lessons/new`                                                                      |
+| `components/teacher/LessonEditorForm.tsx`                     | Create and edit lesson form (client). React Hook Form and the Zod schemas in `lib/lessons/schema.ts`. Materials stay a placeholder |
 | `components/shared/StatusBadge.tsx`                           | Status chip. Used on Teacher Home upcoming rows, lesson draft badge, submission pending badge, and submission list statuses      |
 
 #### Final Teacher route map
@@ -171,7 +178,9 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | URL                                  | Page                   |
 | ------------------------------------ | ---------------------- |
 | `/teacher/home`                      | Teacher Home           |
+| `/teacher/lessons`                   | My Lessons             |
 | `/teacher/lessons/new`               | Create Lesson          |
+| `/teacher/lessons/[lessonId]`        | Lesson editor          |
 | `/teacher/assignments/new`           | Create Assignment      |
 | `/teacher/assignments/1/submissions` | Submission grading     |
 | `/teacher/assessments/1/grade-entry` | Score-only grade entry |
@@ -457,9 +466,26 @@ Why this asymmetry: RLS can only auto-fill a value if you use a DEFAULT or a tri
 
 A delete or update that changes zero rows returns `{ ok: false, error }` so a hidden cross-tenant id cannot look successful.
 
+### Teacher course assignment until migration 0005
+
+`teacher_assignments` is not in the migrations. `courses` has no teacher column. `lib/teacher/assignment-stub.ts` assigns `teacher@pilotschool.test` to every course the session can read. RLS already limits that read to the teacher's tenant, so the pilot teacher sees the pilot courses and a teacher in another tenant does not. Other teachers in the same tenant are assigned to no courses unless their email is added to the stub. The stub does not store course UUIDs, because `scripts/seed-dev.ts` generates those ids. That script sets `lessons.created_by` to the pilot teacher's profile id, which is the auth user id. `getTeacherCourses` and `getTeacherLessons` apply the stub and do not add a `tenant_id` filter. Real `teacher_assignments` rows arrive with migration 0005.
+
 Marking a year or term current clears `is_current` on the rows this session can update, then sets the chosen row. The clear step has no `tenant_id` filter.
 
 The only unique constraint in migration 0002 is `class_subjects (class_id, subject_id)`. That violation is mapped to "This subject is already linked to that class." Year, term, class, and subject names are required in Zod. A same-name check selects through RLS, without a `tenant_id` filter, and returns a short message when this school already has that name.
+
+## Temporary workarounds (remove when the dependency lands)
+
+1. Teacher-to-course assignment
+   Location: `lib/teacher/assignment-stub.ts`, applied by `getTeacherCourses` in `lib/queries/lessons.ts`
+   Behavior: `teacher@pilotschool.test` is treated as assigned to every course in the pilot tenant. Any other teacher gets zero courses.
+   Remove when: `teacher_assignments` table is migrated (part of the next migration batch per ERD v2).
+   Replace with: query `teacher_assignments` joined to `class_subjects`.
+
+2. Lesson materials UI
+   Location: `components/teacher/LessonEditorForm.tsx`
+   Behavior: renders a placeholder "Attachment uploads coming soon".
+   Remove when: `files` table is migrated and `lesson_materials.file_id` refactor is done (migration 0004).
 
 ## JWT claim hook
 
@@ -489,6 +515,7 @@ The script creates tenant "Pilot School #1" (`subdomain` `pilotschool`), one `pl
 ## Manual test fixtures
 
 - `scripts/spike-second-tenant.ts` creates a second tenant "Other Tenant School" (subdomain `other-tenant`) with one academic year "Other Tenant Year". Kept in the DB as a permanent cross-tenant testing fixture. Do not seed from this script in production.
+- `teacher-unassigned@pilotschool.test` is a second teacher in the pilot tenant, created with the service role for the lesson assignment check. `scripts/seed-dev.ts` does not create this user. The assignment stub does not list them, so My Classes and My Lessons show "You don't have classes assigned yet. Ask your School Admin to assign you to a class."
 
 ## What the auth spike proved
 
@@ -521,6 +548,9 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | Duplicate name error shows raw Postgres code                                     | Wrap error handling in the Server Action. `class_subjects` unique violations should become "This subject is already linked to that class." Year, term, class, and subject names are not unique in Postgres                      |
 | Query returns data from wrong tenant                                             | This is a security bug. Stop and report                                                                                                                                                                                         |
 | Lesson editor shows no courses                                                   | `scripts/seed-dev.ts` ran after `0003_content.sql`. Check `class_subject_id` linkage on the course                                                                                                                              |
+| Teacher sees no courses                                                          | `teacher_assignments` is not migrated; teacher-to-course link is stubbed; pilot teacher is assigned to all courses in the tenant                                                                                               |
+| Lesson list empty after create                                                   | `revalidatePath` in `app/teacher/lessons/actions.ts` for `/teacher/home`, `/teacher/lessons`, and the lesson editor                                                                                                             |
+| Save draft fails silently                                                        | Server Action error handling. The form shows `{ ok: false, error }`. A write that changes 0 rows returns an error                                                                                                              |
 | Lesson materials don't load                                                      | `mime_type` is in the allowlist, and `storage_path` or `external_url` is set                                                                                                                                                    |
 | `Failed to fetch` on sign-in, or `npm run seed:dev` says the URL did not resolve | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`. The project host must resolve. `https://supabase.com` loading does not mean the project host exists                                                                                 |
 | `Tenant: root` on `pilotschool.localhost`                                        | `middleware.ts` must read the `Host` header. `nextUrl.hostname` is rewritten to `localhost` in dev. Then check `lib/tenant/resolve.ts`                                                                                          |
@@ -575,11 +605,11 @@ Counts after the 2026-09-24 final verification audit (page routes only; layouts 
 | Persona               | Page routes | Notes                                                                                               |
 | --------------------- | ----------- | --------------------------------------------------------------------------------------------------- |
 | Student               | 4           | `/feed`, `/lessons/[lessonId]`, `/assignments/[assignmentId]`, `/assignments/[assignmentId]/status` |
-| Teacher               | 6           | Under `/teacher/*`                                                                                  |
+| Teacher               | 8           | Under `/teacher/*`, including `/teacher/lessons` and `/teacher/lessons/[lessonId]`                  |
 | School Admin          | 8           | Under `/admin/*`                                                                                    |
 | Platform Admin        | 6           | Under `/platform/*`                                                                                 |
 | Root scaffold         | 1           | `/` foundation placeholder                                                                          |
-| **Total page routes** | **25**      |                                                                                                     |
+| **Total page routes** | **27**      |                                                                                                     |
 
 | Inventory                                                                         | Count  |
 | --------------------------------------------------------------------------------- | ------ |

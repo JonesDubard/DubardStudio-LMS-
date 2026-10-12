@@ -6,6 +6,7 @@
  * 0002_academic_structure.sql, and 0003_content.sql to be applied first.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { PILOT_TEACHER_EMAIL } from "../lib/teacher/assignment-stub";
 
 type AuthUser = { id: string; email?: string };
 import { loadLocalEnv } from "./load-env";
@@ -351,11 +352,17 @@ function contentSetupError(error: { message: string }): Error {
 }
 
 async function seedContent(admin: AdminClient, tenantId: string) {
+  // teacher_assignments is not migrated (it arrives with migration 0005).
+  // lib/teacher/assignment-stub.ts assigns PILOT_TEACHER_EMAIL to every course
+  // this session can read. Course UUIDs are generated here, so the stub stores
+  // the teacher email rather than course ids. Do not create a second teacher
+  // in this script. Other teachers in the tenant stay unassigned.
+  // Lessons below set created_by to this teacher's profile id (auth user id).
   const { data: teacher, error: teacherError } = await admin
     .from("profiles")
     .select("id")
     .eq("tenant_id", tenantId)
-    .eq("email", "teacher@pilotschool.test")
+    .eq("email", PILOT_TEACHER_EMAIL)
     .maybeSingle();
   if (teacherError) throw teacherError;
   if (!teacher) {
@@ -574,6 +581,9 @@ async function seedContent(admin: AdminClient, tenantId: string) {
   }
 
   console.log("Content seeded");
+  console.log(
+    `  assignment stub: ${PILOT_TEACHER_EMAIL} is assigned to every course in this tenant until migration 0005. Other teachers are assigned to none.`,
+  );
   console.log(`  course: ${COURSE_NAME}`);
   console.log(
     "  lessons: Introduction to Fractions (published), Adding and Subtracting Fractions (published), Multiplying Fractions (draft)",

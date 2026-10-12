@@ -12,7 +12,7 @@ const navItems = [
   { label: "Classes", href: "#", match: () => false },
   {
     label: "Lessons",
-    href: "/teacher/lessons/new",
+    href: "/teacher/lessons",
     match: (path: string) => path.startsWith("/teacher/lessons"),
   },
   {
