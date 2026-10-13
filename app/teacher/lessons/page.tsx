@@ -98,7 +98,7 @@ export default async function TeacherLessonsPage({
           </div>
           <Link
             href="/teacher/lessons/new"
-            className="border border-[#333333] bg-[#333333] px-5 py-3 text-sm text-white"
+            className="border border-brand-primary bg-brand-primary px-5 py-3 text-sm text-white"
           >
             Create Lesson
           </Link>
@@ -204,7 +204,7 @@ export default async function TeacherLessonsPage({
               <div className="mt-4 flex gap-3">
                 <button
                   type="submit"
-                  className="border border-[#333333] bg-[#333333] px-4 py-2 text-sm text-white"
+                  className="border border-brand-primary bg-brand-primary px-4 py-2 text-sm text-white"
                 >
                   Apply
                 </button>

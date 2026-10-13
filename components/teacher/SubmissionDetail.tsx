@@ -83,7 +83,7 @@ export function SubmissionDetail({ submission }: SubmissionDetailProps) {
 
           <button
             type="button"
-            className="border border-[#333333] bg-[#333333] px-5 py-3 text-white"
+            className="border border-brand-primary bg-brand-primary px-5 py-3 text-white"
           >
             Release Grade
           </button>

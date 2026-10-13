@@ -11,3 +11,6 @@ public/swe-worker*
 test-results
 playwright-report
 coverage
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo

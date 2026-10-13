@@ -3,6 +3,7 @@ type UploadZoneProps = {
   description: string;
   buttonLabel: string;
   variant?: "centered" | "inline";
+  note?: string;
 };
 
 export function UploadZone({
@@ -10,7 +11,18 @@ export function UploadZone({
   description,
   buttonLabel,
   variant = "centered",
+  note,
 }: UploadZoneProps) {
+  const button = (
+    <button
+      type="button"
+      disabled={Boolean(note)}
+      className="border border-[#999999] bg-white px-4 py-2 disabled:opacity-60"
+    >
+      {buttonLabel}
+    </button>
+  );
+
   if (variant === "inline") {
     return (
       <div className="border border-dashed border-[#999999] bg-[#E5E5E5] p-6">
@@ -18,13 +30,9 @@ export function UploadZone({
           <div>
             <p className="font-medium">{title}</p>
             <p className="mt-1 text-sm text-[#666666]">{description}</p>
+            {note ? <p className="mt-2 text-sm text-[#666666]">{note}</p> : null}
           </div>
-          <button
-            type="button"
-            className="border border-[#999999] bg-white px-4 py-2"
-          >
-            {buttonLabel}
-          </button>
+          {button}
         </div>
       </div>
     );
@@ -37,12 +45,8 @@ export function UploadZone({
       </div>
       <p className="mt-3 font-medium">{title}</p>
       <p className="mt-1 text-sm text-[#666666]">{description}</p>
-      <button
-        type="button"
-        className="mt-4 border border-[#999999] bg-white px-4 py-2"
-      >
-        {buttonLabel}
-      </button>
+      {note ? <p className="mt-2 text-sm text-[#666666]">{note}</p> : null}
+      <div className="mt-4">{button}</div>
     </div>
   );
 }

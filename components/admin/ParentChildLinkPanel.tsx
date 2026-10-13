@@ -54,7 +54,7 @@ export function ParentChildLinkPanel({
 
         <button
           type="button"
-          className="border border-[#333333] bg-[#333333] px-4 py-2 text-white"
+          className="border border-brand-primary bg-brand-primary px-4 py-2 text-white"
         >
           + Link Child
         </button>
@@ -113,7 +113,7 @@ export function ParentChildLinkPanel({
           <div className="mt-5 flex justify-end">
             <button
               type="button"
-              className="border border-[#333333] bg-[#333333] px-5 py-3 text-white"
+              className="border border-brand-primary bg-brand-primary px-5 py-3 text-white"
             >
               {confirmLabel}
             </button>

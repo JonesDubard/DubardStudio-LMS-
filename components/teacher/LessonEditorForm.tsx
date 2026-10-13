@@ -344,7 +344,7 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
             onClick={() => {
               publishRef.current = true;
             }}
-            className="border border-[#333333] bg-[#333333] px-5 py-3 text-white disabled:opacity-60"
+            className="border border-brand-primary bg-brand-primary px-5 py-3 text-white disabled:opacity-60"
           >
             Publish Lesson
           </button>

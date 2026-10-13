@@ -1,7 +1,7 @@
 export const inputClass = "w-full border border-[#999999] px-3 py-2 text-sm";
 export const labelClass = "mb-1 block text-sm font-medium";
 export const primaryButtonClass =
-  "border border-[#333333] bg-[#333333] px-5 py-3 text-sm text-white disabled:opacity-60";
+  "border border-brand-primary bg-brand-primary px-5 py-3 text-sm text-white disabled:opacity-60";
 export const secondaryButtonClass =
   "border border-[#333333] bg-white px-3 py-2 text-sm disabled:opacity-60";
 export const quietButtonClass =

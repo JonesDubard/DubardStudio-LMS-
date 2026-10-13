@@ -3,7 +3,8 @@
  * Run: npm run seed:dev
  *
  * Requires 0001_custom_access_token_hook.sql,
- * 0002_academic_structure.sql, and 0003_content.sql to be applied first.
+ * 0002_academic_structure.sql, 0003_content.sql, and
+ * 0004_tenant_branding.sql to be applied first.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { PILOT_TEACHER_EMAIL } from "../lib/teacher/assignment-stub";

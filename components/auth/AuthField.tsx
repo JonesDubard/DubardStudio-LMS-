@@ -62,7 +62,7 @@ export function AuthSubmit({
     <button
       type="submit"
       disabled={pending || !ready}
-      className="min-h-12 w-full bg-[#333333] px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
+      className="min-h-12 w-full border border-brand-primary bg-brand-primary px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
     >
       {pending ? pendingLabel : label}
     </button>

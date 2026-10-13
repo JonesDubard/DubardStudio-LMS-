@@ -115,7 +115,7 @@ export default async function AdminAcademicPage() {
                       <span
                         className={
                           active
-                            ? "flex h-8 w-8 items-center justify-center bg-[#333333] text-sm text-white"
+                            ? "flex h-8 w-8 items-center justify-center bg-brand-primary text-sm text-white"
                             : "flex h-8 w-8 items-center justify-center border border-[#999999] bg-[#E5E5E5] text-sm"
                         }
                       >

@@ -17,7 +17,7 @@ export function BottomNav() {
           href="/feed"
           className={
             homeActive
-              ? "flex min-h-16 flex-col items-center justify-center bg-[#333333] text-white"
+              ? "flex min-h-16 flex-col items-center justify-center border-t-4 border-brand-secondary bg-brand-primary text-white"
               : "flex min-h-16 flex-col items-center justify-center text-[#666666]"
           }
           aria-current={homeActive ? "page" : undefined}

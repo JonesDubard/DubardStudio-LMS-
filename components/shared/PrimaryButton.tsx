@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 const variantClass = {
-  feed: "min-h-11 w-full bg-[#333333] px-4 py-2 text-sm font-semibold text-white",
-  page: "min-h-12 w-full bg-[#333333] px-4 py-3 text-sm font-bold text-white",
+  feed: "min-h-11 w-full border border-brand-primary bg-brand-primary px-4 py-2 text-sm font-semibold text-white",
+  page: "min-h-12 w-full border border-brand-primary bg-brand-primary px-4 py-3 text-sm font-bold text-white",
 } as const;
 
 type PrimaryButtonProps = {

@@ -43,7 +43,7 @@ export default async function StudentFeedPage() {
       <main className="space-y-5 px-4 py-5">
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-bold">{feed.todayLabel}</h2>
+            <h2 className="text-base font-bold text-brand-primary">{feed.todayLabel}</h2>
             <span className="text-xs text-[#666666]">{feed.todayDate}</span>
           </div>
 

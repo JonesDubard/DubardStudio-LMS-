@@ -26,7 +26,7 @@ export function GradingQueueRow({
       <td className="px-4 py-4">
         <Link
           href={href}
-          className="inline-block border border-[#333333] px-3 py-2"
+          className="inline-block border border-brand-primary bg-brand-primary px-3 py-2 text-white"
         >
           {actionLabel}
         </Link>

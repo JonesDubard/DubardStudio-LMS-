@@ -46,15 +46,15 @@ export function TeacherSideNav({
         <div className="flex h-10 w-10 items-center justify-center border border-[#999999] bg-[#E5E5E5] text-[#666666]">
           /
         </div>
-        <p className="mt-3 text-sm text-[#666666]">{portalLabel}</p>
-        <p className="font-semibold">{teacherName}</p>
+        <p className="mt-3 text-sm text-brand-secondary">{portalLabel}</p>
+        <p className="font-semibold text-brand-primary">{teacherName}</p>
       </div>
 
       <nav className="space-y-1 text-sm">
         {navItems.map((item) => {
           const active = item.match(pathname);
           const className = active
-            ? "block rounded border border-[#333333] bg-[#E5E5E5] px-4 py-3 font-semibold"
+            ? "block rounded border border-brand-primary bg-brand-primary px-4 py-3 font-semibold text-white"
             : "block rounded px-4 py-3";
 
           if (item.href === "#") {

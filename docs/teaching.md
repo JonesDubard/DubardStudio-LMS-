@@ -70,7 +70,7 @@ A later session on the same day added the four student P0 screens as server comp
 | `README.md`                            | Replaced the one-line title placeholder with install, run, test, and structure                          |
 | `.github/workflows/ci.yml`             | `npm ci`, lint, typecheck, and unit test. RLS step is commented out                                     |
 | `middleware.ts`                        | Reads the host, sets `x-tenant-subdomain`, refreshes the Supabase session                               |
-| `app/layout.tsx`                       | Root HTML shell. Imports global CSS                                                                     |
+| `app/layout.tsx`                       | Root HTML shell. Imports global CSS and injects tenant brand variables                                  |
 | `app/page.tsx`                         | Placeholder. Prints the tenant label and "Foundation scaffold running"                                  |
 | `app/globals.css`                      | Tailwind layers and the neutral gray brand variables                                                    |
 | `app/manifest.ts`                      | Placeholder PWA manifest                                                                                |
@@ -196,7 +196,12 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app/(admin)/layout.tsx`                           | Side nav shell. Renders `AdminSideNav` on the left and `{children}` on the right                                                                                            |
 | `app/(admin)/admin/dashboard/page.tsx`             | School Admin dashboard. Reads `getAdminDashboard()`                                                                                                                         |
-| `app/(admin)/admin/branding/page.tsx`              | School branding. Reads `getSchoolBranding()`                                                                                                                                |
+| `app/(admin)/admin/branding/page.tsx`              | School branding. Reads the signed-in school's name and colors through `readShellBrand()`                                                                                   |
+| `app/(admin)/admin/branding/actions.ts`            | `updateBranding` and `resetBranding`. Validates hex, updates the session tenant row, then `revalidatePath`                                                                  |
+| `app/(admin)/admin/branding/_components/BrandingForm.tsx` | Color pickers, live preview, save, and reset. Logo and favicon sections stay disabled                                                                                 |
+| `lib/branding/colors.ts`                           | Hex schema, neutral defaults `#333333` / `#666666`, and the `:root` style text                                                                                             |
+| `lib/branding/shell.ts`                            | Server read of `tenants.primary_color` and `secondary_color` for the HTML shell. Row key is `id`                                                                           |
+| `supabase/migrations/0004_tenant_branding.sql`     | SELECT and UPDATE policies so an authenticated user can read and update only the tenant row matching the JWT `tenant_id`                                                   |
 | `app/(admin)/admin/academic/page.tsx`              | Academic setup overview. Reads years, current-year terms, classes, and subjects through `lib/queries/academic.ts`                                                           |
 | `app/(admin)/admin/people/teachers/page.tsx`       | Teachers list + CSV import. Reads `getTeachers()`                                                                                                                           |
 | `app/(admin)/admin/people/students/page.tsx`       | Students list + CSV import. Reads `getStudents()`                                                                                                                           |
@@ -204,7 +209,7 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | `app/(admin)/admin/people/parents/page.tsx`        | Parent-child linking. Reads `getParents()`                                                                                                                                  |
 | `app/(admin)/admin/assignments/page.tsx`           | Assignments overview. Reads `getAdminAssignments()`                                                                                                                         |
 | `lib/stubs/get-admin-dashboard.ts`                 | `getAdminDashboard()` returns setup progress, summary tiles, and usage metrics                                                                                              |
-| `lib/stubs/get-school-branding.ts`                 | `getSchoolBranding()` returns logo/favicon labels, color swatches, and student preview copy                                                                                 |
+| `lib/stubs/get-school-branding.ts`                 | Unused by the branding page. Colors are read from `tenants`. The stub remains from the shell session                                                                        |
 | `lib/types/academic.ts`                            | Row types for years, terms, classes, subjects, and class_subjects. Column names match migration 0002                                                                        |
 | `lib/queries/academic.ts`                          | Read functions `getAcademicYears`, `getTerms`, `getClasses`, `getSubjects`, `getClassSubjects`. The caller passes a Supabase client. RLS scopes rows. No `tenant_id` filter |
 | `lib/academic/schema.ts`                           | Zod schemas shared by the academic forms and Server Actions. Also `termOutsideYearMessage` and the `ActionResult` type                                                      |
@@ -237,7 +242,7 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | `components/shared/UploadZone.tsx`                 | Dashed upload area. Used on Branding and inside `BulkImportPanel`                                                                                                           |
 | `components/shared/FormField.tsx`                  | Label + control slot. Used on Branding and Parent linking                                                                                                                   |
 
-Color swatches on Branding are inlined in `app/(admin)/admin/branding/page.tsx` (single use; `ColorSwatch` shared file removed in the final verification audit).
+Branding colors are edited in `BrandingForm` and previewed in `BrandingPreviewPanel` before save. `ColorSwatch` was removed in the shell verification audit.
 
 #### Final School Admin route map
 
@@ -368,6 +373,18 @@ School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts
 | `/login`, `/invite/*`, `/reset`, `/reset/confirm` | All            | `app/(auth)/layout.tsx`     |
 | `/api/health`                                     | Public         | No persona layout           |
 
+## Migration index
+
+- 0001 — Auth spike: tenants, profiles, platform_admins, custom_access_token_hook
+- 0002 — Academic structure: academic_years, terms, classes, subjects, class_subjects
+- 0003 — Content: courses, lessons, lesson_materials, gradebook_categories
+- 0004 — Tenant branding RLS: policies on tenants table for self-read and self-update
+- 0005 — (reserved) Files refactor + memberships + teacher_assignments + enrollments + parent_children
+- 0006 — (reserved) Assessments (rename from assignments) + submissions + grades
+- 0007+ — Later batches per ERD v2
+
+Migration numbers are assigned in order of application, not by feature group. The files refactor originally planned for 0004 was deferred and branding took the number. Future migrations continue from the last applied number.
+
 ## Request lifecycle
 
 1. The browser requests a host, for example `http://pilotschool.localhost:3000/` or `http://localhost:3000/`.
@@ -403,7 +420,7 @@ School Admin page, after the same middleware step:
 2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
 3. Role check is a stub for now. There is no auth gate; the `(admin)` layout always renders.
 4. `app/(admin)/layout.tsx` wraps the page with `AdminSideNav`.
-5. People, branding, dashboard, and assignments pages still call their stubs (`getAdminDashboard`, `getSchoolBranding`, `getTeachers`, `getStudents`, `getSchoolAdmins`, `getParents`, or `getAdminAssignments`). Academic setup does not. See "Server data flow".
+5. People, dashboard, and assignments pages still call their stubs (`getAdminDashboard`, `getTeachers`, `getStudents`, `getSchoolAdmins`, `getParents`, or `getAdminAssignments`). Branding reads `tenants`. Academic setup does not use a stub. See "Server data flow" and "Branding system".
 6. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
 7. The page renders admin and shared components. Client panels hold input state only; buttons do not save.
 
@@ -474,6 +491,26 @@ Marking a year or term current clears `is_current` on the rows this session can 
 
 The only unique constraint in migration 0002 is `class_subjects (class_id, subject_id)`. That violation is mapped to "This subject is already linked to that class." Year, term, class, and subject names are required in Zod. A same-name check selects through RLS, without a `tenant_id` filter, and returns a short message when this school already has that name.
 
+## Branding system
+
+School colors live on `tenants.primary_color` and `tenants.secondary_color` (docs/data-model.md §5). Both columns are nullable hex text. Logo and favicon URLs exist on the row and are not written yet. The branding page shows those upload sections disabled, with the text "Logo upload coming soon".
+
+`app/layout.tsx` is the HTML shell. It calls `readShellBrand()` in `lib/branding/shell.ts`, which reads `x-tenant-id` from the middleware (the JWT `tenant_id` claim) and selects that `tenants` row by `id`. It does not call a client endpoint. The layout renders:
+
+```css
+:root { --brand-primary: ...; --brand-secondary: ...; }
+```
+
+That style tag is in the first HTML response, so the colors are present before paint. A client fetch would add a round trip on a slow 3G connection and could flash the fallback, then swap. There is no client override.
+
+`tailwind.config.ts` maps `brand.primary` and `brand.secondary` to those variables, so `bg-brand-primary`, `text-brand-primary`, `border-brand-primary`, and the secondary equivalents resolve to the school colors. `app/globals.css` still defines the neutral fallback (`--brand-primary: #333333`, `--brand-secondary: #666666`, plus `--brand-bg` and `--brand-text`).
+
+FR-2.3.5: a tenant with null colors gets a clean default theme. Reset stores NULL. The layout then injects `#333333` and `#666666`. Those are the documented neutral grays, not a leftover blue. Invalid or missing values use the same fallback, and only a `#RGB` or `#RRGGBB` string is written into the style tag.
+
+`updateBranding(primaryColor, secondaryColor)` in `app/(admin)/admin/branding/actions.ts` checks the hex with Zod, then updates `primary_color` and `secondary_color` where `tenants.id` equals the session tenant id. `resetBranding()` sets both columns to NULL. Either write that changes 0 rows returns `{ ok: false, error }`. `revalidatePath` runs for `/feed`, `/teacher/home`, `/admin/dashboard`, and `/admin/branding`.
+
+Migration `0004_tenant_branding.sql` adds SELECT and UPDATE policies: `id = (auth.jwt() ->> 'tenant_id')::uuid`. Authenticated users do not get a blanket policy, and they are not granted INSERT or DELETE on `tenants`.
+
 ## Temporary workarounds (remove when the dependency lands)
 
 1. Teacher-to-course assignment
@@ -485,7 +522,7 @@ The only unique constraint in migration 0002 is `class_subjects (class_id, subje
 2. Lesson materials UI
    Location: `components/teacher/LessonEditorForm.tsx`
    Behavior: renders a placeholder "Attachment uploads coming soon".
-   Remove when: `files` table is migrated and `lesson_materials.file_id` refactor is done (migration 0004).
+   Remove when: `files` table is migrated and `lesson_materials.file_id` refactor is done (migration 0005 per current numbering).
 
 ## JWT claim hook
 
@@ -504,7 +541,7 @@ How to test: `tests/e2e/auth-jwt.spec.ts` creates a student, signs in through `/
 
 ## How to seed the dev environment
 
-Apply `supabase/migrations/0001_custom_access_token_hook.sql`, then `0002_academic_structure.sql`, then `0003_content.sql`. Then:
+Apply `supabase/migrations/0001_custom_access_token_hook.sql`, then `0002_academic_structure.sql`, then `0003_content.sql`, then `0004_tenant_branding.sql`. Then:
 
 ```bash
 npm run seed:dev
@@ -580,7 +617,10 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | Lesson Reuse page has no in-app path                                             | Create Lesson header must link to `/teacher/lessons/1/reuse` in `app/teacher/lessons/new/page.tsx`                                                                                                                              |
 | Student Home tab does not return to the feed                                     | `components/student/BottomNav.tsx` Home must be a `Link` to `/feed` (client; uses `usePathname`)                                                                                                                                |
 | Duplicate StatusBadge import errors after merge                                  | Import `@/components/shared/StatusBadge` only. Pass `tone` for Student chips; omit `tone` (use `className`) for Teacher/Admin                                                                                                   |
-| Brand fallback colors look off-palette                                           | `app/globals.css` `--brand-*` vars must stay on `#333333` / `#666666` / `#E5E5E5`                                                                                                                                               |
+| Brand fallback colors look off-palette                                           | `app/globals.css` `--brand-*` vars must stay on `#333333` / `#666666` / `#E5E5E5`. Reset stores NULL; the layout injects those hex defaults                                                                                      |
+| Brand colors not applying                                                        | The `tenants` row has `primary_color` and `secondary_color`, `app/layout.tsx` injects the style tag, and `tailwind.config.ts` wires `brand.primary` / `brand.secondary` to the variables                                          |
+| Brand colors flash then disappear                                                | A client-side override is replacing the server style tag. Branding must be in the HTML shell, not a follow-up fetch                                                                                                              |
+| Default theme missing on unbranded tenant                                        | Fallback values are not applied in the layout. Null colors must still inject `#333333` and `#666666`                                                                                                                              |
 
 ## Shared components inventory
 

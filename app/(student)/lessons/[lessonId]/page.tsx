@@ -13,7 +13,7 @@ const outlineButtonClass =
   "min-h-10 border border-[#333333] bg-white px-3 text-xs font-semibold text-[#333333]";
 
 const solidButtonClass =
-  "min-h-10 border border-[#333333] bg-[#333333] px-3 text-xs font-semibold text-white";
+  "min-h-10 border border-brand-primary bg-brand-primary px-3 text-xs font-semibold text-white";
 
 export default async function LessonPage({
   params,

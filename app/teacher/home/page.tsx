@@ -45,10 +45,10 @@ export default async function TeacherHomePage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b border-[#999999] bg-white px-8 py-6">
-        <p className="text-sm text-[#666666]">{home.eyebrow}</p>
+      <header className="border-b-4 border-brand-secondary bg-brand-primary px-8 py-6 text-white">
+        <p className="text-sm">{home.eyebrow}</p>
         <h1 className="text-2xl font-semibold">{home.greeting}</h1>
-        <p className="mt-1 text-sm text-[#666666]">{home.dateLabel}</p>
+        <p className="mt-1 text-sm">{home.dateLabel}</p>
       </header>
 
       <div className="space-y-8 p-8">
