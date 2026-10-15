@@ -3,8 +3,8 @@
  * Run: npm run seed:dev
  *
  * Requires 0001_custom_access_token_hook.sql,
- * 0002_academic_structure.sql, 0003_content.sql, and
- * 0004_tenant_branding.sql to be applied first.
+ * 0002_academic_structure.sql, 0003_content.sql,
+ * 0004_tenant_branding.sql, and 0005a_files.sql to be applied first.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { PILOT_TEACHER_EMAIL } from "../lib/teacher/assignment-stub";
@@ -346,14 +346,14 @@ const GRADEBOOK_CATEGORIES = [
 function contentSetupError(error: { message: string }): Error {
   if (/schema cache|does not exist|could not find the table/i.test(error.message)) {
     return new Error(
-      `${error.message}. Apply supabase/migrations/0003_content.sql in the Supabase SQL editor first.`,
+      `${error.message}. Apply supabase/migrations/0003_content.sql and 0005a_files.sql in the Supabase SQL editor first.`,
     );
   }
   return new Error(error.message);
 }
 
 async function seedContent(admin: AdminClient, tenantId: string) {
-  // teacher_assignments is not migrated (it arrives with migration 0005).
+  // teacher_assignments is not migrated (it arrives with migration 0005b).
   // lib/teacher/assignment-stub.ts assigns PILOT_TEACHER_EMAIL to every course
   // this session can read. Course UUIDs are generated here, so the stub stores
   // the teacher email rather than course ids. Do not create a second teacher
@@ -497,18 +497,44 @@ async function seedContent(admin: AdminClient, tenantId: string) {
     throw new Error("Introduction to Fractions was not seeded");
   }
 
+  const samplePath = `${tenantId}/lessons/${fractionsLessonId}/sample.pdf`;
+  const fileLookup = await admin
+    .from("files")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("storage_path", samplePath)
+    .maybeSingle();
+  if (fileLookup.error) throw contentSetupError(fileLookup.error);
+
+  let fileId = fileLookup.data?.id as string | undefined;
+  if (!fileId) {
+    const createdFile = await admin
+      .from("files")
+      .insert({
+        tenant_id: tenantId,
+        storage_path: samplePath,
+        original_name: "sample.pdf",
+        mime_type: "application/pdf",
+        size_bytes: 100000,
+      })
+      .select("id")
+      .single();
+    if (createdFile.error) throw contentSetupError(createdFile.error);
+    fileId = createdFile.data.id;
+  }
+
   const pdfLookup = await admin
     .from("lesson_materials")
     .select("id")
     .eq("lesson_id", fractionsLessonId)
-    .eq("storage_path", "seed/sample.pdf")
+    .eq("file_id", fileId)
     .maybeSingle();
   if (pdfLookup.error) throw pdfLookup.error;
   const pdfValues = {
     tenant_id: tenantId,
     lesson_id: fractionsLessonId,
     kind: "pdf",
-    storage_path: "seed/sample.pdf",
+    file_id: fileId,
     external_url: null,
     file_size: 100000,
     mime_type: "application/pdf",
@@ -535,7 +561,7 @@ async function seedContent(admin: AdminClient, tenantId: string) {
     tenant_id: tenantId,
     lesson_id: fractionsLessonId,
     kind: "external_video",
-    storage_path: null,
+    file_id: null,
     external_url: "https://www.youtube.com/watch?v=example",
     file_size: null,
     mime_type: null,
@@ -583,7 +609,7 @@ async function seedContent(admin: AdminClient, tenantId: string) {
 
   console.log("Content seeded");
   console.log(
-    `  assignment stub: ${PILOT_TEACHER_EMAIL} is assigned to every course in this tenant until migration 0005. Other teachers are assigned to none.`,
+    `  assignment stub: ${PILOT_TEACHER_EMAIL} is assigned to every course in this tenant until migration 0005b. Other teachers are assigned to none.`,
   );
   console.log(`  course: ${COURSE_NAME}`);
   console.log(

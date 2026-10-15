@@ -41,9 +41,99 @@ async function deleteTenantRows(admin: SupabaseClient, table: string, tenantId: 
   throw error;
 }
 
+type MaterialRow = {
+  id: string;
+  tenant_id: string;
+  lesson_id: string;
+  kind: string;
+};
+
+function missingTable(message: string): boolean {
+  return /schema cache|does not exist|could not find the table/i.test(message);
+}
+
+async function insertLessonMaterials(
+  admin: SupabaseClient,
+  rows: { tenant_id: string; lesson_id: string }[],
+): Promise<{ data: MaterialRow[] | null; error: { message: string } | null }> {
+  const inserted: MaterialRow[] = [];
+
+  for (const row of rows) {
+    const storagePath = `${row.tenant_id}/lessons/${row.lesson_id}/sample.pdf`;
+    const fileInsert = await admin
+      .from("files")
+      .insert({
+        tenant_id: row.tenant_id,
+        storage_path: storagePath,
+        original_name: "sample.pdf",
+        mime_type: "application/pdf",
+        size_bytes: 100000,
+      })
+      .select("id")
+      .single();
+
+    const filesMissing = fileInsert.error !== null && missingTable(fileInsert.error.message);
+
+    if (filesMissing) {
+      const legacy = await admin
+        .from("lesson_materials")
+        .insert({
+          tenant_id: row.tenant_id,
+          lesson_id: row.lesson_id,
+          kind: "pdf",
+          storage_path: storagePath,
+          external_url: null,
+          file_size: 100000,
+          mime_type: "application/pdf",
+        })
+        .select("id, tenant_id, lesson_id, kind")
+        .single();
+      if (legacy.error || !legacy.data) {
+        return {
+          data: null,
+          error: legacy.error ?? { message: "legacy material insert failed" },
+        };
+      }
+      inserted.push(legacy.data);
+      continue;
+    }
+
+    if (fileInsert.error || !fileInsert.data) {
+      return {
+        data: null,
+        error: fileInsert.error ?? { message: "file insert failed" },
+      };
+    }
+
+    const material = await admin
+      .from("lesson_materials")
+      .insert({
+        tenant_id: row.tenant_id,
+        lesson_id: row.lesson_id,
+        kind: "pdf",
+        file_id: fileInsert.data.id,
+        external_url: null,
+        file_size: 100000,
+        mime_type: "application/pdf",
+      })
+      .select("id, tenant_id, lesson_id, kind")
+      .single();
+    if (material.error || !material.data) {
+      return {
+        data: null,
+        error: material.error ?? { message: "material insert failed" },
+      };
+    }
+    inserted.push(material.data);
+  }
+
+  return { data: inserted, error: null };
+}
+
 async function removeTenant(admin: SupabaseClient, tenantId: string) {
   const tables = [
     "lesson_materials",
+    "files",
     "lessons",
     "gradebook_categories",
     "courses",
@@ -295,29 +385,16 @@ test("lessons and lesson_materials RLS return only the signed-in tenant", async 
       throw new Error("Service role insert did not return both lessons");
     }
 
-    const { data: materials, error: materialError } = await admin
-      .from("lesson_materials")
-      .insert([
-        {
-          tenant_id: TENANT_A,
-          lesson_id: lessonA.id,
-          kind: "pdf",
-          storage_path: "seed/tenant-a.pdf",
-          external_url: null,
-          file_size: 100000,
-          mime_type: "application/pdf",
-        },
-        {
-          tenant_id: TENANT_B,
-          lesson_id: lessonB.id,
-          kind: "pdf",
-          storage_path: "seed/tenant-b.pdf",
-          external_url: null,
-          file_size: 100000,
-          mime_type: "application/pdf",
-        },
-      ])
-      .select("id, tenant_id, lesson_id, kind");
+    const { data: materials, error: materialError } = await insertLessonMaterials(admin, [
+      {
+        tenant_id: TENANT_A,
+        lesson_id: lessonA.id,
+      },
+      {
+        tenant_id: TENANT_B,
+        lesson_id: lessonB.id,
+      },
+    ]);
     if (materialError) throw materialError;
     const materialA = materials?.find((row) => row.tenant_id === TENANT_A);
     const materialB = materials?.find((row) => row.tenant_id === TENANT_B);

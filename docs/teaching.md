@@ -154,7 +154,7 @@ Left in the page, not extracted, because each appears on only one screen: feed s
 | `lib/types/lessons.ts`                                        | `Lesson`, `LessonStatus`, `Course`, `TeacherCourse`, and `LessonListItem`. Column names match migration 0003                    |
 | `lib/queries/lessons.ts`                                      | `getTeacherCourses`, `getTeacherLessons`, `getLessonById`, `getLessonsForCourse`. No `tenant_id` filter. Empty lists return `[]` |
 | `lib/lessons/schema.ts`                                       | Zod schemas shared by the lesson form and Server Actions. Title required, max 200. Description optional, max 5000               |
-| `lib/teacher/assignment-stub.ts`                              | Until migration 0005, the pilot teacher is assigned to every course the session can read. Other teachers are assigned to none  |
+| `lib/teacher/assignment-stub.ts`                              | Until migration 0005b, the pilot teacher is assigned to every course the session can read. Other teachers are assigned to none |
 | `lib/stubs/get-teacher-home.ts`                               | `getTeacherHome()` still supplies Pending Grading and Upcoming Assignments. My Classes on the home page no longer read it       |
 | `lib/stubs/get-lesson-for-edit.ts`                            | `getLessonForEdit(lessonId)` returns one lesson draft with class/subject/term options, materials, and video URL                  |
 | `lib/stubs/get-assignment-for-edit.ts`                        | `getAssignmentForEdit(assignmentId)` returns an `Assessment` (type assignment) plus linked lesson fields and one material        |
@@ -362,6 +362,14 @@ School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts
 | `tests/e2e/rls-content.spec.ts`        | Proves lessons and lesson_materials return only the signed-in tenant                                                                                   |
 | `scripts/seed-dev.ts`                  | Also seeds the JSS 2A Mathematics course on the existing JSS 2 Mathematics class_subject, three lessons, two materials, and three gradebook categories |
 
+### Files (0005a)
+
+| File | Purpose |
+|---|---|
+| `supabase/migrations/0005a_files.sql` | `files` table, tenant RLS, and `lesson_materials.file_id` in place of `storage_path` |
+| `scripts/setup-storage.ts` | One-time private `tenant-files` bucket and storage path policy. Run by hand. Not part of seed |
+| `tests/e2e/rls-files.spec.ts` | Proves `files` returns only the signed-in tenant |
+
 ### Route map — all personas
 
 | Route prefix                                      | Persona        | Layout                      |
@@ -379,11 +387,46 @@ School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts
 - 0002 — Academic structure: academic_years, terms, classes, subjects, class_subjects
 - 0003 — Content: courses, lessons, lesson_materials, gradebook_categories
 - 0004 — Tenant branding RLS: policies on tenants table for self-read and self-update
-- 0005 — (reserved) Files refactor + memberships + teacher_assignments + enrollments + parent_children
+- 0005a — Files table + lesson_materials refactor (`storage_path` moves to `files`; materials point at `file_id`)
+- 0005b — (reserved) Memberships + teacher_assignments + enrollments + parent_children
 - 0006 — (reserved) Assessments (rename from assignments) + submissions + grades
 - 0007+ — Later batches per ERD v2
 
-Migration numbers are assigned in order of application, not by feature group. The files refactor originally planned for 0004 was deferred and branding took the number. Future migrations continue from the last applied number.
+Migration numbers are assigned in order of application, not by feature group. The files refactor originally planned for 0004 was deferred and branding took the number. Files then landed as `0005a` so memberships can follow as `0005b`. Future migrations continue from the last applied number.
+
+## Storage setup
+
+Apply `supabase/migrations/0005a_files.sql` in the Supabase SQL editor before running the storage script. The migration is not applied by the app or by seed.
+
+Then, once:
+
+```bash
+npx tsx scripts/setup-storage.ts
+```
+
+The script uses the service role in `.env.local`. It does two things:
+
+1. Creates a private Storage bucket named `tenant-files` when that bucket is missing. The bucket is not public.
+2. Installs `tenant_files_isolation` on `storage.objects` through `public.auth_spike_exec`. Authenticated users can read and write only objects whose first path folder equals the JWT `tenant_id`. The path pattern is `{tenant_id}/...`.
+
+If the helper refuses the policy, paste this SQL in the Supabase SQL editor:
+
+```sql
+DROP POLICY IF EXISTS tenant_files_isolation ON storage.objects;
+CREATE POLICY tenant_files_isolation ON storage.objects
+  FOR ALL
+  TO authenticated
+  USING (
+    bucket_id = 'tenant-files'
+    AND (storage.foldername(name))[1] = (auth.jwt() ->> 'tenant_id')
+  )
+  WITH CHECK (
+    bucket_id = 'tenant-files'
+    AND (storage.foldername(name))[1] = (auth.jwt() ->> 'tenant_id')
+  );
+```
+
+Do not upload lesson files in this step. The lesson editor still shows "Attachment uploads coming soon".
 
 ## Request lifecycle
 
@@ -483,9 +526,9 @@ Why this asymmetry: RLS can only auto-fill a value if you use a DEFAULT or a tri
 
 A delete or update that changes zero rows returns `{ ok: false, error }` so a hidden cross-tenant id cannot look successful.
 
-### Teacher course assignment until migration 0005
+### Teacher course assignment until migration 0005b
 
-`teacher_assignments` is not in the migrations. `courses` has no teacher column. `lib/teacher/assignment-stub.ts` assigns `teacher@pilotschool.test` to every course the session can read. RLS already limits that read to the teacher's tenant, so the pilot teacher sees the pilot courses and a teacher in another tenant does not. Other teachers in the same tenant are assigned to no courses unless their email is added to the stub. The stub does not store course UUIDs, because `scripts/seed-dev.ts` generates those ids. That script sets `lessons.created_by` to the pilot teacher's profile id, which is the auth user id. `getTeacherCourses` and `getTeacherLessons` apply the stub and do not add a `tenant_id` filter. Real `teacher_assignments` rows arrive with migration 0005.
+`teacher_assignments` is not in the migrations. `courses` has no teacher column. `lib/teacher/assignment-stub.ts` assigns `teacher@pilotschool.test` to every course the session can read. RLS already limits that read to the teacher's tenant, so the pilot teacher sees the pilot courses and a teacher in another tenant does not. Other teachers in the same tenant are assigned to no courses unless their email is added to the stub. The stub does not store course UUIDs, because `scripts/seed-dev.ts` generates those ids. That script sets `lessons.created_by` to the pilot teacher's profile id, which is the auth user id. `getTeacherCourses` and `getTeacherLessons` apply the stub and do not add a `tenant_id` filter. Real `teacher_assignments` rows arrive with migration 0005b.
 
 Marking a year or term current clears `is_current` on the rows this session can update, then sets the chosen row. The clear step has no `tenant_id` filter.
 
@@ -516,13 +559,13 @@ Migration `0004_tenant_branding.sql` adds SELECT and UPDATE policies: `id = (aut
 1. Teacher-to-course assignment
    Location: `lib/teacher/assignment-stub.ts`, applied by `getTeacherCourses` in `lib/queries/lessons.ts`
    Behavior: `teacher@pilotschool.test` is treated as assigned to every course in the pilot tenant. Any other teacher gets zero courses.
-   Remove when: `teacher_assignments` table is migrated (part of the next migration batch per ERD v2).
+   Remove when: `teacher_assignments` table is migrated (0005b, memberships and enrollments).
    Replace with: query `teacher_assignments` joined to `class_subjects`.
 
 2. Lesson materials UI
    Location: `components/teacher/LessonEditorForm.tsx`
    Behavior: renders a placeholder "Attachment uploads coming soon".
-   Remove when: `files` table is migrated and `lesson_materials.file_id` refactor is done (migration 0005 per current numbering).
+   Remove when: the lesson editor upload UI is wired to `files` and `lesson_materials.file_id`. The table and column land in migration 0005a. The placeholder stays until that upload session.
 
 ## JWT claim hook
 
@@ -541,7 +584,7 @@ How to test: `tests/e2e/auth-jwt.spec.ts` creates a student, signs in through `/
 
 ## How to seed the dev environment
 
-Apply `supabase/migrations/0001_custom_access_token_hook.sql`, then `0002_academic_structure.sql`, then `0003_content.sql`, then `0004_tenant_branding.sql`. Then:
+Apply `supabase/migrations/0001_custom_access_token_hook.sql`, then `0002_academic_structure.sql`, then `0003_content.sql`, then `0004_tenant_branding.sql`, then `0005a_files.sql`. Then:
 
 ```bash
 npm run seed:dev
@@ -588,7 +631,9 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | Teacher sees no courses                                                          | `teacher_assignments` is not migrated; teacher-to-course link is stubbed; pilot teacher is assigned to all courses in the tenant                                                                                               |
 | Lesson list empty after create                                                   | `revalidatePath` in `app/teacher/lessons/actions.ts` for `/teacher/home`, `/teacher/lessons`, and the lesson editor                                                                                                             |
 | Save draft fails silently                                                        | Server Action error handling. The form shows `{ ok: false, error }`. A write that changes 0 rows returns an error                                                                                                              |
-| Lesson materials don't load                                                      | `mime_type` is in the allowlist, and `storage_path` or `external_url` is set                                                                                                                                                    |
+| Lesson materials show missing file | `lesson_materials.file_id` is set, `files` has that row, and the object path's first folder is the tenant id in the `tenant-files` bucket |
+| Cross-tenant file access succeeds | This is a security bug. Stop and report |
+| Lesson materials don't load | For an uploaded row, `file_id` is set. For a video, `external_url` is set. Exactly one of those is allowed |
 | `Failed to fetch` on sign-in, or `npm run seed:dev` says the URL did not resolve | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`. The project host must resolve. `https://supabase.com` loading does not mean the project host exists                                                                                 |
 | `Tenant: root` on `pilotschool.localhost`                                        | `middleware.ts` must read the `Host` header. `nextUrl.hostname` is rewritten to `localhost` in dev. Then check `lib/tenant/resolve.ts`                                                                                          |
 | Page fails before any school exists                                              | Supabase URL or anon key is empty. Middleware skips refresh on purpose. Calling `createClient()` throws until `.env.local` is filled                                                                                            |

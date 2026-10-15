@@ -1,6 +1,6 @@
 /**
  * Teacher lesson reads. RLS applies the JWT tenant_id. Do not filter tenant_id here.
- * Course assignment is stubbed until migration 0005. See lib/teacher/assignment-stub.ts.
+ * Course assignment is stubbed until migration 0005b. See lib/teacher/assignment-stub.ts.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isStubAssignedTeacher } from "@/lib/teacher/assignment-stub";

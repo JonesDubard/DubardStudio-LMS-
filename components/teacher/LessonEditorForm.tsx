@@ -306,7 +306,8 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
         </div>
       </section>
 
-      {/* TODO: wire to files table once migration 0004 lands (see docs/data-model.md for files pattern) */}
+      {/* TODO: wire uploads to public.files and lesson_materials.file_id.
+          The table lands in 0005a_files.sql. Do not upload in this session. */}
       <section className="border border-[#999999] bg-white p-6">
         <h2 className="text-lg font-semibold">Materials</h2>
         <p className="mt-1 text-sm text-[#666666]">

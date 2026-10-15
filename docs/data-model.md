@@ -244,9 +244,25 @@ A subject offering within a class for a term.
 | created_at | timestamptz | no | now() |
 | updated_at | timestamptz | no | now() |
 
+### files (tenant-scoped)
+
+Central object metadata. Bytes live in the private `tenant-files` bucket. `storage_path` starts with `{tenant_id}/`.
+
+| Column | Type | Null | Default |
+|---|---|---|---|
+| id | uuid | no | gen_random_uuid() |
+| tenant_id | uuid | no | — |
+| storage_path | text | no | — |
+| original_name | text | no | — |
+| mime_type | text | no | — |
+| size_bytes | bigint | no | — |
+| variant_paths | jsonb | yes | null |
+| scan_status | text | no | 'pending' | `pending`, `clean`, or `blocked` |
+| created_at | timestamptz | no | now() |
+
 ### lesson_materials (tenant-scoped)
 
-**Q8 resolved.** Allowlist: PDF, doc (docx), image (jpg, png, webp).
+**Q8 resolved.** Allowlist: PDF, doc (docx), image (jpg, png, webp). Uploaded materials point at `files`. External videos keep `external_url`.
 
 | Column | Type | Null | Default |
 |---|---|---|---|
@@ -254,14 +270,13 @@ A subject offering within a class for a term.
 | tenant_id | uuid | no | — |
 | lesson_id | uuid | no | — |
 | kind | text | no | — | 'pdf', 'doc', 'image', 'external_video' |
-| storage_path | text | yes | null | For uploaded files |
+| file_id | uuid | yes | null | `files.id`. Set for uploads. `ON DELETE RESTRICT` |
 | external_url | text | yes | null | For external video links |
 | file_size | bigint | yes | null | |
-| mime_type | text | yes | null | Validated server-side against allowlist |
+| mime_type | text | yes | null | Copied for display. The file row is the source of truth for uploads |
 | created_at | timestamptz | no | now() | |
 
-CONSTRAINT: exactly one of storage_path or external_url is non-null.
-CONSTRAINT: if storage_path is set, mime_type must be in allowlist.
+CONSTRAINT: exactly one of file_id or external_url is non-null.
 
 ### gradebook_categories (tenant-scoped) — NEW in v2
 

@@ -1,5 +1,5 @@
 /**
- * Course assignment until migration 0005 adds teacher_assignments.
+ * Course assignment until migration 0005b adds teacher_assignments.
  *
  * The pilot teacher is assigned to every course the session can read.
  * RLS already limits that read to their tenant. Other teachers in the
