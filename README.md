@@ -40,3 +40,24 @@ End-to-end tests (none yet): `npm run test:e2e`
 - `docs/` — Product docs and `teaching.md`.
 - `supabase/migrations/` — Empty until the schema is written.
 - `tests/unit`, `tests/e2e`, `tests/rls` — Unit tests now; e2e and RLS later.
+
+## Local database (Supabase)
+
+Needs Docker Desktop running and the Supabase CLI.
+
+```
+supabase start      # start local Supabase (first run downloads images)
+supabase db reset   # rebuild the local database from supabase/migrations
+```
+Local API: http://127.0.0.1:54321 · Studio: http://127.0.0.1:54323
+
+For the scripts, create `.env.local` with:
+```
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_SERVICE_ROLE_KEY=<"Secret" key printed by supabase start>
+```
+Seed test data: `npm run seed:dev`, then `npx tsx scripts/spike-second-tenant.ts`.
+
+Rules:
+- New migrations go in `supabase/migrations/` named `NNNN_name.sql` (digits, then `_`).
+

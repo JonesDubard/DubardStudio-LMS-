@@ -3,7 +3,7 @@ node_modules
 .env*
 !.env.example
 .vercel
-
+github_issues (2).csv
 # Serwist writes the compiled worker here.
 public/sw*
 public/swe-worker*
