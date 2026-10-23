@@ -10,6 +10,8 @@
 -- Jones's 0005a, and cover NFR-6.5.5 (not checked yet / passed / failed).
 -- NF-07b decides scanning for the pilot and may add a 'skipped' state.
 
+BEGIN;
+
 -- ---------------------------------------------------------------------------
 -- files
 -- ---------------------------------------------------------------------------
@@ -26,8 +28,18 @@ CREATE TABLE IF NOT EXISTS public.files (
   created_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT files_scan_status_check CHECK (
     scan_status IN ('pending', 'clean', 'blocked')
-  )
+  ),
+  CONSTRAINT files_size_bytes_check CHECK (size_bytes >= 0)
 );
+
+-- If 0005a already made the table, the CHECK above was skipped.
+DO $$
+BEGIN
+  ALTER TABLE public.files
+    ADD CONSTRAINT files_size_bytes_check CHECK (size_bytes >= 0);
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- lesson_materials.file_id is added here because the files policies below use it.
 ALTER TABLE public.lesson_materials
@@ -60,6 +72,36 @@ BEGIN
     ADD CONSTRAINT files_id_tenant_id_key UNIQUE (id, tenant_id);
 EXCEPTION
   WHEN duplicate_object OR duplicate_table THEN NULL;
+END $$;
+
+-- Rows from 0005a may have a leading slash.
+UPDATE public.files
+SET storage_path = ltrim(storage_path, '/')
+WHERE storage_path LIKE '/%';
+
+-- Stop with a clear message if any old path is outside its school's folder,
+-- instead of failing on the CHECK below (or on the backfill) with no detail.
+DO $$
+DECLARE
+  bad_count integer;
+  bad_ids text;
+BEGIN
+  SELECT count(*), string_agg(src.id::text, ', ')
+  INTO bad_count, bad_ids
+  FROM (
+    SELECT f.id, f.tenant_id, f.storage_path FROM public.files AS f
+    UNION ALL
+    -- to_jsonb so this still runs after storage_path is dropped (re-run).
+    SELECT lm.id, lm.tenant_id, ltrim(to_jsonb(lm) ->> 'storage_path', '/')
+    FROM public.lesson_materials AS lm
+    WHERE (to_jsonb(lm) ->> 'storage_path') IS NOT NULL
+  ) AS src
+  WHERE src.storage_path NOT LIKE src.tenant_id::text || '/%';
+
+  IF bad_count > 0 THEN
+    RAISE EXCEPTION '0007: % path(s) are not in their school''s folder. Row ids: %',
+      bad_count, left(bad_ids, 1000);
+  END IF;
 END $$;
 
 -- The file must sit in its own school's folder.
@@ -130,13 +172,19 @@ CREATE POLICY files_learner_read ON public.files
   FOR SELECT TO authenticated
   USING (
     ((SELECT public.jwt_has_role('student')) OR (SELECT public.jwt_has_role('parent')))
+    AND scan_status <> 'blocked'
     AND EXISTS (
       SELECT 1 FROM public.lesson_materials lm WHERE lm.file_id = files.id
     )
   );
 
 REVOKE ALL ON TABLE public.files FROM PUBLIC, anon;
-GRANT SELECT, INSERT, DELETE ON TABLE public.files TO authenticated;
+GRANT SELECT, DELETE ON TABLE public.files TO authenticated;
+-- scan_status, variant_paths and created_at are server-set: users can't insert them.
+REVOKE INSERT ON TABLE public.files FROM authenticated;
+GRANT INSERT (
+  id, tenant_id, storage_path, original_name, mime_type, size_bytes, uploaded_by
+) ON TABLE public.files TO authenticated;
 -- Users may only rename a file. Path, type, size and scan_status are server-set.
 REVOKE UPDATE ON TABLE public.files FROM authenticated;
 GRANT UPDATE (original_name) ON TABLE public.files TO authenticated;
@@ -160,10 +208,12 @@ BEGIN
       AND table_name = 'lesson_materials'
       AND column_name = 'storage_path'
   ) THEN
+    -- DISTINCT ON: materials sharing a path get one files row (the unique
+    -- index would reject the second), and the UPDATE links them all to it.
     INSERT INTO public.files (
       tenant_id, storage_path, original_name, mime_type, size_bytes, uploaded_by
     )
-    SELECT
+    SELECT DISTINCT ON (ltrim(lm.storage_path, '/'))
       lm.tenant_id,
       ltrim(lm.storage_path, '/'),
       regexp_replace(lm.storage_path, '^.*/', ''),
@@ -175,7 +225,8 @@ BEGIN
       AND NOT EXISTS (
         SELECT 1 FROM public.files AS existing
         WHERE existing.storage_path = ltrim(lm.storage_path, '/')
-      );
+      )
+    ORDER BY ltrim(lm.storage_path, '/'), lm.file_size IS NULL, lm.id;  -- prefer a row with a size
 
     UPDATE public.lesson_materials AS lm
     SET file_id = f.id
@@ -184,6 +235,17 @@ BEGIN
       AND lm.file_id IS NULL
       AND f.tenant_id = lm.tenant_id
       AND f.storage_path = ltrim(lm.storage_path, '/');
+
+    -- Same rule as lesson_materials_one_source (added at the end), checked
+    -- while storage_path still exists, so a failure names the rows.
+    IF EXISTS (
+      SELECT 1 FROM public.lesson_materials
+      WHERE (file_id IS NULL) = (external_url IS NULL)
+    ) THEN
+      RAISE EXCEPTION '0007: lesson_materials rows need exactly one of file_id / external_url. Row ids: %',
+        (SELECT left(string_agg(id::text, ', '), 1000) FROM public.lesson_materials
+         WHERE (file_id IS NULL) = (external_url IS NULL));
+    END IF;
   END IF;
 END $$;
 
@@ -223,7 +285,7 @@ ALTER TABLE public.lesson_materials
   );
 
 -- ---------------------------------------------------------------------------
--- Storage: private bucket + policies (replaces scripts/setup-storage.ts) because it used things that have been changed in mig 005_membership
+-- Storage: private bucket + policies (replaces scripts/setup-storage.ts)
 -- ---------------------------------------------------------------------------
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -278,5 +340,10 @@ CREATE POLICY tenant_files_delete ON storage.objects
     )
   );
 -- No UPDATE policy: files are never overwritten in place; upload a new one.
+-- The files row and the object are deleted in separate calls: the app deletes
+-- the row first (fails while a lesson still uses it), then the object. A left-
+-- over object is harmless and can be cleaned up later.
+
+COMMIT;
 
 NOTIFY pgrst, 'reload schema';
