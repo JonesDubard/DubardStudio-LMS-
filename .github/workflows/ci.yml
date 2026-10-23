@@ -18,3 +18,15 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       # - run: npm run test:rls   # re-enable once migrations land
+
+  db:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Apply all migrations to a fresh database
+        run: supabase db start
+
+   
