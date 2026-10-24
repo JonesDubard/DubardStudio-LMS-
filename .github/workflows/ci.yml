@@ -28,5 +28,7 @@ jobs:
           version: latest
       - name: Apply all migrations to a fresh database
         run: supabase db start
-
-   
+      - name: School-safety check (tenant_id + RLS on every table)
+        run: >
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+          -v ON_ERROR_STOP=1 -f tests/rls/check-tenant-safety.sql
