@@ -191,6 +191,38 @@ CREATE INDEX IF NOT EXISTS grades_submission_id_idx
 -- 3. Rules in triggers
 -- ---------------------------------------------------------------------------
 
+-- Keep lesson publication timestamps database-controlled too. This hardens the
+-- existing 0008 lesson trigger so teachers cannot backdate or forge publication.
+CREATE OR REPLACE FUNCTION public.lessons_before_write()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  uid uuid := auth.uid();
+BEGIN
+  IF uid IS NOT NULL THEN
+    IF TG_OP = 'INSERT' AND NEW.published_at IS NOT NULL THEN
+      RAISE EXCEPTION 'published_at is database-controlled' USING ERRCODE = 'check_violation';
+    ELSIF TG_OP = 'UPDATE' AND NEW.published_at IS DISTINCT FROM OLD.published_at THEN
+      RAISE EXCEPTION 'published_at is database-controlled' USING ERRCODE = 'check_violation';
+    END IF;
+
+    IF TG_OP = 'INSERT' AND NEW.created_by IS DISTINCT FROM uid THEN
+      RAISE EXCEPTION 'created_by must be the signed-in user'
+        USING ERRCODE = 'check_violation';
+    ELSIF TG_OP = 'UPDATE' AND NEW.created_by IS DISTINCT FROM OLD.created_by THEN
+      RAISE EXCEPTION 'created_by cannot be changed'
+        USING ERRCODE = 'check_violation';
+    END IF;
+  END IF;
+
+  IF NEW.status = 'published' AND NEW.published_at IS NULL THEN
+    NEW.published_at := now();
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
 -- Students must hold the student role in the school (0008's check).
 DROP TRIGGER IF EXISTS submissions_student_role ON public.submissions;
 CREATE TRIGGER submissions_student_role
@@ -212,11 +244,13 @@ AS $$
 DECLARE
   uid uuid := auth.uid();
 BEGIN
-  IF NEW.status = 'published' AND NEW.published_at IS NULL THEN
-    NEW.published_at := now();
-  END IF;
-
   IF uid IS NOT NULL THEN
+    IF TG_OP = 'INSERT' AND NEW.published_at IS NOT NULL THEN
+      RAISE EXCEPTION 'published_at is database-controlled' USING ERRCODE = 'check_violation';
+    ELSIF TG_OP = 'UPDATE' AND NEW.published_at IS DISTINCT FROM OLD.published_at THEN
+      RAISE EXCEPTION 'published_at is database-controlled' USING ERRCODE = 'check_violation';
+    END IF;
+
     IF TG_OP = 'INSERT' AND NEW.created_by IS DISTINCT FROM uid THEN
       RAISE EXCEPTION 'created_by must be the signed-in user' USING ERRCODE = 'check_violation';
     ELSIF TG_OP = 'UPDATE' AND NEW.created_by IS DISTINCT FROM OLD.created_by THEN
@@ -224,7 +258,17 @@ BEGIN
     END IF;
   END IF;
 
+  IF NEW.status = 'published' AND NEW.published_at IS NULL THEN
+    NEW.published_at := now();
+  END IF;
+
   IF TG_OP = 'UPDATE' THEN
+    IF OLD.status = 'published' AND NEW.status = 'draft'
+       AND (EXISTS (SELECT 1 FROM public.submissions s WHERE s.assessment_id = OLD.id)
+         OR EXISTS (SELECT 1 FROM public.grades g WHERE g.assessment_id = OLD.id)) THEN
+      RAISE EXCEPTION 'an assessment with submissions or grades cannot return to draft; archive it instead'
+        USING ERRCODE = 'check_violation';
+    END IF;
     IF OLD.type = 'assignment' AND NEW.type <> 'assignment'
        AND EXISTS (SELECT 1 FROM public.submissions s WHERE s.assessment_id = OLD.id) THEN
       RAISE EXCEPTION 'this assignment already has submissions; it cannot become a %', NEW.type
@@ -283,6 +327,33 @@ DROP TRIGGER IF EXISTS assessment_materials_before_write ON public.assessment_ma
 CREATE TRIGGER assessment_materials_before_write
   BEFORE INSERT OR UPDATE OF file_id ON public.assessment_materials
   FOR EACH ROW EXECUTE FUNCTION public.assessment_materials_before_write();
+
+-- A student's submission file must never become a lesson handout either.
+CREATE OR REPLACE FUNCTION public.lesson_materials_before_write()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM public.files f
+    WHERE f.id = NEW.file_id
+      AND f.tenant_id = NEW.tenant_id
+      AND f.storage_path LIKE f.tenant_id::text || '/submissions/%'
+  ) THEN
+    RAISE EXCEPTION 'a student submission file cannot be used as lesson material'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.lesson_materials_before_write() FROM PUBLIC;
+DROP TRIGGER IF EXISTS lesson_materials_before_write ON public.lesson_materials;
+CREATE TRIGGER lesson_materials_before_write
+  BEFORE INSERT OR UPDATE OF file_id ON public.lesson_materials
+  FOR EACH ROW EXECUTE FUNCTION public.lesson_materials_before_write();
 
 -- submissions
 CREATE OR REPLACE FUNCTION public.submissions_before_write()
@@ -350,8 +421,9 @@ BEGIN
       IF TG_OP = 'INSERT' THEN
         NEW.status := 'submitted';
       ELSE
-        IF public.submission_is_graded(OLD.id) THEN
-          RAISE EXCEPTION 'a graded submission cannot be edited' USING ERRCODE = 'check_violation';
+        IF public.submission_is_graded(OLD.id) AND OLD.status <> 'returned' THEN
+          RAISE EXCEPTION 'graded work can only be edited after it has been returned for redo'
+            USING ERRCODE = 'check_violation';
         END IF;
         IF NOT public.submission_is_editable(OLD.assessment_id, OLD.status) THEN
           RAISE EXCEPTION 'submission can only be edited before the due date or after it has been returned'
@@ -498,6 +570,40 @@ AS $$
   )
 $$;
 
+-- Teacher file access must not depend on submission RLS hiding references:
+-- SECURITY DEFINER lets this helper check every submission linked to a file.
+-- Teachers may read ordinary school files, but a file referenced by any
+-- submission is visible only when at least one linked submission belongs to
+-- an assessment the teacher can read. The standard submission-path exclusion
+-- also prevents an unlinked student upload from being treated as an ordinary file.
+CREATE OR REPLACE FUNCTION public.teacher_can_read_file(p_file_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.files f
+    WHERE f.id = p_file_id
+      AND f.tenant_id = (SELECT public.jwt_tenant_id())
+      AND (
+        (
+          f.storage_path NOT LIKE (f.tenant_id::text || '/submissions/%')
+          AND NOT EXISTS (
+            SELECT 1 FROM public.submissions s
+            WHERE s.file_id = f.id AND s.tenant_id = f.tenant_id
+          )
+        )
+        OR EXISTS (
+          SELECT 1 FROM public.submissions s
+          WHERE s.file_id = f.id
+            AND s.tenant_id = f.tenant_id
+            AND s.assessment_id IN (SELECT public.teacher_assessment_ids())
+        )
+      )
+  )
+$$;
+
 -- Has this submission been graded (released or not)? The helper returns false
 -- for IDs outside the caller's own authorized scope to reduce information leaks.
 CREATE OR REPLACE FUNCTION public.submission_is_graded(p_submission_id uuid)
@@ -508,7 +614,10 @@ AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.submissions s
-    JOIN public.grades g ON g.submission_id = s.id AND g.tenant_id = s.tenant_id
+    JOIN public.grades g
+      ON g.assessment_id = s.assessment_id
+     AND g.student_id = s.student_id
+     AND g.tenant_id = s.tenant_id
     WHERE s.id = p_submission_id
       AND s.tenant_id = (SELECT public.jwt_tenant_id())
       AND (
@@ -570,8 +679,8 @@ DECLARE
 BEGIN
   FOREACH f IN ARRAY ARRAY[
     'teacher_assessment_ids()', 'student_assessment_ids()',
-    'teacher_can_grade_student(uuid, uuid)', 'submission_is_graded(uuid)',
-    'submission_is_editable(uuid, public.submission_status)',
+    'teacher_can_grade_student(uuid, uuid)', 'teacher_can_read_file(uuid)',
+    'submission_is_graded(uuid)', 'submission_is_editable(uuid, public.submission_status)',
     'can_delete_submission_storage_object(text)'
   ] LOOP
     EXECUTE format('REVOKE ALL ON FUNCTION public.%s FROM PUBLIC, anon', f);
@@ -760,7 +869,7 @@ CREATE POLICY submissions_student_update_own ON public.submissions
     (SELECT public.jwt_has_role('student'))
     AND student_id = (SELECT auth.uid())
     AND assessment_id IN (SELECT public.student_assessment_ids())
-    AND NOT public.submission_is_graded(id)
+    AND (NOT public.submission_is_graded(id) OR status = 'returned')
     AND public.submission_is_editable(assessment_id, status)
   )
   WITH CHECK (
@@ -790,7 +899,6 @@ CREATE POLICY grades_teacher_read ON public.grades
   USING (
     (SELECT public.jwt_has_role('teacher'))
     AND assessment_id IN (SELECT public.teacher_assessment_ids())
-    AND public.teacher_can_grade_student(assessment_id, student_id)
   );
 
 DROP POLICY IF EXISTS grades_teacher_insert ON public.grades;
@@ -864,6 +972,17 @@ GRANT ALL ON TABLE public.assessments, public.assessment_materials,
 -- 6. Files and storage: assessment materials, and student uploads for submissions
 -- ---------------------------------------------------------------------------
 
+-- 0007 granted teachers school-wide file metadata access. Submission uploads
+-- are the exception: the SECURITY DEFINER helper checks all references, not
+-- only submissions visible through the caller's RLS policies.
+DROP POLICY IF EXISTS files_teacher_read ON public.files;
+CREATE POLICY files_teacher_read ON public.files
+  FOR SELECT TO authenticated
+  USING (
+    (SELECT public.jwt_has_role('teacher'))
+    AND public.teacher_can_read_file(id)
+  );
+
 -- Students and parents see a file if it is a lesson material, an assessment
 -- material, or a submission file they may see (RLS applies inside each subquery).
 DROP POLICY IF EXISTS files_learner_read ON public.files;
@@ -915,6 +1034,27 @@ CREATE POLICY files_student_delete_own ON public.files
     AND NOT EXISTS (SELECT 1 FROM public.submissions s WHERE s.file_id = files.id)
     AND NOT EXISTS (SELECT 1 FROM public.assessment_materials am WHERE am.file_id = files.id)
     AND NOT EXISTS (SELECT 1 FROM public.lesson_materials lm WHERE lm.file_id = files.id)
+  );
+
+-- Storage reads also enforce the teacher-specific rule explicitly. This is
+-- intentional defense in depth: teachers cannot download a submission object
+-- merely because another permissive files policy makes its metadata visible.
+-- Non-teacher roles continue to rely on their own public.files RLS policies.
+DROP POLICY IF EXISTS tenant_files_read ON storage.objects;
+CREATE POLICY tenant_files_read ON storage.objects
+  FOR SELECT TO authenticated
+  USING (
+    bucket_id = 'tenant-files'
+    AND (storage.foldername(name))[1] = (SELECT public.jwt_tenant_id())::text
+    AND EXISTS (
+      SELECT 1 FROM public.files f
+      WHERE f.storage_path = objects.name
+        AND f.tenant_id = (SELECT public.jwt_tenant_id())
+        AND (
+          NOT (SELECT public.jwt_has_role('teacher'))
+          OR public.teacher_can_read_file(f.id)
+        )
+    )
   );
 
 -- Storage: a student may upload into, and delete from, their own submissions folder only.
