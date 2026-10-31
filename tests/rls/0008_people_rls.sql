@@ -104,13 +104,15 @@ INSERT INTO public.profiles (id, tenant_id, full_name, email)
 SELECT id, CASE WHEN id::text LIKE 'a%' THEN 'a0000000-0000-0000-0000-000000000000'::uuid
                 ELSE 'b0000000-0000-0000-0000-000000000000'::uuid END,
        email, email
-FROM auth.users;
+FROM auth.users
+WHERE email LIKE '%@test';  -- only this file's users, not seed.sql's
 
 INSERT INTO public.memberships (tenant_id, profile_id, role)
 SELECT p.tenant_id, p.id,
   (CASE substr(p.id::text, 2, 1) WHEN '1' THEN 'school_admin' WHEN '2' THEN 'teacher'
                                  WHEN '3' THEN 'student' ELSE 'parent' END)::public.user_role
-FROM public.profiles p;
+FROM public.profiles p
+WHERE p.email LIKE '%@test';
 
 INSERT INTO public.academic_years (id, tenant_id, name, start_date, end_date, is_current) VALUES
   ('a5000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000000', '2026', '2026-09-01', '2027-07-31', true),
