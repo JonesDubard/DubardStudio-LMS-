@@ -1,7 +1,5 @@
 {
-    "compilerOptions": {
-        "lib": [
-            "deno.window"
-        ]
-    }
+  "compilerOptions": {
+    "lib": ["deno.window"]
+  }
 }
