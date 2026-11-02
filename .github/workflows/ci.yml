@@ -36,3 +36,13 @@ jobs:
           for f in tests/rls/0*.sql; do
             psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f "$f"
           done
+
+  functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Edge Function unit tests (US-013/US-014)
+        run: deno test --config supabase/functions/deno.json --allow-env=ADMIN_APP_ORIGIN --allow-read=supabase/functions supabase/functions/tests/
