@@ -61,3 +61,33 @@ Seed test data: `npm run seed:dev`, then `npx tsx scripts/spike-second-tenant.ts
 Rules:
 - New migrations go in `supabase/migrations/` named `NNNN_name.sql` (digits, then `_`).
 
+`supabase db reset` also loads `supabase/seed.sql`: two schools with one login per role, plus a Platform Admin.
+ 
+## Local dev data
+ 
+The same logins exist locally and on the shared dev project (learngrid-dev). They are test accounts only; never reuse these passwords anywhere real.
+ 
+| School | Subdomain | Role | Email | Password |
+|---|---|---|---|---|
+| Pilot School #1 | `pilot1` | School Admin | `admin@pilot1.test` | `Pilot-School-1` |
+| | | Teacher | `teacher@pilot1.test` | `Pilot-School-1` |
+| | | Student | `student@pilot1.test` | `Pilot-School-1` |
+| | | Parent | `parent@pilot1.test` | `Pilot-School-1` |
+| Pilot School #2 | `pilot2` | School Admin | `admin@pilot2.test` | `Pilot-School-2` |
+| | | Teacher | `teacher@pilot2.test` | `Pilot-School-2` |
+| | | Student | `student@pilot2.test` | `Pilot-School-2` |
+| | | Parent | `parent@pilot2.test` | `Pilot-School-2` |
+| (none) | | Platform Admin | `platform@liberia-lms.test` | `Platform-Admin-1` |
+ 
+Each school has an academic year and terms, a class, a subject and course, lessons (one still a draft), materials, and assessments with a submission and grades. See `supabase/seed.sql` for the details. Use School #2 to check that School #1 can't see its data.
+ 
+When a migration adds a table, add rows for it to `supabase/seed.sql`.
+ 
+## Dev project
+ 
+The dev database is built from `supabase/migrations/`, with its history recorded (reset on 6 Nov 2026). After a migration PR is merged:
+```
+supabase db push --dry-run   # check what will be applied
+supabase db push
+```
+Never run `supabase db reset --linked`: it wipes dev.
