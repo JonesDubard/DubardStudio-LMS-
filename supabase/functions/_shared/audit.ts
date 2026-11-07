@@ -1,83 +1,66 @@
-// US-014: the one way Edge Functions write to public.audit_log (MIG-0010).
-// audit_log is append-only and only the service role can insert, so this
-// needs the service-role client from client.ts.
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+// What Edge Functions import:
+//
+//   import { sendEmail } from "../_shared/mail.ts";
+//   await sendEmail(to, "invite", { school, acceptUrl, roleLabel });
+//
+// Same as email.ts, plus: a failure that the team must know about (bad key,
+// unverified domain, quota, Resend down) is also
+//   - reported to Sentry, tagged with the school and template, and
+//   - written to audit_log as "email.send" / error (system action).
+// Neither gets the recipient: Sentry is a third party, and audit_log is
+// append-only, so an address written there could never be removed.
+// The recipient is in the function log line (NF-10.6), which rotates.
+// A mistyped address is only logged, not alerted and not audited.
 
-export type AuditResult = "success" | "denied" | "error";
+import { sendEmail as send } from "./email.ts";
+import type { FailureInfo, SendOptions } from "./email.ts";
+import type { TemplateData, TemplateName } from "./email_templates.ts";
+import { reportError } from "./sentry.ts";
+import { serviceClient } from "./client.ts";
+import { writeAudit } from "./audit.ts";
 
-export interface AuditEntry {
-  /** Who: the auth user id, or null when nobody could be identified. */
-  actorId: string | null;
-  actorKind?: "platform_admin" | "system" | "user";
-  /** School: only a tenant id that is known to exist (the column has a foreign key). */
-  tenantId: string | null;
-  /** What was done, as "<thing>.<verb>", e.g. "tenant.create". */
-  action: string;
-  /** Record: the kind of row and its id. */
-  resourceType: string;
-  resourceId?: string | null;
-  result: AuditResult;
-  /** Short error or refusal code, e.g. "not_platform_admin". */
-  reason?: string | null;
-  details?: Record<string, unknown>;
-  ipAddress?: string | null;
-}
-
-export class AuditWriteError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "AuditWriteError";
-  }
-}
-
-const ACTION_FORMAT = /^[a-z][a-z_]*\.[a-z][a-z_]*$/;
 const UUID_FORMAT =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Writes one audit row. Throws AuditWriteError if the row was not saved. Time is set by the database. */
-export async function writeAudit(
-  db: SupabaseClient,
-  entry: AuditEntry,
-): Promise<void> {
-  if (!ACTION_FORMAT.test(entry.action)) {
-    throw new AuditWriteError(
-      `bad audit action "${entry.action}": use "<thing>.<verb>"`,
-    );
-  }
-  if (!entry.resourceType)
-    throw new AuditWriteError("audit resourceType is required");
-  for (const [name, value] of [
-    ["actorId", entry.actorId],
-    ["tenantId", entry.tenantId],
-    ["resourceId", entry.resourceId],
-  ]) {
-    if (value != null && !UUID_FORMAT.test(value))
-      throw new AuditWriteError(`audit ${name} is not a uuid`);
-  }
-
-  const { error } = await db.from("audit_log").insert({
-    actor_id: entry.actorId,
-    actor_kind: entry.actorKind ?? "platform_admin",
-    tenant_id: entry.tenantId,
-    action: entry.action,
-    resource_type: entry.resourceType,
-    resource_id: entry.resourceId ?? null,
-    result: entry.result,
-    reason: entry.reason ?? null,
-    details: entry.details ?? {},
-    ip_address: entry.ipAddress ?? null,
+async function toSentry(info: FailureInfo): Promise<void> {
+  if (!info.alert) return;
+  // The message holds the template and the error code only: no address, no name.
+  await reportError(new Error(`EmailError: ${info.template}: ${info.code}`), {
+    fn: "email",
+    tenantId: info.tenantId === "unknown" ? undefined : info.tenantId,
   });
-  if (error)
-    throw new AuditWriteError(`audit_log insert failed: ${error.message}`);
 }
 
-const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
-const IPV6 = /^[0-9a-f:]+$/i;
-
-/** The caller's IP from x-forwarded-for, or null. A bad value would make the insert fail, so anything odd is dropped. */
-export function callerIp(req: Request): string | null {
-  const first = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
-  if (IPV4.test(first) || (first.includes(":") && IPV6.test(first)))
-    return first;
-  return null;
+async function toAudit(info: FailureInfo): Promise<void> {
+  if (!info.alert) return;
+  await writeAudit(serviceClient(), {
+    actorId: null,
+    actorKind: "system",
+    // audit_log.tenant_id has a foreign key: only pass an id that looks real.
+    tenantId: UUID_FORMAT.test(info.tenantId) ? info.tenantId : null,
+    action: "email.send",
+    resourceType: "email",
+    result: "error",
+    reason: info.code,
+    details: { template: info.template, attempts: info.attempts },
+  });
 }
+
+// Independent hooks: one failing (Sentry down, audit insert refused) must not
+// skip the other. sendEmail also guards the whole hook, so the real error is
+// always the one the caller sees.
+async function onFailure(info: FailureInfo): Promise<void> {
+  await Promise.allSettled([toSentry(info), toAudit(info)]);
+}
+
+export function sendEmail<T extends TemplateName>(
+  to: string,
+  template: T,
+  data: TemplateData[T],
+  options: SendOptions = {},
+): Promise<{ id: string }> {
+  return send(to, template, data, { onFailure, ...options });
+}
+
+export type { TemplateData, TemplateName } from "./email_templates.ts";
+export { EmailError } from "./email.ts";
