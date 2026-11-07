@@ -1,6 +1,9 @@
 /** NF-03: the one helper every upload and download goes through.
  *
  *   NF-03.1  path is {tenant_id}/{type}/{id}/{file}   (no leading slash, see 0007)
+ *            for submissions {id} is the student's own user id and the file
+ *            name starts with the file id: {tenant_id}/submissions/{user_id}/{file_id}-{name}
+ *            (the 0009 policies only allow that folder)
  *   NF-03.2  the real type is read from the first bytes, not the file name
  *   NF-03.3  the size limit of each bucket is enforced
  *   NF-03.4  anything else is refused with a StorageError (code + plain message)
@@ -150,7 +153,11 @@ export function sanitizeFileName(name: string): string {
   return cleaned.slice(0, 100 - ext.length) + ext;
 }
 
-/** {tenant_id}/{type}/{id}/{file}. Used by logos, lesson materials and submissions. */
+/**
+ * {tenant_id}/{type}/{id}/{file}. Used by logos, lesson materials and submissions.
+ * For logos and materials {id} is the file id; for submissions the caller passes
+ * the student's own user id (see uploadFile).
+ */
 export function buildStoragePath(
   tenantId: string,
   type: UploadType,
@@ -459,8 +466,14 @@ export interface UploadOptions {
   type: UploadType;
   file: FileInput;
   fileName: string;
-  /** Becomes {id} in the path and public.files.id. Generated when omitted. */
+  /** Becomes public.files.id. Generated when omitted. */
   id?: string;
+  /**
+   * The signed-in user's id, taken from the verified token (never from a header
+   * or the body). Required for submissions: it is the {id} folder in the path,
+   * because the 0009 policies only let a student write to their own folder.
+   */
+  userId?: string;
 }
 
 export interface UploadResult {
@@ -476,10 +489,26 @@ export async function uploadFile(
   opts: UploadOptions,
 ): Promise<UploadResult> {
   const bucket = opts.bucket ?? "tenant-files";
-  const id = opts.id ?? crypto.randomUUID();
+  const id = opts.id ?? crypto.randomUUID(); // stays as public.files.id
+
+  const isSubmission = opts.type === "submissions";
+  if (isSubmission && !(opts.userId && UUID_FORMAT.test(opts.userId))) {
+    throw new StorageError(
+      "invalid_input",
+      400,
+      "A submission needs the signed-in user's id.",
+    );
+  }
 
   const checked = await checkFile(opts.file, opts.fileName, bucket, opts.type);
-  const path = buildStoragePath(opts.tenantId, opts.type, id, checked.fileName);
+
+  // Submissions: {tenant}/submissions/{user id}/{file id}-{name}
+  // Everything else: {tenant}/{type}/{file id}/{name}
+  const folderId = isSubmission ? opts.userId! : id;
+  const nameInPath = isSubmission
+    ? `${id}-${checked.fileName}`
+    : checked.fileName;
+  const path = buildStoragePath(opts.tenantId, opts.type, folderId, nameInPath);
 
   const objects = client.storage.from(bucket);
   const { error: uploadError } = await objects.upload(path, checked.bytes, {
@@ -503,6 +532,7 @@ export async function uploadFile(
 
   /** storage.objects read policy (0007) only shows objects that have a files row,
    * so the row is part of the upload. If it fails, the object is removed again.
+   * original_name is the name the user sees, without the file id prefix.
    */
   const { error: rowError } = await client.from("files").insert({
     id,
