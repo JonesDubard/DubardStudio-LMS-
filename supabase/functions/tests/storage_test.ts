@@ -1,5 +1,6 @@
 /** NF-03.6 unit tests. They run without a database: the Supabase client is a
- * fake that behaves like the 0007 storage policies (own school's folder only).
+ * fake that behaves like the 0007 and 0009 storage policies (own school's
+ * folder only; in submissions/ only the student's own folder).
  * The real-database versions are in tests/storage_integration_test.ts.
  */
 
@@ -24,6 +25,8 @@ import type { StorageClient } from "../_shared/storage.ts";
 const SCHOOL_A = "11111111-1111-4111-8111-111111111111";
 const SCHOOL_B = "22222222-2222-4222-8222-222222222222";
 const FILE_ID = "33333333-3333-4333-8333-333333333333";
+const STUDENT = "a1000000-0000-4000-8000-000000000003";
+const OTHER_STUDENT = "a1000000-0000-4000-8000-000000000099";
 
 // --------------------------------------------------------------------------
 // Sample files, built from real signatures
@@ -89,25 +92,32 @@ const XLSX = zip(["[Content_Types].xml", "xl/workbook.xml"]);
 const PLAIN_ZIP = zip(["readme.txt"]);
 
 // --------------------------------------------------------------------------
-// A fake Supabase client that applies the 0007 rules
+// A fake Supabase client that applies the 0007 and 0009 rules
 // --------------------------------------------------------------------------
 
-function fakeClient(sessionTenant: string | null, opts: { failRecord?: boolean } = {}) {
+function fakeClient(
+  sessionTenant: string | null,
+  opts: { failRecord?: boolean; userId?: string } = {},
+) {
   const objects = new Map<string, { contentType: string; size: number }>();
   const rows: Record<string, unknown>[] = [];
   const signed: { path: string; ttl: number; expiresAt: number }[] = [];
   let now = 1_000_000; // fake clock, in ms
+  const denied = () =>
+    Promise.resolve({
+      data: null,
+      error: { message: "new row violates row-level security policy", statusCode: "403" },
+    });
   const client: StorageClient = {
     storage: {
       from: (_bucket: string) => ({
         upload: (path, body, options) => {
           // tenant_files_upload: first folder must be the caller's school
-          if (path.split("/")[0] !== sessionTenant) {
-            return Promise.resolve({
-              data: null,
-              error: { message: "new row violates row-level security policy", statusCode: "403" },
-            });
-          }
+          if (path.split("/")[0] !== sessionTenant) return denied();
+          // 0009: in submissions/ the folder must be the caller's own user id
+          // (no userId on the fake means every submissions upload is refused)
+          const [, type, folder] = path.split("/");
+          if (type === "submissions" && folder !== opts.userId) return denied();
           objects.set(path, { contentType: options.contentType, size: body.length });
           return Promise.resolve({ data: { path }, error: null });
         },
@@ -304,6 +314,65 @@ test("two uploads of the same name do not overwrite each other", async () => {
   const b = await uploadFile(f.client, { tenantId: SCHOOL_A, type: "materials", file: PDF, fileName: "a.pdf" });
   assert.notEqual(a.storagePath, b.storagePath);
   assert.equal(f.objects.size, 2);
+});
+
+// --------------------------------------------------------------------------
+// Submissions (0009): the student's own id is the folder
+// --------------------------------------------------------------------------
+
+test("submissions: the student's own id is the folder, files.id stays separate", async () => {
+  const f = fakeClient(SCHOOL_A, { userId: STUDENT });
+  const r = await uploadFile(f.client, {
+    tenantId: SCHOOL_A, type: "submissions", file: PDF, fileName: "essay.pdf", userId: STUDENT,
+  });
+  assert.equal(r.storagePath, `${SCHOOL_A}/submissions/${STUDENT}/${r.fileId}-essay.pdf`);
+  assert.notEqual(r.fileId, STUDENT);
+  assert.ok(f.objects.has(r.storagePath));
+  assert.equal(f.rows[0].id, r.fileId);
+  assert.equal(f.rows[0].original_name, "essay.pdf"); // no id prefix shown to the user
+  assert.ok(pathBelongsToTenant(r.storagePath, SCHOOL_A)); // so it can still be signed
+});
+
+test("submissions: another student's folder is refused and nothing is recorded", async () => {
+  const f = fakeClient(SCHOOL_A, { userId: STUDENT }); // signed in as STUDENT
+  await rejects(
+    uploadFile(f.client, {
+      tenantId: SCHOOL_A, type: "submissions", file: PDF, fileName: "a.pdf", userId: OTHER_STUDENT,
+    }),
+    "wrong_school",
+  );
+  assert.equal(f.objects.size, 0);
+  assert.equal(f.rows.length, 0);
+});
+
+test("submissions: no user id is refused before anything reaches storage", async () => {
+  const f = fakeClient(SCHOOL_A, { userId: STUDENT });
+  await rejects(
+    uploadFile(f.client, { tenantId: SCHOOL_A, type: "submissions", file: PDF, fileName: "a.pdf" }),
+    "invalid_input",
+  );
+  assert.equal(f.objects.size, 0);
+  assert.equal(f.rows.length, 0);
+});
+
+test("submissions: the same name twice from the same student does not overwrite", async () => {
+  const f = fakeClient(SCHOOL_A, { userId: STUDENT });
+  const up = () => uploadFile(f.client, {
+    tenantId: SCHOOL_A, type: "submissions", file: PDF, fileName: "essay.pdf", userId: STUDENT,
+  });
+  const a = await up();
+  const b = await up();
+  assert.notEqual(a.storagePath, b.storagePath);
+  assert.equal(f.objects.size, 2);
+});
+
+test("submissions: a student can open their own submission link", async () => {
+  const f = fakeClient(SCHOOL_A, { userId: STUDENT });
+  const up = await uploadFile(f.client, {
+    tenantId: SCHOOL_A, type: "submissions", file: PDF, fileName: "essay.pdf", userId: STUDENT,
+  });
+  const d = await getDownloadUrl(f.client, { tenantId: SCHOOL_A, storagePath: up.storagePath });
+  assert.equal(f.open(d.url), 200);
 });
 
 // --------------------------------------------------------------------------
