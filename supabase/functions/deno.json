@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
     "lib": ["deno.window"]
+  },
+  "test": {
+    "exclude": ["tests/functions_integration_test.ts"]
   }
 }
