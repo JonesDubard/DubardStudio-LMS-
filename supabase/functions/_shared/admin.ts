@@ -19,6 +19,7 @@ export class HttpError extends Error {
     public status: number,
     public code: string,
     message?: string,
+    public headers?: Record<string, string>,
   ) {
     super(message ?? code);
     this.name = "HttpError";
@@ -39,10 +40,18 @@ function corsHeaders(): Record<string, string> {
   };
 }
 
-function json(status: number, body: unknown): Response {
+function json(
+  status: number,
+  body: unknown,
+  extraHeaders?: Record<string, string>,
+): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders(), "Content-Type": "application/json" },
+    headers: {
+      ...corsHeaders(),
+      "Content-Type": "application/json",
+      ...extraHeaders,
+    },
   });
 }
 
@@ -318,7 +327,12 @@ export function adminHandler(
         err instanceof HttpError && err.message !== code && status < 500
           ? err.message
           : undefined;
-      return json(status, message ? { error: code, message } : { error: code });
+      const extraHeaders = err instanceof HttpError ? err.headers : undefined;
+      return json(
+        status,
+        message ? { error: code, message } : { error: code },
+        extraHeaders,
+      );
     }
   };
 }
