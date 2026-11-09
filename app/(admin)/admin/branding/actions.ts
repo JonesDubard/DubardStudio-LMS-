@@ -43,9 +43,9 @@ async function requireSchoolAdmin(
     return fail("You need to sign in again.");
   }
 
-  const { tenantId, app_role } = readAccessTokenClaims(accessToken);
+  const { tenantId, app_roles } = readAccessTokenClaims(accessToken);
   if (!tenantId) return fail("This session has no school.");
-  if (app_role !== "school_admin") {
+  if (!app_roles.includes("school_admin")) {
     return fail("Only a school admin can change branding.");
   }
   return { tenantId };

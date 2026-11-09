@@ -33,7 +33,7 @@ Other commands:
 | `npm run typecheck` | `tsc --noEmit`                                                      |
 | `npm run test`      | Vitest unit tests                                                   |
 | `npm run test:e2e`  | Playwright. `tests/e2e/auth-jwt.spec.ts` is the JWT → RLS spike     |
-| `npm run seed:dev`  | Creates the pilot tenant and one user per persona. Prints passwords |
+| `npx supabase db reset` | Rebuilds the local database and applies `supabase/seed.sql` (pilot1 and pilot2) |
 | `npm run format`    | Prettier                                                            |
 | `npm run db:types`  | Stub. Prints a message until migrations exist                       |
 
@@ -117,12 +117,13 @@ A later session on the same day added the four student P0 screens as server comp
 | File                                                       | Purpose                                                                                                                                                                                       |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app/(student)/layout.tsx`                                 | Phone frame (`max-w-[390px]`) and `BottomNav` for the student routes                                                                                                                          |
-| `app/(student)/feed/page.tsx`                              | Student home. Reads `getStudentFeed()`                                                                                                                                                        |
-| `app/(student)/lessons/[lessonId]/page.tsx`                | Lesson viewer. Reads `getLesson(lessonId)`                                                                                                                                                    |
+| `app/(student)/feed/page.tsx`                              | Student home. Server component. Reads `getStudentFeed()` from `lib/queries/student.ts`                                                                                                        |
+| `app/(student)/lessons/[lessonId]/page.tsx`                | Lesson viewer. Server component. Reads `getLessonDetails(lessonId)`. Missing or unpublished lessons call `notFound()`                                                                        |
 | `app/(student)/assignments/[assignmentId]/page.tsx`        | Assignment detail. Reads `getAssignment(assignmentId)`                                                                                                                                        |
 | `app/(student)/assignments/[assignmentId]/status/page.tsx` | Submission status. Reads `getSubmissionStatus(assignmentId)`                                                                                                                                  |
-| `lib/stubs/get-student-feed.ts`                            | `getStudentFeed()` returns a `StudentFeed`. `items` is the today list: Mathematics — Fractions, then English — Reading Response. Also returns the greeting and the two recently viewed rows   |
-| `lib/stubs/get-lesson.ts`                                  | `getLesson(lessonId)` returns the Week 3 fractions lesson, including the two paragraphs, image caption, PDF, and external video                                                               |
+| `lib/queries/student.ts`                                   | `getStudentFeed`, `getStudentLessons`, `getLessonDetails`. No `student_id` or `tenant_id` filter. RLS scopes enrollments, published lessons, and files                                       |
+| `lib/stubs/get-student-feed.ts`                            | Old mock feed. The student home page no longer calls it                                                                                                                                      |
+| `lib/stubs/get-lesson.ts`                                  | Old mock lesson. The lesson viewer no longer calls it                                                                                                                                         |
 | `lib/stubs/get-assignment.ts`                              | `getAssignment(assignmentId)` returns English — Reading Response: due date, instructions, Reading Passage.pdf, and the empty answer/file area                                                 |
 | `lib/stubs/get-submission-status.ts`                       | `getSubmissionStatus(assignmentId)` returns the received submission: Sep 23, 1:42 PM, status SUBMITTED, written answer, and Reading Response.pdf                                              |
 | `components/student/BottomNav.tsx`                         | Home / Classes / Grades bar. Used by `app/(student)/layout.tsx` on all four screens. Home is marked Current, matching the mockups                                                             |
@@ -224,7 +225,7 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | `app/(admin)/admin/academic/subjects/_components/` | Subject form, link form, add button, and subjects panel                                                                                                                     |
 | `app/(admin)/admin/academic/_components/`          | Shared modal, delete confirmation, field styles, and the overview save note                                                                                                 |
 | `components/admin/AcademicSubNav.tsx`              | Overview / Years / Terms / Classes / Subjects links                                                                                                                         |
-| `scripts/spike-second-tenant.ts`                   | Manual cross-tenant fixture. Tenant "Other Tenant School" (`other-tenant`) and year "Other Tenant Year". Not production seed. See "Manual test fixtures"                    |
+| `supabase/seed.sql`                                | Also the cross-tenant fixture: Pilot School #2. See "Manual test fixtures"                                                                                                 |
 | `lib/stubs/get-teachers.ts`                        | `getTeachers()` returns teacher rows and CSV preview (`TeachersList`)                                                                                                       |
 | `lib/stubs/get-students.ts`                        | `getStudents()` returns student rows, CSV preview, and parent-linking note (`StudentsList`)                                                                                 |
 | `lib/stubs/get-school-admins.ts`                   | `getSchoolAdmins()` returns admin rows and access note (`SchoolAdminsList`)                                                                                                 |
@@ -333,18 +334,18 @@ Tenant names match the mockups (not the prompt's alternate set): Pilot School #1
 | `app/api/health/route.ts`                               | Public `{ ok: true }` health check                  |
 | `components/auth/*`                                     | The four forms plus shared field, error, and submit |
 | `lib/auth/public-paths.ts`                              | Login redirect allowlist                            |
-| `lib/auth/claims.ts`                                    | Reads `role` and `tenant_id` from an access token   |
+| `lib/auth/claims.ts`                                    | Reads `app_roles` and `tenant_id` from an access token |
 | `lib/supabase/middleware.ts`                            | Session refresh, login redirect, claim headers      |
 | `supabase/migrations/0001_custom_access_token_hook.sql` | Auth tables, the §10 hook, and the spike DDL helper |
 | `scripts/enable-auth-hook.ts`                           | Prints the manual dashboard registration steps      |
-| `scripts/seed-dev.ts`                                   | Pilot tenant and one user per persona               |
+| `supabase/seed.sql`                                     | Pilot School #1 and #2, one user per persona, applied by `npx supabase db reset` |
 | `scripts/load-env.ts`                                   | Loads `.env.local` for the scripts and the e2e test |
 | `tests/e2e/auth-jwt.spec.ts`                            | Proves the JWT claim reaches RLS. This is the spike |
-| `app/(student)/feed/page.tsx`                           | Dev-only banner for `x-app-role` and `x-tenant-id`  |
+| `app/(student)/feed/page.tsx`                           | Dev-only banner for `x-app-roles` and `x-tenant-id` |
 
 ### Academic structure reads (2026-10-09)
 
-School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts`. That stub was removed. The five `/admin/academic` routes are server components. They call `lib/queries/academic.ts` with the cookie Supabase client. Row types live in `lib/types/academic.ts` and use the migration 0002 column names. Terms are the rows for the academic year with `is_current`. Create, edit, delete, mark-current, and class-subject link/unlink go through Server Actions in `app/(admin)/admin/academic/actions.ts`. Forms live under each entity `_components` folder and share Zod schemas in `lib/academic/schema.ts`. `scripts/spike-second-tenant.ts` leaves tenant "Other Tenant School" and the year "Other Tenant Year" in place. See "Manual test fixtures".
+School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts`. That stub was removed. The five `/admin/academic` routes are server components. They call `lib/queries/academic.ts` with the cookie Supabase client. Row types live in `lib/types/academic.ts` and use the migration 0002 column names. Terms are the rows for the academic year with `is_current`. Create, edit, delete, mark-current, and class-subject link/unlink go through Server Actions in `app/(admin)/admin/academic/actions.ts`. Forms live under each entity `_components` folder and share Zod schemas in `lib/academic/schema.ts`. Cross-tenant checks use Pilot School #2 from `supabase/seed.sql`. See "Manual test fixtures".
 
 ### Academic structure (2026-10-01)
 
@@ -352,7 +353,7 @@ School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `supabase/migrations/0002_academic_structure.sql` | Years, terms, classes, subjects, class_subjects, each with tenant RLS                                                       |
 | `tests/e2e/rls-academic.spec.ts`                  | Proves academic_years returns only the signed-in tenant                                                                     |
-| `scripts/seed-dev.ts`                             | Also seeds the 2026–2027 year, three terms, four classes, five subjects, and Mathematics / English / Science on every class |
+| `supabase/seed.sql`                               | Seeds each school's year, three terms, one class, one subject, and the class-subject link                                 |
 
 ### Content tables (2026-10-05)
 
@@ -360,7 +361,7 @@ School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `supabase/migrations/0003_content.sql` | Courses, lessons, lesson_materials, gradebook_categories, and the lesson_status enum, each table with tenant RLS                                       |
 | `tests/e2e/rls-content.spec.ts`        | Proves lessons and lesson_materials return only the signed-in tenant                                                                                   |
-| `scripts/seed-dev.ts`                  | Also seeds the JSS 2A Mathematics course on the existing JSS 2 Mathematics class_subject, three lessons, two materials, and three gradebook categories |
+| `supabase/seed.sql`                    | Seeds one published course, three lessons (two published, one draft), two materials, and three gradebook categories per school |
 
 ### Files (0005a)
 
@@ -439,13 +440,13 @@ Do not upload lesson files in this step. The lesson editor still shows "Attachme
 
 Student feed, after the same middleware step:
 
-1. The browser requests `http://pilotschool.localhost:3000/feed`.
-2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
-3. `app/(student)/feed/page.tsx` calls `getStudentFeed()` in `lib/stubs/get-student-feed.ts`.
-4. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
-5. The page renders `PageHeader`, two `FeedCard`s, the recently viewed rows, and `BottomNav` from the student layout.
+1. The browser requests `http://localhost:3000/feed` with the session cookie.
+2. `middleware.ts` refreshes the session and sets `x-tenant-id` and `x-app-roles` from the access token.
+3. `app/(student)/feed/page.tsx` calls `createClient()` and `getStudentFeed()` in `lib/queries/student.ts`.
+4. The query reads `enrollments`, then courses for those classes, then published lessons and upcoming assignments. It does not filter `student_id` or `tenant_id`. Postgres RLS does.
+5. No active enrollment renders "You are not enrolled in any classes yet." Otherwise the page renders `PageHeader` and one `FeedCard` per lesson or assignment. Download of lesson files is not wired yet. `BottomNav` comes from the student layout.
 
-Lesson, assignment, and status follow the same path. The page awaits `params`, then calls `getLesson`, `getAssignment`, or `getSubmissionStatus` with that id. The stub still returns the one mockup record.
+`/lessons/[lessonId]` calls `getLessonDetails()`. A missing, unpublished, or other-school lesson returns no row, and the page calls `notFound()`. Assignment and submission-status pages still call their stubs.
 
 Teacher page, after the same middleware step:
 
@@ -479,13 +480,13 @@ Platform Admin page, after the same middleware step:
 
 ## Auth flow
 
-Browser → `middleware.ts` → session refresh → `x-app-role` and `x-tenant-id` → page.
+Browser → `middleware.ts` → session refresh → `x-app-roles` and `x-tenant-id` → page.
 
 1. The browser requests any page except the public allowlist: `/login`, `/invite/*`, `/reset/*`, `/_next/*`, `/api/health`.
 2. Root `middleware.ts` still resolves the hostname to `x-tenant-subdomain`. Next.js does not run `app/middleware.ts`.
 3. `lib/supabase/middleware.ts` calls `supabase.auth.getUser()`, which refreshes the session cookie when the access token is due.
 4. If there is no user, the response is a redirect to `/login`. `/login` is on the allowlist, so this is not a loop.
-5. If there is a user, the middleware reads `app_role` and `tenant_id` from the access-token payload (the hook writes those claims; they are not on the user object) and sets request headers `x-app-role` and `x-tenant-id`. Incoming copies of those headers are deleted first so a browser cannot spoof them. The reserved JWT `role` claim stays `authenticated` and is not copied onto a header.
+5. If there is a user, the middleware reads `app_roles` (an array) and `tenant_id` from the access-token payload and sets request headers `x-app-roles` (comma-joined) and `x-tenant-id`. A legacy token that still has a single `app_role` string is treated as a one-item list. Incoming copies of those headers are deleted first so a browser cannot spoof them. The reserved JWT `role` claim stays `authenticated` and is not copied onto a header.
 6. There is no role-based route gate yet. A signed-in student can still open `/admin` or `/platform`.
 7. In development, `app/(student)/feed/page.tsx` prints those headers in a banner. Production builds omit the banner. Remove the banner before the pilot.
 8. After a successful password sign-in, the login form navigates to `/feed`. That is a temporary landing, not role routing.
@@ -504,11 +505,13 @@ Academic setup pages (`/admin/academic`, `/admin/academic/years`, `/admin/academ
 browser → middleware (sets `x-tenant-id` from the JWT) → server component → Supabase query (RLS applies via the user JWT on the cookie session) → render.
 
 1. The browser requests an academic setup URL with the session cookie.
-2. Root `middleware.ts` refreshes the session and sets `x-tenant-id` and `x-app-role` from the access token. It does not query academic tables.
+2. Root `middleware.ts` refreshes the session and sets `x-tenant-id` and `x-app-roles` from the access token. It does not query academic tables.
 3. The server component calls `createClient()` in `lib/supabase/server.ts`. That client sends the user JWT. It does not use the service role.
 4. The page calls a function in `lib/queries/academic.ts`. Those functions do not filter `tenant_id`. Postgres RLS compares `tenant_id` to `auth.jwt() ->> 'tenant_id'`.
 5. An empty list renders the empty-state sentence inside the table. A PostgREST error is thrown and is not turned into an empty list.
 6. Terms are loaded for the academic year whose `is_current` is true.
+
+Student feed (`/feed`) and the lesson viewer (`/lessons/[lessonId]`) use the same cookie client and `lib/queries/student.ts`. Those reads do not filter `student_id` or `tenant_id`. `getStudentFeed` starts at `enrollments`, then the class's courses, then published lessons and published assignments whose due date is still ahead. The merged list is sorted by date descending and limited to 20. `getLessonDetails` loads one published lesson, its `lesson_materials`, and the linked `files` rows (name and size). The Download button does not call Storage yet.
 
 ## Server Actions pattern
 
@@ -528,7 +531,7 @@ A delete or update that changes zero rows returns `{ ok: false, error }` so a hi
 
 ### Teacher course assignment until migration 0005b
 
-`teacher_assignments` is not in the migrations. `courses` has no teacher column. `lib/teacher/assignment-stub.ts` assigns `teacher@pilotschool.test` to every course the session can read. RLS already limits that read to the teacher's tenant, so the pilot teacher sees the pilot courses and a teacher in another tenant does not. Other teachers in the same tenant are assigned to no courses unless their email is added to the stub. The stub does not store course UUIDs, because `scripts/seed-dev.ts` generates those ids. That script sets `lessons.created_by` to the pilot teacher's profile id, which is the auth user id. `getTeacherCourses` and `getTeacherLessons` apply the stub and do not add a `tenant_id` filter. Real `teacher_assignments` rows arrive with migration 0005b.
+`lib/teacher/assignment-stub.ts` still assigns `teacher@pilotschool.test` to every course the session can read. That email is not in `supabase/seed.sql`. `teacher_assignments` now exists, and the seeded teacher is `teacher@pilot1.test`. `getTeacherCourses` and `getTeacherLessons` still apply the stub and do not add a `tenant_id` filter.
 
 Marking a year or term current clears `is_current` on the rows this session can update, then sets the chosen row. The clear step has no `tenant_id` filter.
 
@@ -569,7 +572,7 @@ Migration `0004_tenant_branding.sql` adds SELECT and UPDATE policies: `id = (aut
 
 ## JWT claim hook
 
-`public.custom_access_token_hook` runs when Supabase Auth issues an access token. The function body is the one in `docs/data-model.md` §10, copied into `supabase/migrations/0001_custom_access_token_hook.sql`. It reads `platform_admins` first. A platform admin gets `app_role: platform_admin` and no `tenant_id`. Everyone else gets `tenant_id` and `app_role` from `profiles.role`. The JWT `role` claim is left as `authenticated`.
+`public.custom_access_token_hook` runs when Supabase Auth issues an access token. Migration `0005_memberships_hook_rls.sql` replaced the original hook. It reads `platform_admins` first. A platform admin gets `app_roles: ["platform_admin"]` and no `tenant_id`. Everyone else gets `tenant_id` and `app_roles` (an array) from active `memberships` rows. The JWT `role` claim is left as `authenticated`. `lib/auth/claims.ts` reads that array. A token that still carries the old `app_role` string is treated as a one-item list.
 
 The same migration creates `tenants`, `platform_admins`, and `profiles`, because the hook selects from those tables. It does not create the academic tables. RLS is enabled on the three auth tables. `supabase_auth_admin` has a SELECT policy on `profiles` and `platform_admins`, because the hook is `SECURITY INVOKER` and runs as that role. Without that policy the hook would see zero rows and the token would have no `tenant_id`.
 
@@ -584,18 +587,14 @@ How to test: `tests/e2e/auth-jwt.spec.ts` creates a student, signs in through `/
 
 ## How to seed the dev environment
 
-Apply `supabase/migrations/0001_custom_access_token_hook.sql`, then `0002_academic_structure.sql`, then `0003_content.sql`, then `0004_tenant_branding.sql`, then `0005a_files.sql`. Then:
+Run `npx supabase db reset` to rebuild the local database and apply the standard seed data (pilot1/pilot2).
 
-```bash
-npm run seed:dev
-```
-
-The script creates tenant "Pilot School #1" (`subdomain` `pilotschool`), one `platform_admins` user, and one `profiles` row each for school admin, teacher, student, and parent. The platform admin is not inserted into `profiles`. Passwords are printed in the terminal. Re-running the script resets those passwords and reuses the existing tenant.
+The seed lives in `supabase/seed.sql`. It creates Pilot School #1 and Pilot School #2, one user per persona in each school, and the academic, lesson, enrollment, and assessment rows those schools need. Logins are listed in the README.
 
 ## Manual test fixtures
 
-- `scripts/spike-second-tenant.ts` creates a second tenant "Other Tenant School" (subdomain `other-tenant`) with one academic year "Other Tenant Year". Kept in the DB as a permanent cross-tenant testing fixture. Do not seed from this script in production.
-- `teacher-unassigned@pilotschool.test` is a second teacher in the pilot tenant, created with the service role for the lesson assignment check. `scripts/seed-dev.ts` does not create this user. The assignment stub does not list them, so My Classes and My Lessons show "You don't have classes assigned yet. Ask your School Admin to assign you to a class."
+- Pilot School #2 in `supabase/seed.sql` is the cross-tenant fixture. A Pilot School #1 student must not see its lessons.
+- `lib/teacher/assignment-stub.ts` still treats `teacher@pilotschool.test` as assigned to every course the session can read. That email is not in `supabase/seed.sql`. The seeded teacher is `teacher@pilot1.test`, and real assignment rows are `teacher_assignments`.
 
 ## What the auth spike proved
 
@@ -607,7 +606,7 @@ What the JWT actually contains: nothing. The login form shows `Failed to fetch`.
 
 What the RLS policy actually reads: the policy was never created. The test would have installed `tenant_id = (auth.jwt() ->> 'tenant_id')::uuid` on `public.auth_spike_rows`. That SQL did not run.
 
-The exact SQL query that failed: none. The call that failed is the Auth Admin HTTP request, before any SQL. `npm run seed:dev` fails on the same unreachable host.
+The exact SQL query that failed: none. The call that failed is the Auth Admin HTTP request, before any SQL. Sign-in fails on the same unreachable host.
 
 Hypothesis: `NEXT_PUBLIC_SUPABASE_URL` does not name a project DNS is publishing. Auth never mints a JWT, so the hook never runs and RLS never evaluates `auth.jwt()`. This is not evidence that the hook SQL is wrong, and it is not a reason to bypass RLS. Copy the project URL from the dashboard Connect dialog, apply the migration, register the hook, then run the same test again. The application role claim is `app_role`.
 
@@ -622,19 +621,19 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | Queries fail with 'role X does not exist'                                        | JWT claim collision with Supabase's reserved `role` claim. The app role must be `app_role`. The `profiles.role` column stays `role`                                                                                             |
 | RLS blocks everything including own-tenant rows                                  | The hook is reading the wrong column. `0001_custom_access_token_hook.sql` must select `profiles.tenant_id` and `profiles.role`                                                                                                  |
 | Redirect loop on `/login`                                                        | `lib/auth/public-paths.ts`. `/login`, `/invite/*`, `/reset/*`, `/_next/*`, and `/api/health` must stay public                                                                                                                   |
-| Academic Setup shows no rows                                                     | `scripts/seed-dev.ts` must have run after `0002_academic_structure.sql`. The seed `tenant_id` must match the JWT `tenant_id` claim                                                                                              |
+| Academic Setup shows no rows                                                     | `npx supabase db reset` applies `supabase/seed.sql`. The seed `tenant_id` must match the JWT `tenant_id` claim                                                                                                                  |
 | Academic pages show empty list                                                   | Check the RLS policy, the JWT `tenant_id` claim in dev tools, and seed data. Do not add a `tenant_id` filter in the page query                                                                                                  |
 | Create action returns 0 rows but no error                                        | RLS blocks INSERT. Check the policy allows authenticated INSERT for the session tenant. The insert must include `tenant_id` from the JWT, because the 0002 policies use `USING` as the insert check                             |
 | Duplicate name error shows raw Postgres code                                     | Wrap error handling in the Server Action. `class_subjects` unique violations should become "This subject is already linked to that class." Year, term, class, and subject names are not unique in Postgres                      |
 | Query returns data from wrong tenant                                             | This is a security bug. Stop and report                                                                                                                                                                                         |
-| Lesson editor shows no courses                                                   | `scripts/seed-dev.ts` ran after `0003_content.sql`. Check `class_subject_id` linkage on the course                                                                                                                              |
+| Lesson editor shows no courses                                                   | `supabase/seed.sql` created the course and its `class_subject_id`. The teacher assignment stub still keys off `teacher@pilotschool.test`, not `teacher@pilot1.test`                                                            |
 | Teacher sees no courses                                                          | `teacher_assignments` is not migrated; teacher-to-course link is stubbed; pilot teacher is assigned to all courses in the tenant                                                                                               |
 | Lesson list empty after create                                                   | `revalidatePath` in `app/teacher/lessons/actions.ts` for `/teacher/home`, `/teacher/lessons`, and the lesson editor                                                                                                             |
 | Save draft fails silently                                                        | Server Action error handling. The form shows `{ ok: false, error }`. A write that changes 0 rows returns an error                                                                                                              |
 | Lesson materials show missing file | `lesson_materials.file_id` is set, `files` has that row, and the object path's first folder is the tenant id in the `tenant-files` bucket |
 | Cross-tenant file access succeeds | This is a security bug. Stop and report |
 | Lesson materials don't load | For an uploaded row, `file_id` is set. For a video, `external_url` is set. Exactly one of those is allowed |
-| `Failed to fetch` on sign-in, or `npm run seed:dev` says the URL did not resolve | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`. The project host must resolve. `https://supabase.com` loading does not mean the project host exists                                                                                 |
+| `Failed to fetch` on sign-in                                                     | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`. The project host must resolve. `https://supabase.com` loading does not mean the project host exists                                                                                 |
 | `Tenant: root` on `pilotschool.localhost`                                        | `middleware.ts` must read the `Host` header. `nextUrl.hostname` is rewritten to `localhost` in dev. Then check `lib/tenant/resolve.ts`                                                                                          |
 | Page fails before any school exists                                              | Supabase URL or anon key is empty. Middleware skips refresh on purpose. Calling `createClient()` throws until `.env.local` is filled                                                                                            |
 | `npm run build` says it cannot find `self.__SW_MANIFEST`                         | `app/sw.ts` must contain that identifier so Serwist can compile. Do not pass it to `precacheEntries` until lesson caching is real                                                                                               |
@@ -643,7 +642,8 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | `npm run lint` warns that `next lint` is deprecated                              | Expected on Next.js 15. The command still exits 0. Next.js 16 removes it                                                                                                                                                        |
 | `npm run db:types` does not generate types                                       | It is a stub until `supabase/migrations` has SQL                                                                                                                                                                                |
 | CI fails on `npm run test:rls`                                                   | That step is commented out until migrations and RLS policies exist                                                                                                                                                              |
-| Feed shows wrong data                                                            | `lib/stubs/get-student-feed.ts`, `app/(student)/feed/page.tsx`                                                                                                                                                                  |
+| Student feed empty                                                               | Check the `enrollments` table for an active row for this student, and the student JWT `tenant_id` claim. Do not add a `student_id` or `tenant_id` filter in `lib/queries/student.ts`                                           |
+| Feed shows wrong data                                                            | `lib/queries/student.ts`, `app/(student)/feed/page.tsx`. RLS on `lessons` only returns published lessons in `student_course_ids()`                                                                                             |
 | Styling looks off                                                                | `components/student/*`, `components/shared/PageHeader.tsx`, `components/shared/PrimaryButton.tsx`, `tailwind.config.ts`. Mockup grays are arbitrary values (`#E5E5E5`, `#999999`, `#666666`, `#333333`), not `gray-*` utilities |
 | Tenant name wrong in header                                                      | `middleware.ts`. The prompt named `app/middleware.ts`; that file does not exist and Next.js would not run it. Student headers currently show the mockup labels (Student Home, Mathematics, English), not the subdomain          |
 | Pending Grading list empty                                                       | `lib/stubs/get-teacher-home.ts`                                                                                                                                                                                                 |

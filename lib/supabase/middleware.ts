@@ -32,6 +32,7 @@ export async function updateSession(
 
   // Drop client-supplied values so pages only see claims this middleware sets.
   requestHeaders.delete("x-app-role");
+  requestHeaders.delete("x-app-roles");
   requestHeaders.delete("x-tenant-id");
 
   if (!url || !anonKey) {
@@ -80,8 +81,8 @@ export async function updateSession(
     const accessToken = sessionData.session?.access_token;
     if (accessToken) {
       const claims = readAccessTokenClaims(accessToken);
-      if (claims.app_role) {
-        requestHeaders.set("x-app-role", claims.app_role);
+      if (claims.app_roles.length > 0) {
+        requestHeaders.set("x-app-roles", claims.app_roles.join(","));
       }
       if (claims.tenantId) {
         requestHeaders.set("x-tenant-id", claims.tenantId);
