@@ -9,5 +9,5 @@ export function OnboardingProgressCell({
     return <span>✓</span>;
   }
 
-  return <span className="text-[#999999]">○</span>;
+  return <span className="text-ink-muted">○</span>;
 }

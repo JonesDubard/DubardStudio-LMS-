@@ -14,8 +14,8 @@ export function BottomNav() {
   const itemClass = "flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium";
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-10 w-full max-w-[390px] -translate-x-1/2 border-t border-line bg-surface">
-      <div className="grid grid-cols-3">
+    <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
+      <div className="mx-auto grid w-full max-w-7xl grid-cols-3">
         <Link
           href="/feed"
           className={

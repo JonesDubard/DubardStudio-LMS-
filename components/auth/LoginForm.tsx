@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { AuthError, AuthField, AuthSubmit } from "@/components/auth/AuthField";
+import { homePathFromAccessToken } from "@/lib/auth/home-path";
+import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export function LoginForm() {
     setPending(true);
 
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -30,7 +31,7 @@ export function LoginForm() {
       return;
     }
 
-    router.push("/feed");
+    router.push(homePathFromAccessToken(data.session?.access_token));
     router.refresh();
   }
 

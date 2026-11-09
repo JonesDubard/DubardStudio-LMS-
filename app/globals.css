@@ -45,6 +45,7 @@
   --info: #0369a1;
   --info-subtle: #f0f9ff;
   --info-border: #bae6fd;
+  --overlay: rgb(15 23 42 / 0.4);
 }
 
 @layer base {

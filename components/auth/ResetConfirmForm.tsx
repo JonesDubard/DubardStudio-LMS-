@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { AuthError, AuthField, AuthSubmit } from "@/components/auth/AuthField";
+import { homePathFromAccessToken } from "@/lib/auth/home-path";
+import { createClient } from "@/lib/supabase/client";
 
 export function ResetConfirmForm() {
   const router = useRouter();
@@ -74,7 +75,8 @@ export function ResetConfirmForm() {
       return;
     }
 
-    router.push("/feed");
+    const { data: sessionData } = await supabase.auth.getSession();
+    router.push(homePathFromAccessToken(sessionData.session?.access_token));
     router.refresh();
   }
 

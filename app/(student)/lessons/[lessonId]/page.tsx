@@ -5,16 +5,14 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { getLessonDetails } from "@/lib/queries/student";
 import { createClient } from "@/lib/supabase/server";
+import { buttonPrimaryCompact, buttonSecondary, surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Lesson Viewer",
 };
 
-const outlineButtonClass =
-  "min-h-10 border border-[#333333] bg-white px-3 text-xs font-semibold text-[#333333]";
-
-const solidButtonClass =
-  "min-h-10 border border-brand-primary bg-brand-primary px-3 text-xs font-semibold text-white";
+const outlineButtonClass = `${buttonSecondary} min-h-11 px-3 text-xs`;
+const solidButtonClass = `${buttonPrimaryCompact} min-h-11 px-3 text-xs`;
 
 function formatPublished(value: string | null): string {
   if (!value) return "Published";
@@ -63,30 +61,32 @@ export default async function LessonPage({
         title="Lesson"
       />
 
-      <main className="space-y-5 px-4 py-5">
+      <main className="mx-auto w-full max-w-3xl space-y-5 px-4 py-5 md:px-8">
         <section>
-          <h2 className="text-xl font-bold leading-7">{lesson.title}</h2>
-          <p className="mt-2 text-sm text-[#666666]">
+          <h2 className="break-words text-xl font-semibold leading-7 tracking-tight text-ink">
+            {lesson.title}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-ink-secondary">
             {lesson.className} · {lesson.subjectName} · {formatPublished(lesson.publishedAt)}
           </p>
         </section>
 
         <section className="space-y-4">
           <div>
-            <p className="mb-2 text-xs font-bold uppercase text-[#666666]">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
               Lesson Content
             </p>
-            <div className="border border-[#999999] p-4">
+            <div className={`${surfaceCard} p-4`}>
               {paragraphs.length === 0 ? (
-                <p className="text-sm leading-6 text-[#333333]">No description yet.</p>
+                <p className="text-sm leading-6 text-ink">No description yet.</p>
               ) : (
                 paragraphs.map((paragraph, index) => (
                   <p
                     key={paragraph}
                     className={
                       index === 0
-                        ? "text-sm leading-6 text-[#333333]"
-                        : "mt-4 text-sm leading-6 text-[#333333]"
+                        ? "break-words text-sm leading-6 text-ink"
+                        : "mt-4 break-words text-sm leading-6 text-ink"
                     }
                   >
                     {paragraph}
@@ -97,11 +97,11 @@ export default async function LessonPage({
           </div>
 
           <div>
-            <p className="mb-2 text-xs font-bold uppercase text-[#666666]">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
               Materials
             </p>
             {lesson.materials.length === 0 ? (
-              <p className="border border-[#999999] p-3 text-sm text-[#666666]">
+              <p className={`${surfaceCard} p-3 text-sm text-ink-secondary`}>
                 No materials on this lesson.
               </p>
             ) : (

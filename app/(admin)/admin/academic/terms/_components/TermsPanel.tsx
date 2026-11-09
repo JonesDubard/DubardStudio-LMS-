@@ -58,7 +58,7 @@ export function TermsPanel({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-[#666666]">
+        <p className="text-sm text-ink-secondary">
           {currentYear
             ? `Showing terms for ${currentYear.name}.`
             : "Set a current academic year to list its terms."}
@@ -70,9 +70,9 @@ export function TermsPanel({
         />
       </div>
       <ServerError message={actionError} />
-      <div className="overflow-x-auto border border-[#999999] bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-[#E5E5E5] text-left">
+      <div className="overflow-x-auto rounded-lg border border-line bg-surface shadow-card">
+        <table className="w-full min-w-[36rem] text-sm [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 [&_tbody_tr]:hover:bg-surface-muted">
+          <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
             <tr>
               <th className="px-4 py-3">Term</th>
               <th className="px-4 py-3">Start</th>
@@ -81,10 +81,10 @@ export function TermsPanel({
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E5E5E5]">
+          <tbody className="divide-y divide-line">
             {terms.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-sm text-[#666666]" colSpan={5}>
+                <td className="px-4 py-6 text-sm text-ink-secondary" colSpan={5}>
                   {currentYear
                     ? "No terms for the current academic year."
                     : "No current academic year."}

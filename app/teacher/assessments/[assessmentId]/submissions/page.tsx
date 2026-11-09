@@ -40,13 +40,13 @@ export default async function AssessmentSubmissionsPage({
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b border-[#999999] bg-white px-8 py-6">
-        <p className="text-sm text-[#666666]">
+      <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
+        <p className="text-sm text-ink-secondary">
           {assessment.type} · {assessment.status}
         </p>
         <h1 className="mt-1 text-2xl font-semibold">{assessment.title}</h1>
         {assessment.dueDate ? (
-          <p className="mt-1 text-sm text-[#666666]">
+          <p className="mt-1 text-sm text-ink-secondary">
             Due {new Date(assessment.dueDate).toLocaleString()}
           </p>
         ) : null}
@@ -55,16 +55,16 @@ export default async function AssessmentSubmissionsPage({
       <div className="p-8">
         {assessment.type === "assignment" ? (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-            <section className="border border-[#999999] bg-white">
-              <div className="border-b border-[#999999] p-5">
+            <section className="border border-line bg-surface">
+              <div className="border-b border-line p-5">
                 <h2 className="font-semibold">Submissions</h2>
-                <p className="mt-1 text-sm text-[#666666]">
+                <p className="mt-1 text-sm text-ink-secondary">
                   {submissions.length} handed in
                 </p>
               </div>
-              <div className="divide-y divide-[#E5E5E5]">
+              <div className="divide-y divide-line">
                 {submissions.length === 0 ? (
-                  <p className="p-5 text-sm text-[#666666]">No submissions yet.</p>
+                  <p className="p-5 text-sm text-ink-secondary">No submissions yet.</p>
                 ) : (
                   submissions.map((row) => (
                     <Link
@@ -72,12 +72,12 @@ export default async function AssessmentSubmissionsPage({
                       href={`/teacher/assessments/${assessment.id}/submissions?submission=${row.id}`}
                       className={
                         selected?.id === row.id
-                          ? "block border-l-4 border-[#333333] bg-[#E5E5E5] p-5"
+                          ? "block border-l-4 border-ink bg-surface-muted p-5"
                           : "block p-5"
                       }
                     >
                       <span className="font-medium">{row.studentName}</span>
-                      <p className="mt-2 text-sm text-[#666666]">
+                      <p className="mt-2 text-sm text-ink-secondary">
                         {row.releasedAt
                           ? `Released · ${row.score ?? "—"}`
                           : row.score === null
@@ -96,7 +96,7 @@ export default async function AssessmentSubmissionsPage({
                 maxScore={assessment.maxScore}
               />
             ) : (
-              <p className="border border-[#999999] bg-white p-6 text-sm">
+              <p className="border border-line bg-surface p-6 text-sm">
                 Submissions appear here after a student hands in.
               </p>
             )}

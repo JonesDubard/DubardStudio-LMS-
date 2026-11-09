@@ -13,11 +13,11 @@ export default function PlatformDashboardPage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1440px] p-8">
+      <div className="mx-auto max-w-[1440px] p-4 md:p-8">
         <header className="mb-8">
-          <div className="text-sm text-[#666666]">{data.eyebrow}</div>
+          <div className="text-sm text-ink-secondary">{data.eyebrow}</div>
           <h1 className="mt-1 text-2xl font-semibold">{data.title}</h1>
-          <p className="mt-2 text-sm text-[#666666]">{data.subtitle}</p>
+          <p className="mt-2 text-sm text-ink-secondary">{data.subtitle}</p>
         </header>
 
         <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -34,15 +34,15 @@ export default function PlatformDashboardPage() {
           <div className="mb-4 flex items-end justify-between">
             <div>
               <h2 className="text-lg font-semibold">{data.onboardingTitle}</h2>
-              <p className="mt-1 text-sm text-[#666666]">
+              <p className="mt-1 text-sm text-ink-secondary">
                 {data.onboardingDescription}
               </p>
             </div>
           </div>
 
-          <div className="overflow-x-auto border border-[#E5E5E5]">
+          <div className="overflow-x-auto border border-line-subtle">
             <table className="w-full min-w-[900px] border-collapse text-sm">
-              <thead className="bg-[#E5E5E5] text-left">
+              <thead className="border-b border-line bg-surface text-left text-sm font-medium text-ink-secondary">
                 <tr>
                   <th className="px-4 py-3 font-medium">Tenant</th>
                   <th className="px-4 py-3 font-medium">Subscription</th>
@@ -54,7 +54,7 @@ export default function PlatformDashboardPage() {
               </thead>
               <tbody>
                 {data.onboardingRows.map((row) => (
-                  <tr key={row.id} className="border-t border-[#E5E5E5]">
+                  <tr key={row.id} className="border-t border-line-subtle">
                     <td className="px-4 py-4 font-medium">{row.name}</td>
                     <td className="px-4 py-4">
                       <TenantStatusPill status={row.status} />
@@ -78,12 +78,12 @@ export default function PlatformDashboardPage() {
           </div>
         </section>
 
-        <section className="border border-[#E5E5E5]">
-          <div className="border-b border-[#E5E5E5] px-5 py-4">
+        <section className="border border-line-subtle">
+          <div className="border-b border-line-subtle px-5 py-4">
             <h2 className="font-semibold">{data.recentAuditTitle}</h2>
           </div>
 
-          <div className="divide-y divide-[#E5E5E5]">
+          <div className="divide-y divide-line">
             {data.recentAuditItems.map((item) => (
               <div
                 key={item.id}
@@ -91,11 +91,11 @@ export default function PlatformDashboardPage() {
               >
                 <div>
                   <div className="text-sm font-medium">{item.title}</div>
-                  <div className="mt-1 text-xs text-[#666666]">
+                  <div className="mt-1 text-xs text-ink-secondary">
                     {item.detail}
                   </div>
                 </div>
-                <div className="text-xs text-[#666666]">{item.timestamp}</div>
+                <div className="text-xs text-ink-secondary">{item.timestamp}</div>
               </div>
             ))}
           </div>

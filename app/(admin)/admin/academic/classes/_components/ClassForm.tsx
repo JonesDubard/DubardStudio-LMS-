@@ -71,7 +71,7 @@ export function ClassForm({
           className={inputClass}
           {...form.register("grade_level")}
         />
-        <p className="mt-1 text-sm text-[#666666]">
+        <p className="mt-1 text-sm text-ink-secondary">
           Optional. Leave blank if this class has no separate grade label.
         </p>
       </div>

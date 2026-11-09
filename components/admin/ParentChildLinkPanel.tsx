@@ -1,5 +1,7 @@
 "use client";
 
+import { fieldControl } from "@/lib/ui/styles";
+
 import { useState } from "react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { FormField } from "@/components/shared/FormField";
@@ -44,12 +46,12 @@ export function ParentChildLinkPanel({
   const [checked, setChecked] = useState(true);
 
   return (
-    <section className="border border-[#999999] bg-white">
-      <div className="flex items-start justify-between gap-6 border-b border-[#999999] p-6">
+    <section className="border border-line bg-surface">
+      <div className="flex items-start justify-between gap-6 border-b border-line p-6">
         <div>
-          <p className="text-sm text-[#666666]">Selected Parent</p>
+          <p className="text-sm text-ink-secondary">Selected Parent</p>
           <h2 className="mt-1 text-xl font-semibold">{parentName}</h2>
-          <p className="mt-1 text-sm text-[#666666]">{parentEmail}</p>
+          <p className="mt-1 text-sm text-ink-secondary">{parentEmail}</p>
         </div>
 
         <button
@@ -63,7 +65,7 @@ export function ParentChildLinkPanel({
       <div className="p-6">
         <h3 className="font-semibold">Linked Children</h3>
 
-        <div className="mt-4 divide-y divide-[#E5E5E5] border border-[#999999]">
+        <div className="mt-4 divide-y divide-line border border-line">
           {linkedChildren.map((child) => (
             <div
               key={child.id}
@@ -71,16 +73,16 @@ export function ParentChildLinkPanel({
             >
               <div>
                 <p className="font-medium">{child.name}</p>
-                <p className="mt-1 text-sm text-[#666666]">{child.meta}</p>
+                <p className="mt-1 text-sm text-ink-secondary">{child.meta}</p>
               </div>
               <StatusBadge label={child.statusLabel} />
             </div>
           ))}
         </div>
 
-        <div className="mt-6 border border-[#999999] bg-[#E5E5E5] p-5">
+        <div className="mt-6 border border-line bg-surface-muted p-5">
           <p className="font-semibold">{linkChildTitle}</p>
-          <p className="mt-1 text-sm text-[#666666]">{linkChildDescription}</p>
+          <p className="mt-1 text-sm text-ink-secondary">{linkChildDescription}</p>
 
           <div className="mt-4">
             <FormField id="search-student" label="Search Student">
@@ -90,16 +92,16 @@ export function ParentChildLinkPanel({
                 value={searchValue}
                 onChange={(event) => setSearchValue(event.target.value)}
                 placeholder={searchPlaceholder}
-                className="w-full border border-[#999999] bg-white px-3 py-3"
+                className={fieldControl}
               />
             </FormField>
           </div>
 
-          <div className="mt-4 border border-[#999999] bg-white">
+          <div className="mt-4 border border-line bg-surface">
             <div className="flex items-center justify-between p-4">
               <div>
                 <p className="font-medium">{searchResult.name}</p>
-                <p className="mt-1 text-sm text-[#666666]">{searchResult.meta}</p>
+                <p className="mt-1 text-sm text-ink-secondary">{searchResult.meta}</p>
               </div>
               <input
                 type="checkbox"

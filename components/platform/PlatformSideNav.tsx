@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { navLink, navLinkActive } from "@/lib/ui/styles";
+import { navLabel, navLink, navLinkActive, sideNavAside } from "@/lib/ui/styles";
 
 const navItems: {
   label: string;

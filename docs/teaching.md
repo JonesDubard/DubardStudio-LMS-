@@ -492,7 +492,7 @@ Browser → `middleware.ts` → session refresh → `x-app-roles` and `x-tenant-
 5. If there is a user, the middleware reads `app_roles` (an array) and `tenant_id` from the access-token payload and sets request headers `x-app-roles` (comma-joined) and `x-tenant-id`. A legacy token that still has a single `app_role` string is treated as a one-item list. Incoming copies of those headers are deleted first so a browser cannot spoof them. The reserved JWT `role` claim stays `authenticated` and is not copied onto a header.
 6. There is no role-based route gate yet. A signed-in student can still open `/admin` or `/platform`.
 7. In development, `app/(student)/feed/page.tsx` prints those headers in a banner. Production builds omit the banner. Remove the banner before the pilot.
-8. After a successful password sign-in, the login form navigates to `/feed`. That is a temporary landing, not role routing.
+8. After a successful password sign-in, invite acceptance, or password reset, the form reads `app_roles` from the access token and opens that role's home: platform admin `/platform/dashboard`, school admin `/admin/dashboard`, teacher `/teacher/home`, student and parent `/feed`. `lib/auth/home-path.ts` is the single map. There is still no route gate, so a signed-in user can open another role's URL directly.
 
 Sign-in, invite, and reset call Supabase Auth from the browser. They are not stubs.
 

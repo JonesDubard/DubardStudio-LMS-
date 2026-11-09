@@ -27,16 +27,16 @@ type DataTableProps = {
 export function DataTable({
   columns,
   rows,
-  headerCellClassName = "px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-muted",
-  bodyCellClassName = "px-5 py-4",
+  headerCellClassName = "px-4 py-3 text-left text-xs font-medium text-ink-secondary",
+  bodyCellClassName = "px-4 py-3 align-middle text-ink",
   wrapperClassName = `overflow-x-auto ${surfaceCard}`,
-  tableClassName = "w-full text-sm",
+  tableClassName = "w-full min-w-[40rem] text-sm",
   rowClassName,
 }: DataTableProps) {
   return (
     <div className={wrapperClassName}>
       <table className={tableClassName}>
-        <thead className="bg-surface-muted text-left">
+        <thead className="border-b border-line bg-surface text-left">
           <tr>
             {columns.map((column) => (
               <th
@@ -48,9 +48,12 @@ export function DataTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-line-subtle">
+        <tbody className="divide-y divide-line">
           {rows.map((row) => (
-            <tr key={row.id} className={rowClassName}>
+            <tr
+              key={row.id}
+              className={`transition-colors duration-150 hover:bg-surface-muted ${rowClassName ?? ""}`.trim()}
+            >
               {row.cells.map((cell, index) => (
                 <td
                   key={`${row.id}-${columns[index]?.key ?? index}`}

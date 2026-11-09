@@ -2,7 +2,7 @@ const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2";
 
 const interactive =
-  `inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold tracking-tight transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`;
+  `inline-flex min-h-11 items-center justify-center gap-2 rounded-lg text-sm font-semibold tracking-tight transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`;
 
 export const buttonPrimary = `${interactive} border border-transparent bg-brand-primary px-4 py-2.5 text-white hover:bg-brand-hover active:bg-brand-active`;
 
@@ -38,7 +38,12 @@ export const badgeBase =
   "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium leading-5";
 
 export const navLink =
-  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink-secondary transition-colors duration-150 hover:bg-surface-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring";
+  "flex min-h-11 min-w-11 items-center justify-center gap-3 rounded-lg px-2 py-2.5 text-sm text-ink-secondary transition-colors duration-150 hover:bg-surface-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring lg:justify-start lg:px-3";
 
 export const navLinkActive =
-  "flex items-center gap-3 rounded-lg bg-brand-subtle px-3 py-2.5 text-sm font-semibold text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring";
+  "flex min-h-11 min-w-11 items-center justify-center gap-3 rounded-lg bg-brand-subtle px-2 py-2.5 text-sm font-semibold text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring lg:justify-start lg:px-3";
+
+export const navLabel = "sr-only lg:not-sr-only";
+
+export const sideNavAside =
+  "flex w-20 shrink-0 flex-col border-r border-line bg-surface px-2 py-4 lg:w-64 lg:px-4 lg:py-5";

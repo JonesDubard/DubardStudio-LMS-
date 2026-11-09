@@ -97,19 +97,19 @@ export function SubjectsPanel({
         </button>
         <AddSubjectButton label="Add subject" />
       </div>
-      <div className="overflow-x-auto border border-[#999999] bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-[#E5E5E5] text-left">
+      <div className="overflow-x-auto rounded-lg border border-line bg-surface shadow-card">
+        <table className="w-full min-w-[36rem] text-sm [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 [&_tbody_tr]:hover:bg-surface-muted">
+          <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
             <tr>
               <th className="px-4 py-3">Subject</th>
               <th className="px-4 py-3">Classes</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E5E5E5]">
+          <tbody className="divide-y divide-line">
             {subjects.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-sm text-[#666666]" colSpan={3}>
+                <td className="px-4 py-6 text-sm text-ink-secondary" colSpan={3}>
                   No subjects yet.
                 </td>
               </tr>

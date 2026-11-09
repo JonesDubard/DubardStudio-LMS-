@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { GradeEntryRow } from "@/lib/stubs/get-grade-entry-roster";
+import { buttonPrimary, buttonSecondary, fieldControl, fieldControlBase, surfaceCard } from "@/lib/ui/styles";
 
 type GradeEntryTableProps = {
   maxScore: number;
@@ -33,23 +34,23 @@ export function GradeEntryTable({
   }
 
   return (
-    <section className="border border-[#999999] bg-white">
-      <div className="flex items-center justify-between border-b border-[#999999] p-5">
+    <section className={surfaceCard}>
+      <div className="flex items-center justify-between border-b border-line p-5">
         <div>
           <h2 className="font-semibold">Grade Entry</h2>
-          <p className="mt-1 text-sm text-[#666666]">
+          <p className="mt-1 text-sm text-ink-secondary">
             Enter the score recorded for each student.
           </p>
         </div>
 
-        <span className="border border-[#999999] px-3 py-2 text-xs">
+        <span className="rounded-md border border-line bg-surface-muted px-3 py-1.5 text-xs font-medium text-ink-secondary">
           {studentCountLabel}
         </span>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-[#E5E5E5] text-left">
+          <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
             <tr>
               <th className="w-16 px-5 py-4">#</th>
               <th className="px-5 py-4">Student Name</th>
@@ -58,10 +59,10 @@ export function GradeEntryTable({
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-[#E5E5E5]">
+          <tbody className="divide-y divide-line">
             {rows.map((row) => (
-              <tr key={row.id}>
-                <td className="px-5 py-4 text-[#666666]">{row.indexLabel}</td>
+              <tr key={row.id} className="transition-colors duration-150 hover:bg-surface-muted">
+                <td className="px-5 py-4 text-ink-secondary">{row.indexLabel}</td>
                 <td className="px-5 py-4 font-medium">{row.studentName}</td>
                 <td className="px-5 py-4">
                   <input
@@ -69,9 +70,9 @@ export function GradeEntryTable({
                     onChange={(event) =>
                       updateRow(row.id, "score", event.target.value)
                     }
-                    className="w-24 border border-[#999999] px-3 py-2"
+                    className={`${fieldControlBase} w-24`}
                   />
-                  <span className="ml-2 text-[#666666]">/ {maxScore}</span>
+                  <span className="ml-2 text-ink-secondary">/ {maxScore}</span>
                 </td>
                 <td className="px-5 py-4">
                   <input
@@ -79,7 +80,7 @@ export function GradeEntryTable({
                     onChange={(event) =>
                       updateRow(row.id, "comment", event.target.value)
                     }
-                    className="w-full border border-[#999999] px-3 py-2"
+                    className={fieldControl}
                   />
                 </td>
               </tr>
@@ -88,24 +89,18 @@ export function GradeEntryTable({
         </table>
       </div>
 
-      <div className="flex items-center justify-between border-t border-[#999999] p-5">
+      <div className="flex items-center justify-between border-t border-line p-5">
         <div>
-          <p className="text-sm text-[#666666]">{lastSavedLabel}</p>
+          <p className="text-sm text-ink-secondary">{lastSavedLabel}</p>
           <p className="text-sm">{lastSavedAt}</p>
         </div>
 
         <div className="flex gap-3">
-          <button
-            type="button"
-            className="border border-[#999999] bg-white px-5 py-3"
-          >
+          <button type="button" className={buttonSecondary}>
             Save Draft
           </button>
 
-          <button
-            type="button"
-            className="border border-brand-primary bg-brand-primary px-5 py-3 text-white"
-          >
+          <button type="button" className={buttonPrimary}>
             Release to Students
           </button>
         </div>
