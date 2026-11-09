@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 import { brandStyleText } from "@/lib/branding/colors";
 import { readShellBrand } from "@/lib/branding/shell";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   title: "LearnGrid",
@@ -13,7 +20,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const brand = await readShellBrand();
 
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body>
         <style>{brandStyleText(brand.primary, brand.secondary)}</style>
         {children}

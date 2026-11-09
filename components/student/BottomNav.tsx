@@ -1,5 +1,6 @@
 "use client";
 
+import { Award, Home, School } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,30 +11,32 @@ export function BottomNav() {
     pathname.startsWith("/lessons") ||
     pathname.startsWith("/assignments");
 
+  const itemClass = "flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium";
+
   return (
-    <nav className="fixed bottom-0 left-1/2 z-10 w-full max-w-[390px] -translate-x-1/2 border-t border-[#999999] bg-white">
+    <nav className="fixed bottom-0 left-1/2 z-10 w-full max-w-[390px] -translate-x-1/2 border-t border-line bg-surface">
       <div className="grid grid-cols-3">
         <Link
           href="/feed"
           className={
             homeActive
-              ? "flex min-h-16 flex-col items-center justify-center border-t-4 border-brand-secondary bg-brand-primary text-white"
-              : "flex min-h-16 flex-col items-center justify-center text-[#666666]"
+              ? `${itemClass} border-t-2 border-brand-primary font-semibold text-brand-primary`
+              : `${itemClass} border-t-2 border-transparent text-ink-muted`
           }
           aria-current={homeActive ? "page" : undefined}
         >
-          <span className="text-sm font-bold">Home</span>
-          {homeActive ? (
-            <span className="mt-1 text-[10px]">Current</span>
-          ) : null}
+          <Home size={18} strokeWidth={1.75} aria-hidden />
+          <span>Home</span>
         </Link>
 
-        <div className="flex min-h-16 flex-col items-center justify-center text-[#666666]">
-          <span className="text-sm font-semibold">Classes</span>
+        <div className={`${itemClass} text-ink-muted`}>
+          <School size={18} strokeWidth={1.75} aria-hidden />
+          <span>Classes</span>
         </div>
 
-        <div className="flex min-h-16 flex-col items-center justify-center text-[#666666]">
-          <span className="text-sm font-semibold">Grades</span>
+        <div className={`${itemClass} text-ink-muted`}>
+          <Award size={18} strokeWidth={1.75} aria-hidden />
+          <span>Grades</span>
         </div>
       </div>
     </nav>

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Inbox } from "lucide-react";
 import { ClassCard } from "@/components/teacher/ClassCard";
 import { GradingQueueRow } from "@/components/teacher/GradingQueueRow";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
   getSignedInTeacherId,
@@ -12,6 +14,7 @@ import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/assignment-stub";
 import { getTeacherHome } from "@/lib/stubs/get-teacher-home";
 import { createClient } from "@/lib/supabase/server";
 import type { LessonStatus } from "@/lib/types/lessons";
+import { buttonSecondary, surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Teacher Home",
@@ -45,33 +48,28 @@ export default async function TeacherHomePage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b-4 border-brand-secondary bg-brand-primary px-8 py-6 text-white">
-        <p className="text-sm">{home.eyebrow}</p>
-        <h1 className="text-2xl font-semibold">{home.greeting}</h1>
-        <p className="mt-1 text-sm">{home.dateLabel}</p>
+      <header className="bg-brand-primary px-8 py-6 text-white">
+        <p className="text-sm text-white/80">{home.eyebrow}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{home.greeting}</h1>
+        <p className="mt-1 text-sm text-white/80">{home.dateLabel}</p>
       </header>
 
       <div className="space-y-8 p-8">
         <section>
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold">My Classes</h2>
-              <p className="text-sm text-[#666666]">
+              <h2 className="text-lg font-semibold tracking-tight text-ink">My Classes</h2>
+              <p className="text-sm text-ink-secondary">
                 Classes and subjects assigned to you.
               </p>
             </div>
-            <Link
-              href="/teacher/lessons"
-              className="border border-[#999999] bg-white px-4 py-2 text-sm"
-            >
+            <Link href="/teacher/lessons" className={buttonSecondary}>
               View Classes
             </Link>
           </div>
 
           {courses.length === 0 ? (
-            <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
-              {NO_CLASSES_ASSIGNED_MESSAGE}
-            </p>
+            <EmptyState icon={Inbox} title={NO_CLASSES_ASSIGNED_MESSAGE} />
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {courses.map((course) => (
@@ -89,31 +87,24 @@ export default async function TeacherHomePage() {
         <section>
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Recent Lessons</h2>
-              <p className="text-sm text-[#666666]">
+              <h2 className="text-lg font-semibold tracking-tight text-ink">Recent Lessons</h2>
+              <p className="text-sm text-ink-secondary">
                 The latest lessons on your courses.
               </p>
             </div>
-            <Link
-              href="/teacher/lessons/new"
-              className="border border-[#999999] bg-white px-4 py-2 text-sm"
-            >
+            <Link href="/teacher/lessons/new" className={buttonSecondary}>
               Create Lesson
             </Link>
           </div>
 
           {courses.length === 0 ? (
-            <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
-              {NO_CLASSES_ASSIGNED_MESSAGE}
-            </p>
+            <EmptyState icon={Inbox} title={NO_CLASSES_ASSIGNED_MESSAGE} />
           ) : recentLessons.length === 0 ? (
-            <p className="border border-[#999999] bg-white px-4 py-6 text-sm text-[#666666]">
-              No lessons yet.
-            </p>
+            <EmptyState icon={Inbox} title="No lessons yet." />
           ) : (
-            <div className="overflow-x-auto border border-[#999999] bg-white">
+            <div className={`overflow-x-auto ${surfaceCard}`}>
               <table className="w-full text-sm">
-                <thead className="bg-[#E5E5E5] text-left">
+                <thead className="bg-surface-muted text-left text-xs font-medium uppercase tracking-wide text-ink-muted">
                   <tr>
                     <th className="px-4 py-3">Lesson</th>
                     <th className="px-4 py-3">Class</th>
@@ -122,13 +113,13 @@ export default async function TeacherHomePage() {
                     <th className="px-4 py-3">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E5E5]">
+                <tbody className="divide-y divide-line-subtle">
                   {recentLessons.map((lesson) => (
                     <tr key={lesson.id}>
                       <td className="px-4 py-4">
                         <Link
                           href={`/teacher/lessons/${lesson.id}`}
-                          className="font-medium underline"
+                          className="font-medium text-ink underline-offset-2 hover:underline"
                         >
                           {lesson.title}
                         </Link>
@@ -152,22 +143,19 @@ export default async function TeacherHomePage() {
         <section>
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Pending Grading</h2>
-              <p className="text-sm text-[#666666]">
+              <h2 className="text-lg font-semibold tracking-tight text-ink">Pending Grading</h2>
+              <p className="text-sm text-ink-secondary">
                 Work and assessments requiring your attention.
               </p>
             </div>
-            <button
-              type="button"
-              className="border border-[#999999] bg-white px-4 py-2 text-sm"
-            >
+            <button type="button" className={buttonSecondary}>
               Open Grading
             </button>
           </div>
 
-          <div className="overflow-x-auto border border-[#999999] bg-white">
+          <div className={`overflow-x-auto ${surfaceCard}`}>
             <table className="w-full text-sm">
-              <thead className="bg-[#E5E5E5] text-left">
+              <thead className="bg-surface-muted text-left text-xs font-medium uppercase tracking-wide text-ink-muted">
                 <tr>
                   <th className="px-4 py-3">Assessment</th>
                   <th className="px-4 py-3">Class</th>
@@ -176,7 +164,7 @@ export default async function TeacherHomePage() {
                   <th className="px-4 py-3">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E5E5]">
+              <tbody className="divide-y divide-line-subtle">
                 {home.pendingGrading.map((item) => (
                   <GradingQueueRow
                     key={item.id}
@@ -195,15 +183,15 @@ export default async function TeacherHomePage() {
 
         <section>
           <div className="mb-4">
-            <h2 className="text-lg font-semibold">Upcoming Assignments</h2>
-            <p className="text-sm text-[#666666]">
+            <h2 className="text-lg font-semibold tracking-tight text-ink">Upcoming Assignments</h2>
+            <p className="text-sm text-ink-secondary">
               Assignments scheduled for your classes.
             </p>
           </div>
 
-          <div className="overflow-x-auto border border-[#999999] bg-white">
+          <div className={`overflow-x-auto ${surfaceCard}`}>
             <table className="w-full text-sm">
-              <thead className="bg-[#E5E5E5] text-left">
+              <thead className="bg-surface-muted text-left text-xs font-medium uppercase tracking-wide text-ink-muted">
                 <tr>
                   <th className="px-4 py-3">Assignment</th>
                   <th className="px-4 py-3">Class</th>
@@ -212,7 +200,7 @@ export default async function TeacherHomePage() {
                   <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E5E5]">
+              <tbody className="divide-y divide-line-subtle">
                 {home.upcomingAssignments.map((item) => (
                   <tr key={item.id}>
                     <td className="px-4 py-4">{item.title}</td>

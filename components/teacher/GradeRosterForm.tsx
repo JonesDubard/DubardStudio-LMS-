@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveGrades } from "@/lib/queries/assessments";
 import type { GradeRosterRow } from "@/lib/types/assessments";
+import { alertError, buttonPrimary, buttonSecondary, fieldControl, fieldControlBase, surfaceCard } from "@/lib/ui/styles";
 
 export function GradeRosterForm({
   assessmentId,
@@ -48,32 +49,32 @@ export function GradeRosterForm({
   }
 
   return (
-    <section className="border border-[#999999] bg-white">
-      <div className="border-b border-[#999999] p-5">
-        <h2 className="font-semibold">Grade entry</h2>
-        <p className="mt-1 text-sm text-[#666666]">
+    <section className={surfaceCard}>
+      <div className="border-b border-line p-5">
+        <h2 className="font-semibold tracking-tight text-ink">Grade entry</h2>
+        <p className="mt-1 text-sm text-ink-secondary">
           One row per enrolled student. There is no digital submission.
         </p>
       </div>
       {error ? (
-        <p className="border-b border-[#999999] px-5 py-3 text-sm">{error}</p>
+        <p className={`${alertError} border-x-0 border-t-0 rounded-none`}>{error}</p>
       ) : null}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-[#E5E5E5] text-left">
+          <thead className="bg-surface-muted text-left text-xs font-medium uppercase tracking-wide text-ink-muted">
             <tr>
               <th className="px-5 py-4">Student name</th>
               <th className="px-5 py-4">Score</th>
               <th className="px-5 py-4">Feedback</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E5E5E5]">
+          <tbody className="divide-y divide-line-subtle">
             {rows.map((row) => (
               <tr key={row.studentId}>
                 <td className="px-5 py-4 font-medium">
                   {row.studentName}
                   {row.releasedAt ? (
-                    <span className="ml-2 text-xs text-[#666666]">Released</span>
+                    <span className="ml-2 text-xs text-ink-muted">Released</span>
                   ) : null}
                 </td>
                 <td className="px-5 py-4">
@@ -82,9 +83,9 @@ export function GradeRosterForm({
                     onChange={(event) =>
                       update(row.studentId, "score", event.target.value)
                     }
-                    className="w-24 border border-[#999999] px-3 py-2"
+                    className={`${fieldControlBase} w-24`}
                   />
-                  <span className="ml-2 text-[#666666]">/ {maxScore ?? "—"}</span>
+                  <span className="ml-2 text-ink-secondary">/ {maxScore ?? "—"}</span>
                 </td>
                 <td className="px-5 py-4">
                   <input
@@ -92,7 +93,7 @@ export function GradeRosterForm({
                     onChange={(event) =>
                       update(row.studentId, "feedback", event.target.value)
                     }
-                    className="w-full border border-[#999999] px-3 py-2"
+                    className={fieldControl}
                   />
                 </td>
               </tr>
@@ -100,11 +101,11 @@ export function GradeRosterForm({
           </tbody>
         </table>
       </div>
-      <div className="flex justify-end gap-3 border-t border-[#999999] p-5">
+      <div className="flex justify-end gap-3 border-t border-line p-5">
         <button
           type="button"
           disabled={pending}
-          className="border border-[#999999] bg-white px-5 py-3"
+          className={buttonSecondary}
           onClick={() => void save(false)}
         >
           Save Grades
@@ -112,7 +113,7 @@ export function GradeRosterForm({
         <button
           type="button"
           disabled={pending}
-          className="border border-brand-primary bg-brand-primary px-5 py-3 text-white"
+          className={buttonPrimary}
           onClick={() => void save(true)}
         >
           Release All

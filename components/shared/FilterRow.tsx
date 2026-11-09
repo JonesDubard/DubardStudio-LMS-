@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { fieldControl, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 
 export type FilterOption = {
   value: string;
@@ -40,10 +41,10 @@ export function FilterRow({
   textFields = [],
   search,
   children,
-  className = "border border-[#999999] bg-white p-5",
+  className = `${surfaceCard} p-5`,
   gridClassName = "grid grid-cols-1 gap-4 md:grid-cols-3",
-  labelClassName = "mb-2 block text-sm font-medium",
-  controlClassName = "w-full border border-[#999999] bg-white px-3 py-3",
+  labelClassName = fieldLabel,
+  controlClassName = fieldControl,
 }: FilterRowProps) {
   return (
     <section className={className}>

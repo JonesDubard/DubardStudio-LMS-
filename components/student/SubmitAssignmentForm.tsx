@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { submitAssignment } from "@/lib/queries/assessments";
+import { alertError, buttonPrimary, fieldControl, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 
 export function SubmitAssignmentForm({ assessmentId }: { assessmentId: string }) {
   const router = useRouter();
@@ -24,11 +25,11 @@ export function SubmitAssignmentForm({ assessmentId }: { assessmentId: string })
   }
 
   return (
-    <form className="space-y-4 border border-[#999999] p-4" onSubmit={onSubmit}>
+    <form className={`space-y-4 p-4 ${surfaceCard}`} onSubmit={onSubmit}>
       {error ? (
-        <p className="border border-[#333333] bg-[#E5E5E5] px-3 py-2 text-sm">{error}</p>
+        <p className={alertError}>{error}</p>
       ) : null}
-      <label className="mb-2 block text-xs font-bold" htmlFor="answer">
+      <label className={fieldLabel} htmlFor="answer">
         Your answer
       </label>
       <textarea
@@ -36,13 +37,13 @@ export function SubmitAssignmentForm({ assessmentId }: { assessmentId: string })
         rows={6}
         value={text}
         onChange={(event) => setText(event.target.value)}
-        className="w-full border border-[#999999] p-3 text-sm"
+        className={fieldControl}
         required
       />
       <button
         type="submit"
         disabled={pending}
-        className="min-h-12 w-full border border-brand-primary bg-brand-primary px-4 py-3 text-sm font-bold text-white"
+        className={`${buttonPrimary} min-h-12 w-full`}
       >
         {pending ? "Handing in..." : "Hand in"}
       </button>

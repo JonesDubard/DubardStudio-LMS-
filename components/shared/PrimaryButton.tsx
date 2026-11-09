@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { buttonPrimary } from "@/lib/ui/styles";
 
 const variantClass = {
-  feed: "min-h-11 w-full border border-brand-primary bg-brand-primary px-4 py-2 text-sm font-semibold text-white",
-  page: "min-h-12 w-full border border-brand-primary bg-brand-primary px-4 py-3 text-sm font-bold text-white",
+  feed: `${buttonPrimary} min-h-11 w-full`,
+  page: `${buttonPrimary} min-h-12 w-full`,
 } as const;
 
 type PrimaryButtonProps = {
@@ -20,7 +21,7 @@ export function PrimaryButton({
 
   if (href) {
     return (
-      <Link href={href} className={`block text-center ${className}`}>
+      <Link href={href} className={className}>
         {children}
       </Link>
     );

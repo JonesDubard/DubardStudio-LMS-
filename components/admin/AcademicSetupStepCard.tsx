@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { surfaceCard } from "@/lib/ui/styles";
 
 type AcademicSetupStepCardProps = {
   title: string;
@@ -17,10 +18,10 @@ export function AcademicSetupStepCard({
   children,
 }: AcademicSetupStepCardProps) {
   return (
-    <section className="border border-[#999999] bg-white p-5">
+    <section className={`${surfaceCard} p-5`}>
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-semibold">
+          <h2 className="text-base font-semibold tracking-tight text-ink">
             {href ? (
               <Link href={href} className="underline-offset-2 hover:underline">
                 {title}
@@ -29,14 +30,12 @@ export function AcademicSetupStepCard({
               title
             )}
           </h2>
-          <p className="mt-1 text-sm text-[#666666]">{description}</p>
+          <p className="mt-1 text-sm text-ink-secondary">{description}</p>
         </div>
         {headerAction}
       </div>
 
-      <div className="mt-4 overflow-x-auto border border-[#999999]">
-        {children}
-      </div>
+      <div className="mt-4 overflow-x-auto rounded-lg border border-line">{children}</div>
     </section>
   );
 }

@@ -1,16 +1,15 @@
-export const inputClass = "w-full border border-[#999999] px-3 py-2 text-sm";
-export const labelClass = "mb-1 block text-sm font-medium";
-export const primaryButtonClass =
-  "border border-brand-primary bg-brand-primary px-5 py-3 text-sm text-white disabled:opacity-60";
-export const secondaryButtonClass =
-  "border border-[#333333] bg-white px-3 py-2 text-sm disabled:opacity-60";
-export const quietButtonClass =
-  "border border-[#999999] bg-white px-2 py-1 text-sm disabled:opacity-60";
+import { alertError, buttonGhost, buttonPrimary, buttonSecondary, fieldControl, fieldError, fieldLabel } from "@/lib/ui/styles";
+
+export const inputClass = fieldControl;
+export const labelClass = fieldLabel;
+export const primaryButtonClass = buttonPrimary;
+export const secondaryButtonClass = buttonSecondary;
+export const quietButtonClass = buttonGhost;
 
 export function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <p role="alert" className="mt-1 text-sm">
+    <p role="alert" className={fieldError}>
       {message}
     </p>
   );
@@ -19,10 +18,7 @@ export function FieldError({ message }: { message?: string }) {
 export function ServerError({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <p
-      role="alert"
-      className="border border-[#333333] bg-[#E5E5E5] px-3 py-2 text-sm"
-    >
+    <p role="alert" className={alertError}>
       {message}
     </p>
   );

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { buttonPrimaryCompact } from "@/lib/ui/styles";
 
 type GradingQueueRowProps = {
   title: string;
@@ -19,15 +20,12 @@ export function GradingQueueRow({
 }: GradingQueueRowProps) {
   return (
     <tr>
-      <td className="px-4 py-4 font-medium">{title}</td>
-      <td className="px-4 py-4">{className}</td>
+      <td className="px-4 py-4 font-medium text-ink">{title}</td>
+      <td className="px-4 py-4 text-ink-secondary">{className}</td>
       <td className="px-4 py-4">{typeLabel}</td>
       <td className="px-4 py-4">{pendingLabel}</td>
       <td className="px-4 py-4">
-        <Link
-          href={href}
-          className="inline-block border border-brand-primary bg-brand-primary px-3 py-2 text-white"
-        >
+        <Link href={href} className={buttonPrimaryCompact}>
           {actionLabel}
         </Link>
       </td>

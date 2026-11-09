@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createAssessment } from "@/lib/queries/assessments";
 import type { AssessmentType } from "@/lib/types/assessments";
+import { alertError, buttonPrimary, buttonSecondary, fieldControl, surfaceCard } from "@/lib/ui/styles";
 
-const fieldClass = "w-full border border-[#999999] px-3 py-3";
+const fieldClass = fieldControl;
 
 export function CreateAssessmentForm({ lessonId }: { lessonId: string }) {
   const router = useRouter();
@@ -38,14 +39,14 @@ export function CreateAssessmentForm({ lessonId }: { lessonId: string }) {
 
   return (
     <form
-      className="space-y-6 border border-[#999999] bg-white p-6"
+      className={`space-y-6 p-6 ${surfaceCard}`}
       onSubmit={(event) => {
         event.preventDefault();
         void save(false);
       }}
     >
       {error ? (
-        <p className="border border-[#333333] bg-[#E5E5E5] px-3 py-2 text-sm">{error}</p>
+        <p className={alertError}>{error}</p>
       ) : null}
 
       <div>
@@ -109,14 +110,14 @@ export function CreateAssessmentForm({ lessonId }: { lessonId: string }) {
         <button
           type="submit"
           disabled={pending}
-          className="border border-[#999999] bg-white px-5 py-3"
+          className={buttonSecondary}
         >
           Save as Draft
         </button>
         <button
           type="button"
           disabled={pending}
-          className="border border-brand-primary bg-brand-primary px-5 py-3 text-white"
+          className={buttonPrimary}
           onClick={() => void save(true)}
         >
           Publish

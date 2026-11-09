@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { surfaceCard } from "@/lib/ui/styles";
 
 export type DataTableColumn = {
   key: string;
@@ -26,16 +27,16 @@ type DataTableProps = {
 export function DataTable({
   columns,
   rows,
-  headerCellClassName = "px-5 py-4",
+  headerCellClassName = "px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-muted",
   bodyCellClassName = "px-5 py-4",
-  wrapperClassName = "overflow-x-auto border border-[#999999] bg-white",
+  wrapperClassName = `overflow-x-auto ${surfaceCard}`,
   tableClassName = "w-full text-sm",
   rowClassName,
 }: DataTableProps) {
   return (
     <div className={wrapperClassName}>
       <table className={tableClassName}>
-        <thead className="bg-[#E5E5E5] text-left">
+        <thead className="bg-surface-muted text-left">
           <tr>
             {columns.map((column) => (
               <th
@@ -47,7 +48,7 @@ export function DataTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#E5E5E5]">
+        <tbody className="divide-y divide-line-subtle">
           {rows.map((row) => (
             <tr key={row.id} className={rowClassName}>
               {row.cells.map((cell, index) => (

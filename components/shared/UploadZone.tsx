@@ -1,3 +1,6 @@
+import { Upload } from "lucide-react";
+import { buttonSecondary } from "@/lib/ui/styles";
+
 type UploadZoneProps = {
   title: string;
   description: string;
@@ -14,23 +17,19 @@ export function UploadZone({
   note,
 }: UploadZoneProps) {
   const button = (
-    <button
-      type="button"
-      disabled={Boolean(note)}
-      className="border border-[#999999] bg-white px-4 py-2 disabled:opacity-60"
-    >
+    <button type="button" disabled={Boolean(note)} className={buttonSecondary}>
       {buttonLabel}
     </button>
   );
 
   if (variant === "inline") {
     return (
-      <div className="border border-dashed border-[#999999] bg-[#E5E5E5] p-6">
+      <div className="rounded-lg border border-dashed border-line-strong bg-surface-muted p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="font-medium">{title}</p>
-            <p className="mt-1 text-sm text-[#666666]">{description}</p>
-            {note ? <p className="mt-2 text-sm text-[#666666]">{note}</p> : null}
+            <p className="font-medium text-ink">{title}</p>
+            <p className="mt-1 text-sm text-ink-secondary">{description}</p>
+            {note ? <p className="mt-2 text-sm text-ink-muted">{note}</p> : null}
           </div>
           {button}
         </div>
@@ -39,14 +38,14 @@ export function UploadZone({
   }
 
   return (
-    <div className="border border-dashed border-[#999999] bg-[#E5E5E5] p-8 text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center border border-[#999999] text-[#666666]">
-        /
+    <div className="rounded-lg border border-dashed border-line-strong bg-surface-muted p-8 text-center">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-muted shadow-card">
+        <Upload size={20} strokeWidth={1.75} aria-hidden />
       </div>
-      <p className="mt-3 font-medium">{title}</p>
-      <p className="mt-1 text-sm text-[#666666]">{description}</p>
-      {note ? <p className="mt-2 text-sm text-[#666666]">{note}</p> : null}
-      <div className="mt-4">{button}</div>
+      <p className="mt-3 font-medium text-ink">{title}</p>
+      <p className="mt-1 text-sm text-ink-secondary">{description}</p>
+      {note ? <p className="mt-2 text-sm text-ink-muted">{note}</p> : null}
+      <div className="mt-4 flex justify-center">{button}</div>
     </div>
   );
 }

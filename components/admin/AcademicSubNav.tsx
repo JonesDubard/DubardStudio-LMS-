@@ -24,8 +24,8 @@ export function AcademicSubNav() {
             href={item.href}
             className={
               active
-                ? "border border-[#333333] bg-[#E5E5E5] px-3 py-2 text-sm font-semibold"
-                : "border border-[#999999] bg-white px-3 py-2 text-sm"
+                ? "rounded-lg border border-brand-border bg-brand-subtle px-3 py-2 text-sm font-semibold text-brand-primary"
+                : "rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink-secondary transition-colors duration-150 hover:bg-surface-muted hover:text-ink"
             }
             aria-current={active ? "page" : undefined}
           >
