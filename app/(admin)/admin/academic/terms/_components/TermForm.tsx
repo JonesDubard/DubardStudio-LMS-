@@ -58,7 +58,7 @@ export function TermForm({
     >
       <ServerError message={serverError} />
       {years.length === 0 ? (
-        <p className="text-sm text-[#666666]">Create an academic year first.</p>
+        <p className="text-sm text-ink-secondary">Create an academic year first.</p>
       ) : null}
       <div>
         <label htmlFor="term-year" className={labelClass}>

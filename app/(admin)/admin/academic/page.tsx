@@ -54,7 +54,7 @@ function EmptyRow({
 }) {
   return (
     <tr>
-      <td className="px-4 py-6 text-sm text-[#666666]" colSpan={colSpan}>
+      <td className="px-4 py-6 text-sm text-ink-secondary" colSpan={colSpan}>
         {children}
       </td>
     </tr>
@@ -83,21 +83,21 @@ export default async function AdminAcademicPage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b border-[#999999] bg-white px-8 py-6">
-        <p className="text-sm text-[#666666]">Academic / Setup</p>
+      <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
+        <p className="text-sm text-ink-secondary">Academic / Setup</p>
         <h1 className="mt-1 text-2xl font-semibold">Academic Setup</h1>
-        <p className="mt-1 text-sm text-[#666666]">
+        <p className="mt-1 text-sm text-ink-secondary">
           Configure the academic structure for the school.
         </p>
       </header>
 
-      <div className="space-y-6 p-8">
+      <div className="space-y-6 p-4 lg:p-8">
         <AcademicSubNav />
 
-        <section className="border border-[#999999] bg-white p-5">
+        <section className="border border-line bg-surface p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-[#666666]">Setup Progress</p>
+              <p className="text-sm text-ink-secondary">Setup Progress</p>
               <p className="mt-1 font-semibold">Academic Structure</p>
             </div>
           </div>
@@ -108,7 +108,7 @@ export default async function AdminAcademicPage() {
               return (
                 <div key={step.id} className="contents">
                   {index > 0 ? (
-                    <div className="w-12 border-t border-[#999999]" />
+                    <div className="w-12 border-t border-line" />
                   ) : null}
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
@@ -116,7 +116,7 @@ export default async function AdminAcademicPage() {
                         className={
                           active
                             ? "flex h-8 w-8 items-center justify-center bg-brand-primary text-sm text-white"
-                            : "flex h-8 w-8 items-center justify-center border border-[#999999] bg-[#E5E5E5] text-sm"
+                            : "flex h-8 w-8 items-center justify-center border border-line bg-surface-muted text-sm"
                         }
                       >
                         {step.number}
@@ -139,14 +139,14 @@ export default async function AdminAcademicPage() {
             href="/admin/academic/years"
             headerAction={<AddYearButton />}
           >
-            <table className="w-full text-sm">
-              <thead className="bg-[#E5E5E5] text-left">
+            <table className="w-full min-w-[28rem] text-sm [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 [&_tbody_tr]:hover:bg-surface-muted">
+              <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
                 <tr>
                   <th className="px-4 py-3">Year</th>
                   <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E5E5]">
+              <tbody className="divide-y divide-line">
                 {years.length === 0 ? (
                   <EmptyRow colSpan={2}>No academic years yet.</EmptyRow>
                 ) : (
@@ -177,14 +177,14 @@ export default async function AdminAcademicPage() {
               />
             }
           >
-            <table className="w-full text-sm">
-              <thead className="bg-[#E5E5E5] text-left">
+            <table className="w-full min-w-[28rem] text-sm [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 [&_tbody_tr]:hover:bg-surface-muted">
+              <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
                 <tr>
                   <th className="px-4 py-3">Term</th>
                   <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E5E5]">
+              <tbody className="divide-y divide-line">
                 {terms.length === 0 ? (
                   <EmptyRow colSpan={2}>
                     {currentYear
@@ -209,14 +209,14 @@ export default async function AdminAcademicPage() {
             href="/admin/academic/classes"
             headerAction={<AddClassButton />}
           >
-            <table className="w-full text-sm">
-              <thead className="bg-[#E5E5E5] text-left">
+            <table className="w-full min-w-[28rem] text-sm [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 [&_tbody_tr]:hover:bg-surface-muted">
+              <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
                 <tr>
                   <th className="px-4 py-3">Class</th>
                   <th className="px-4 py-3">Students</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E5E5]">
+              <tbody className="divide-y divide-line">
                 {classes.length === 0 ? (
                   <EmptyRow colSpan={2}>No classes yet.</EmptyRow>
                 ) : (
@@ -237,14 +237,14 @@ export default async function AdminAcademicPage() {
             href="/admin/academic/subjects"
             headerAction={<AddSubjectButton />}
           >
-            <table className="w-full text-sm">
-              <thead className="bg-[#E5E5E5] text-left">
+            <table className="w-full min-w-[28rem] text-sm [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 [&_tbody_tr]:hover:bg-surface-muted">
+              <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
                 <tr>
                   <th className="px-4 py-3">Subject</th>
                   <th className="px-4 py-3">Classes</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E5E5]">
+              <tbody className="divide-y divide-line">
                 {subjects.length === 0 ? (
                   <EmptyRow colSpan={2}>No subjects yet.</EmptyRow>
                 ) : (

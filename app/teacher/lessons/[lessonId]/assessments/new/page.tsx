@@ -30,30 +30,30 @@ export default async function NewAssessmentPage({
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b border-[#999999] bg-white px-8 py-6">
-        <p className="text-sm text-[#666666]">Lessons / Assessment</p>
+      <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
+        <p className="text-sm text-ink-secondary">Lessons / Assessment</p>
         <h1 className="mt-1 text-2xl font-semibold">Create Assessment</h1>
       </header>
-      <div className="max-w-3xl space-y-6 p-8">
+      <div className="max-w-3xl space-y-6 p-4 lg:p-8">
         {!lesson || !course ? (
-          <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
+          <p className="border border-line bg-surface px-4 py-6 text-sm">
             This lesson is not available.
           </p>
         ) : (
           <>
-            <section className="border border-[#999999] bg-white p-6">
+            <section className="border border-line bg-surface p-6">
               <h2 className="text-lg font-semibold">Linked lesson</h2>
               <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div className="border border-[#999999] p-4">
-                  <p className="text-xs text-[#666666]">Class</p>
+                <div className="border border-line p-4">
+                  <p className="text-xs text-ink-secondary">Class</p>
                   <p className="mt-1 font-medium">{course.class_name}</p>
                 </div>
-                <div className="border border-[#999999] p-4">
-                  <p className="text-xs text-[#666666]">Subject</p>
+                <div className="border border-line p-4">
+                  <p className="text-xs text-ink-secondary">Subject</p>
                   <p className="mt-1 font-medium">{course.subject_name}</p>
                 </div>
-                <div className="border border-[#999999] p-4">
-                  <p className="text-xs text-[#666666]">Lesson</p>
+                <div className="border border-line p-4">
+                  <p className="text-xs text-ink-secondary">Lesson</p>
                   <p className="mt-1 font-medium">{lesson.title}</p>
                 </div>
               </div>

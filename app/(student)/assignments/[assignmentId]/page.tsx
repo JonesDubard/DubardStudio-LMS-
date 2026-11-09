@@ -33,11 +33,11 @@ export default async function AssignmentPage({
   return (
     <>
       <PageHeader variant="section" eyebrow={assessment.type} title="Assignment" />
-      <main className="space-y-5 px-4 py-5">
+      <main className="mx-auto w-full max-w-3xl space-y-5 px-4 py-5 md:px-8">
         <section>
           <h2 className="text-xl font-bold leading-7">{assessment.title}</h2>
           {assessment.dueDate ? (
-            <p className="mt-2 text-sm text-[#666666]">
+            <p className="mt-2 text-sm text-ink-secondary">
               Due {new Date(assessment.dueDate).toLocaleString()}
             </p>
           ) : null}
@@ -47,8 +47,8 @@ export default async function AssignmentPage({
         </section>
 
         {grade ? (
-          <section className="border border-[#999999] bg-[#E5E5E5] p-4">
-            <p className="text-xs font-bold uppercase text-[#666666]">Grade</p>
+          <section className="border border-line bg-surface-muted p-4">
+            <p className="text-xs font-bold uppercase text-ink-secondary">Grade</p>
             <p className="mt-1 text-lg font-bold">
               {grade.score ?? "—"}
               {assessment.maxScore !== null ? ` / ${assessment.maxScore}` : ""}
@@ -61,8 +61,8 @@ export default async function AssignmentPage({
 
         {assessment.type === "assignment" ? (
           submission ? (
-            <section className="border border-[#999999] p-4">
-              <p className="text-xs font-bold uppercase text-[#666666]">Handed in</p>
+            <section className="border border-line p-4">
+              <p className="text-xs font-bold uppercase text-ink-secondary">Handed in</p>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
                 {submission.text}
               </p>
@@ -71,7 +71,7 @@ export default async function AssignmentPage({
             <SubmitAssignmentForm assessmentId={assessment.id} />
           )
         ) : (
-          <p className="text-sm text-[#666666]">
+          <p className="text-sm text-ink-secondary">
             This {assessment.type} is scored by your teacher. There is nothing to hand in.
           </p>
         )}

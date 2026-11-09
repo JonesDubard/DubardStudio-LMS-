@@ -32,8 +32,8 @@ export function SubscriptionRadioGroup({
             key={option.value}
             className={
               isSelected
-                ? "flex items-center gap-4 border border-[#999999] p-4"
-                : "flex items-center gap-4 border border-[#E5E5E5] p-4"
+                ? "flex items-center gap-4 border border-line p-4"
+                : "flex items-center gap-4 border border-line-subtle p-4"
             }
           >
             <input
@@ -45,7 +45,7 @@ export function SubscriptionRadioGroup({
             />
             <div>
               <div className="text-sm font-medium">{option.label}</div>
-              <div className="mt-1 text-xs text-[#666666]">
+              <div className="mt-1 text-xs text-ink-secondary">
                 {option.description}
               </div>
             </div>

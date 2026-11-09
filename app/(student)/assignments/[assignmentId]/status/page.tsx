@@ -25,44 +25,44 @@ export default async function SubmissionStatusPage({
         title={status.headerTitle}
       />
 
-      <main className="space-y-5 px-4 py-5">
-        <section className="border border-[#999999] bg-[#E5E5E5] p-5 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center border-2 border-[#333333] bg-white">
-            <span className="text-xl font-bold text-[#333333]">/</span>
+      <main className="mx-auto w-full max-w-3xl space-y-5 px-4 py-5 lg:px-8">
+        <section className="border border-line bg-surface-muted p-5 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center border-2 border-line-strong bg-surface">
+            <span className="text-xl font-bold text-ink">/</span>
           </div>
 
           <h2 className="mt-4 text-lg font-bold">{status.confirmationTitle}</h2>
 
-          <p className="mt-2 text-sm leading-5 text-[#666666]">
+          <p className="mt-2 text-sm leading-5 text-ink-secondary">
             {status.confirmationDetail}
           </p>
         </section>
 
-        <section className="border border-[#999999] p-4">
-          <div className="border-b border-[#E5E5E5] pb-3">
-            <p className="text-xs font-semibold uppercase text-[#666666]">
+        <section className="border border-line p-4">
+          <div className="border-b border-line-subtle pb-3">
+            <p className="text-xs font-semibold uppercase text-ink-secondary">
               {status.summaryLabel}
             </p>
             <h3 className="mt-1 text-sm font-bold">{status.title}</h3>
           </div>
 
-          <dl className="divide-y divide-[#E5E5E5]">
+          <dl className="divide-y divide-line">
             <div className="flex items-center justify-between py-3">
-              <dt className="text-xs text-[#666666]">{status.submittedLabel}</dt>
-              <dd className="text-xs font-semibold text-[#333333]">
+              <dt className="text-xs text-ink-secondary">{status.submittedLabel}</dt>
+              <dd className="text-xs font-semibold text-ink">
                 {status.submittedAt}
               </dd>
             </div>
 
             <div className="flex items-center justify-between py-3">
-              <dt className="text-xs text-[#666666]">{status.dueLabel}</dt>
-              <dd className="text-xs font-semibold text-[#333333]">
+              <dt className="text-xs text-ink-secondary">{status.dueLabel}</dt>
+              <dd className="text-xs font-semibold text-ink">
                 {status.dueValue}
               </dd>
             </div>
 
             <div className="flex items-center justify-between py-3">
-              <dt className="text-xs text-[#666666]">{status.statusLabel}</dt>
+              <dt className="text-xs text-ink-secondary">{status.statusLabel}</dt>
               <dd>
                 <StatusBadge label={status.statusBadge} tone="submitted" />
               </dd>
@@ -74,11 +74,11 @@ export default async function SubmissionStatusPage({
           <h3 className="mb-2 text-sm font-bold">{status.workTitle}</h3>
 
           <div className="space-y-2">
-            <div className="border border-[#999999] p-3">
-              <p className="text-xs font-semibold text-[#666666]">
+            <div className="border border-line p-3">
+              <p className="text-xs font-semibold text-ink-secondary">
                 {status.answerLabel}
               </p>
-              <p className="mt-2 text-sm leading-5 text-[#333333]">
+              <p className="mt-2 text-sm leading-5 text-ink">
                 {status.answer}
               </p>
             </div>
@@ -87,7 +87,7 @@ export default async function SubmissionStatusPage({
               title={status.attachmentName}
               meta={status.attachmentMeta}
               action={
-                <span className="text-xs font-bold text-[#666666]">
+                <span className="text-xs font-bold text-ink-secondary">
                   {status.attachmentState}
                 </span>
               }
@@ -95,16 +95,16 @@ export default async function SubmissionStatusPage({
           </div>
         </section>
 
-        <section className="border border-[#E5E5E5] bg-[#E5E5E5] p-4">
-          <p className="text-xs font-bold uppercase text-[#666666]">
+        <section className="border border-line-subtle bg-surface-muted p-4">
+          <p className="text-xs font-bold uppercase text-ink-secondary">
             {status.reviewLabel}
           </p>
 
-          <p className="mt-2 text-sm font-semibold text-[#333333]">
+          <p className="mt-2 text-sm font-semibold text-ink">
             {status.reviewState}
           </p>
 
-          <p className="mt-1 text-xs leading-5 text-[#666666]">
+          <p className="mt-1 text-xs leading-5 text-ink-secondary">
             {status.reviewDetail}
           </p>
         </section>

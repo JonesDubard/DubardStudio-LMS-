@@ -34,11 +34,11 @@ export function GradeSubmissionForm({
   }
 
   return (
-    <section className="border border-[#999999] bg-white">
-      <div className="border-b border-[#999999] p-6">
-        <p className="text-sm text-[#666666]">Selected student</p>
+    <section className="border border-line bg-surface">
+      <div className="border-b border-line p-6">
+        <p className="text-sm text-ink-secondary">Selected student</p>
         <h2 className="mt-1 text-xl font-semibold">{submission.studentName}</h2>
-        <p className="text-sm text-[#666666]">
+        <p className="text-sm text-ink-secondary">
           {new Date(submission.submittedAt).toLocaleString()}
           {submission.releasedAt ? " · Released" : ""}
         </p>
@@ -46,7 +46,7 @@ export function GradeSubmissionForm({
       <div className="space-y-6 p-6">
         <div>
           <h3 className="font-semibold">Submitted work</h3>
-          <div className="mt-3 border border-[#999999] p-5">
+          <div className="mt-3 border border-line p-5">
             <p className="whitespace-pre-wrap text-sm leading-6">
               {submission.text ?? "No written answer."}
             </p>

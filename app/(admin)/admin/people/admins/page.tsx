@@ -3,6 +3,7 @@ import { PeopleSubNav } from "@/components/admin/PeopleSubNav";
 import { DataTable } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { getSchoolAdmins } from "@/lib/stubs/get-school-admins";
+import { buttonPrimary, buttonSecondary, surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "School Admins",
@@ -13,20 +14,17 @@ export default function AdminAdminsPage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b border-[#999999] bg-white px-8 py-6">
-        <p className="text-sm text-[#666666]">{data.eyebrow}</p>
+      <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
+        <p className="text-sm text-ink-secondary">{data.eyebrow}</p>
         <h1 className="mt-1 text-2xl font-semibold">{data.title}</h1>
-        <p className="mt-1 text-sm text-[#666666]">{data.subtitle}</p>
+        <p className="mt-1 text-sm text-ink-secondary">{data.subtitle}</p>
       </header>
 
-      <div className="space-y-6 p-8">
+      <div className="space-y-6 p-4 lg:p-8">
         <PeopleSubNav />
 
         <div className="flex justify-end">
-          <button
-            type="button"
-            className="border border-brand-primary bg-brand-primary px-5 py-3 text-white"
-          >
+          <button type="button" className={buttonPrimary}>
             {data.inviteButtonLabel}
           </button>
         </div>
@@ -51,7 +49,7 @@ export default function AdminAdminsPage() {
               <button
                 key="action"
                 type="button"
-                className="border border-[#999999] px-3 py-2"
+                className={buttonSecondary}
               >
                 {admin.actionLabel}
               </button>,
@@ -59,9 +57,9 @@ export default function AdminAdminsPage() {
           }))}
         />
 
-        <div className="max-w-2xl border border-[#999999] bg-white p-5">
+        <div className={`${surfaceCard} max-w-2xl p-5`}>
           <p className="font-medium">{data.accessTitle}</p>
-          <p className="mt-2 text-sm text-[#666666]">{data.accessDescription}</p>
+          <p className="mt-2 text-sm text-ink-secondary">{data.accessDescription}</p>
         </div>
       </div>
     </main>

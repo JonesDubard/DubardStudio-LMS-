@@ -66,6 +66,7 @@ const config: Config = {
           subtle: "var(--info-subtle)",
           border: "var(--info-border)",
         },
+        overlay: "var(--overlay)",
       },
       boxShadow: {
         card: "0 1px 2px 0 rgb(15 23 42 / 0.05)",

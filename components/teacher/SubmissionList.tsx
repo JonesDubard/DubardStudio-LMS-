@@ -13,20 +13,20 @@ export function SubmissionList({
   submissions,
 }: SubmissionListProps) {
   return (
-    <section className="border border-[#999999] bg-white">
-      <div className="border-b border-[#999999] p-5">
+    <section className="rounded-lg border border-line bg-surface shadow-card">
+      <div className="border-b border-line p-5">
         <h2 className="font-semibold">{title}</h2>
-        <p className="mt-1 text-sm text-[#666666]">{subtitle}</p>
+        <p className="mt-1 text-sm text-ink-secondary">{subtitle}</p>
       </div>
 
-      <div className="divide-y divide-[#E5E5E5]">
+      <div className="divide-y divide-line">
         {submissions.map((submission) => (
           <button
             key={submission.id}
             type="button"
             className={
               submission.selected
-                ? "w-full border-l-4 border-[#333333] bg-[#E5E5E5] p-5 text-left"
+                ? "w-full border-l-4 border-line-strong bg-surface-muted p-5 text-left"
                 : "w-full p-5 text-left"
             }
           >
@@ -40,7 +40,7 @@ export function SubmissionList({
               </span>
               <StatusBadge label={submission.status} />
             </div>
-            <p className="mt-2 text-sm text-[#666666]">{submission.meta}</p>
+            <p className="mt-2 text-sm text-ink-secondary">{submission.meta}</p>
           </button>
         ))}
       </div>

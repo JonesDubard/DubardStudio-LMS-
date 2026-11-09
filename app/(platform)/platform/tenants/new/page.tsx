@@ -3,17 +3,18 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FormField } from "@/components/shared/FormField";
+import { buttonPrimary, buttonSecondary, fieldControl, fieldLabel } from "@/lib/ui/styles";
 
 export default function CreateTenantPage() {
   const [subdomain, setSubdomain] = useState("pilotschool");
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1100px] p-8">
+      <div className="mx-auto max-w-[1100px] p-4 md:p-8">
         <header className="mb-8">
-          <div className="text-sm text-[#666666]">Tenants</div>
+          <div className="text-sm text-ink-secondary">Tenants</div>
           <h1 className="mt-1 text-2xl font-semibold">Create Tenant</h1>
-          <p className="mt-2 text-sm text-[#666666]">
+          <p className="mt-2 text-sm text-ink-secondary">
             Provision a new school on the LMS platform.
           </p>
         </header>
@@ -23,8 +24,8 @@ export default function CreateTenantPage() {
             event.preventDefault();
           }}
         >
-          <section className="border border-[#E5E5E5]">
-            <div className="border-b border-[#E5E5E5] px-6 py-5">
+          <section className="rounded-lg border border-line bg-surface shadow-card">
+            <div className="border-b border-line-subtle px-6 py-5">
               <h2 className="font-semibold">Tenant Information</h2>
             </div>
 
@@ -34,7 +35,7 @@ export default function CreateTenantPage() {
                   id="school-name"
                   type="text"
                   defaultValue="Pilot School #1"
-                  className="w-full border border-[#999999] px-3 py-3 text-sm"
+                  className={fieldControl}
                 />
               </FormField>
 
@@ -43,7 +44,7 @@ export default function CreateTenantPage() {
                   id="contact-person"
                   type="text"
                   defaultValue="Mrs. Abena Kollie"
-                  className="w-full border border-[#999999] px-3 py-3 text-sm"
+                  className={fieldControl}
                 />
               </FormField>
 
@@ -52,14 +53,14 @@ export default function CreateTenantPage() {
                   id="contact-email"
                   type="email"
                   defaultValue="admin@pilotschool.edu.lr"
-                  className="w-full border border-[#999999] px-3 py-3 text-sm"
+                  className={fieldControl}
                 />
               </FormField>
 
               <div>
                 <label
                   htmlFor="subdomain"
-                  className="mb-2 block text-sm font-medium"
+                  className={fieldLabel}
                 >
                   Subdomain
                 </label>
@@ -68,11 +69,11 @@ export default function CreateTenantPage() {
                   type="text"
                   value={subdomain}
                   onChange={(event) => setSubdomain(event.target.value)}
-                  className="w-full border border-[#999999] px-3 py-3 text-sm"
+                  className={fieldControl}
                 />
-                <div className="mt-2 text-xs text-[#666666]">
+                <div className="mt-2 text-xs text-ink-secondary">
                   Preview:{" "}
-                  <span className="font-medium text-[#333333]">
+                  <span className="font-medium text-ink">
                     {subdomain || "pilotschool"}.ourlms.com
                   </span>
                 </div>
@@ -82,7 +83,7 @@ export default function CreateTenantPage() {
                 <select
                   id="subscription-status"
                   defaultValue="Trial"
-                  className="w-full border border-[#999999] bg-white px-3 py-3 text-sm"
+                  className={fieldControl}
                 >
                   <option>Trial</option>
                   <option>Active</option>
@@ -95,7 +96,7 @@ export default function CreateTenantPage() {
                 <select
                   id="grade-range"
                   defaultValue="Both"
-                  className="w-full border border-[#999999] bg-white px-3 py-3 text-sm"
+                  className={fieldControl}
                 >
                   <option>Primary</option>
                   <option>Secondary</option>
@@ -105,33 +106,33 @@ export default function CreateTenantPage() {
             </div>
           </section>
 
-          <section className="mt-6 border border-[#E5E5E5] bg-[#E5E5E5] p-6">
+          <section className="mt-6 rounded-lg border border-line bg-surface-muted p-6">
             <h2 className="font-semibold">What happens on creation?</h2>
-            <p className="mt-2 text-sm text-[#666666]">
+            <p className="mt-2 text-sm text-ink-secondary">
               On creation, the system will automatically:
             </p>
 
             <ul className="mt-4 space-y-3 text-sm">
               <li className="flex gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-line bg-surface text-xs">
                   /
                 </span>
                 Create the tenant record
               </li>
               <li className="flex gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-line bg-surface text-xs">
                   /
                 </span>
                 Provision default branding
               </li>
               <li className="flex gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-line bg-surface text-xs">
                   /
                 </span>
                 Generate a School Admin invite email
               </li>
               <li className="flex gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-line bg-surface text-xs">
                   /
                 </span>
                 Set up default academic term structure
@@ -142,13 +143,13 @@ export default function CreateTenantPage() {
           <div className="mt-6 flex items-center justify-end gap-3">
             <Link
               href="/platform/tenants"
-              className="border border-[#999999] px-5 py-3 text-sm"
+              className={buttonSecondary}
             >
               Cancel
             </Link>
             <button
               type="submit"
-              className="bg-[#333333] px-5 py-3 text-sm font-medium text-white"
+              className={buttonPrimary}
             >
               Create Tenant
             </button>

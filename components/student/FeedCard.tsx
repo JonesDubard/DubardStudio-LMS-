@@ -31,7 +31,7 @@ export function FeedCard({
           <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
             {eyebrow}
           </p>
-          <h3 className="mt-1 text-base font-semibold tracking-tight text-ink">
+          <h3 className="mt-1 break-words text-base font-semibold tracking-tight text-ink">
             {title}
           </h3>
           <p className="mt-1 text-[13px] text-ink-secondary">{meta}</p>

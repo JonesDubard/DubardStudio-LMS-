@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { navLink, navLinkActive } from "@/lib/ui/styles";
+import { navLabel, navLink, navLinkActive, sideNavAside } from "@/lib/ui/styles";
 
 const navItems: {
   label: string;
@@ -70,13 +70,13 @@ export function AdminSideNav({
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 shrink-0 border-r border-line bg-surface px-4 py-5">
-      <div className="mb-8 px-2">
+    <aside className={sideNavAside}>
+      <div className="mb-6 flex flex-col items-center lg:mb-8 lg:items-start lg:px-2">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-subtle text-brand-primary">
           <School size={18} strokeWidth={1.75} aria-hidden />
         </div>
-        <p className="mt-3 text-xs font-medium text-ink-muted">{portalLabel}</p>
-        <p className="font-semibold tracking-tight text-ink">{schoolName}</p>
+        <p className={`mt-3 text-xs font-medium text-ink-muted ${navLabel}`}>{portalLabel}</p>
+        <p className={`font-semibold tracking-tight text-ink ${navLabel}`}>{schoolName}</p>
       </div>
 
       <nav className="space-y-1">
@@ -87,20 +87,26 @@ export function AdminSideNav({
           const content = (
             <>
               <Icon size={18} strokeWidth={1.75} aria-hidden />
-              {item.label}
+              <span className={navLabel}>{item.label}</span>
             </>
           );
 
           if (item.href === "#") {
             return (
-              <span key={item.label} className={className}>
+              <span key={item.label} className={className} title={item.label}>
                 {content}
               </span>
             );
           }
 
           return (
-            <Link key={item.label} href={item.href} className={className}>
+            <Link
+              key={item.label}
+              href={item.href}
+              className={className}
+              title={item.label}
+              aria-current={active ? "page" : undefined}
+            >
               {content}
             </Link>
           );

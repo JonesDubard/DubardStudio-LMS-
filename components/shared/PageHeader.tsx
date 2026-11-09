@@ -17,11 +17,11 @@ type PageHeaderProps = GreetingHeader | SectionHeader;
 export function PageHeader(props: PageHeaderProps) {
   if (props.variant === "greeting") {
     return (
-      <header className="bg-brand-primary px-4 py-5 text-white">
+      <header className="bg-brand-primary px-4 py-5 text-white md:px-8">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-medium text-white/80">{props.eyebrow}</p>
-            <h1 className="mt-0.5 truncate text-2xl font-semibold tracking-tight">
+            <h1 className="mt-0.5 break-words text-2xl font-semibold tracking-tight">
               {props.title}
             </h1>
           </div>
@@ -35,7 +35,7 @@ export function PageHeader(props: PageHeaderProps) {
   }
 
   return (
-    <header className="border-b border-line bg-surface px-4 py-4">
+    <header className="border-b border-line bg-surface px-4 py-4 md:px-8">
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-ink-secondary">
           <BookOpen size={18} strokeWidth={1.75} aria-hidden />

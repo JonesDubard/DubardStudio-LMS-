@@ -39,14 +39,14 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b border-[#999999] bg-white px-8 py-6">
-        <p className="text-sm text-[#666666]">Lessons / Lesson</p>
+      <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
+        <p className="text-sm text-ink-secondary">Lessons / Lesson</p>
         <div className="mt-1 flex items-center justify-between gap-6">
           <div>
             <h1 className="text-2xl font-semibold">
               {course && lesson ? lesson.title : "Lesson"}
             </h1>
-            <p className="text-sm text-[#666666]">
+            <p className="text-sm text-ink-secondary">
               {course
                 ? `${course.class_name} · ${course.subject_name}`
                 : "This lesson is not on a course assigned to you."}
@@ -55,7 +55,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
           <div className="flex items-center gap-3">
             <Link
               href="/teacher/lessons"
-              className="border border-[#999999] bg-white px-4 py-2 text-sm"
+              className="border border-line bg-surface px-4 py-2 text-sm"
             >
               All Lessons
             </Link>
@@ -70,7 +70,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
             {course && lesson ? (
               <StatusBadge
                 label={statusLabel(lesson.status)}
-                className="border border-[#999999] px-3 py-2 text-sm"
+                className="border border-line px-3 py-2 text-sm"
               />
             ) : null}
           </div>
@@ -79,11 +79,11 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
       <div className="max-w-5xl p-8">
         {courses.length === 0 ? (
-          <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
+          <p className="border border-line bg-surface px-4 py-6 text-sm">
             {NO_CLASSES_ASSIGNED_MESSAGE}
           </p>
         ) : !lesson || !course ? (
-          <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
+          <p className="border border-line bg-surface px-4 py-6 text-sm">
             This lesson is not available.
           </p>
         ) : (

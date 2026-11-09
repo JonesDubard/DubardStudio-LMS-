@@ -16,8 +16,8 @@ export function AuditLogRow({ event }: AuditLogRowProps) {
       <tr
         className={
           expanded
-            ? "border-t border-[#E5E5E5] bg-[#E5E5E5]"
-            : "border-t border-[#E5E5E5]"
+            ? "border-t border-line-subtle bg-surface-muted"
+            : "border-t border-line-subtle"
         }
       >
         <td className="px-4 py-4 font-medium">
@@ -39,7 +39,7 @@ export function AuditLogRow({ event }: AuditLogRowProps) {
       </tr>
 
       {expanded && event.detail ? (
-        <tr className="border-t border-[#999999]">
+        <tr className="border-t border-line">
           <AuditLogDetail detail={event.detail} />
         </tr>
       ) : null}

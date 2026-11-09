@@ -12,18 +12,18 @@ export default function AuditLogPage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1440px] p-8">
+      <div className="mx-auto max-w-[1440px] p-4 md:p-8">
         <header className="mb-8">
-          <div className="text-sm text-[#666666]">{data.eyebrow}</div>
+          <div className="text-sm text-ink-secondary">{data.eyebrow}</div>
           <h1 className="mt-1 text-2xl font-semibold">{data.title}</h1>
-          <p className="mt-2 text-sm text-[#666666]">{data.subtitle}</p>
+          <p className="mt-2 text-sm text-ink-secondary">{data.subtitle}</p>
         </header>
 
         <FilterRow
-          className="mb-5 border border-[#E5E5E5] p-4"
+          className="mb-5 border border-line-subtle p-4"
           gridClassName="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
-          labelClassName="mb-2 block text-xs font-medium uppercase tracking-wide text-[#666666]"
-          controlClassName="w-full border border-[#999999] bg-white px-3 py-2.5 text-sm"
+          labelClassName="mb-2 block text-xs font-medium uppercase tracking-wide text-ink-secondary"
+          controlClassName="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-sm text-ink shadow-card transition-colors duration-150 placeholder:text-ink-disabled hover:border-line-strong focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-ring disabled:cursor-not-allowed disabled:bg-surface-disabled disabled:text-ink-disabled.5 text-sm"
           textFields={[
             {
               id: "date-range",
@@ -59,9 +59,9 @@ export default function AuditLogPage() {
           ]}
         />
 
-        <section className="overflow-x-auto border border-[#E5E5E5]">
+        <section className="overflow-x-auto border border-line-subtle">
           <table className="w-full min-w-[1150px] border-collapse text-sm">
-            <thead className="bg-[#E5E5E5] text-left">
+            <thead className="border-b border-line bg-surface text-left text-sm font-medium text-ink-secondary">
               <tr>
                 <th className="w-12 px-4 py-3 font-medium" />
                 <th className="px-4 py-3 font-medium">Timestamp</th>

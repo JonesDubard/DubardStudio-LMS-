@@ -44,7 +44,7 @@ export default async function StudentFeedPage() {
         title={feed.greeting}
       />
 
-      <main className="space-y-5 px-4 py-5">
+      <main className="space-y-5 px-4 py-5 md:px-8">
         <section>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold tracking-tight text-ink">
@@ -64,38 +64,39 @@ export default async function StudentFeedPage() {
               title="No published lessons or upcoming assignments yet."
             />
           ) : (
-            feed.items.map((item) =>
-              item.kind === "lesson" ? (
-                <FeedCard
-                  key={`${item.kind}-${item.id}`}
-                  eyebrow={item.eyebrow}
-                  title={item.title}
-                  meta={item.meta}
-                  description={item.description}
-                  showMark
-                  className="mb-3"
-                >
-                  <PrimaryButton href={`/lessons/${item.id}`} variant="feed">
-                    {item.actionLabel}
-                  </PrimaryButton>
-                </FeedCard>
-              ) : (
-                <FeedCard
-                  key={`${item.kind}-${item.id}`}
-                  eyebrow={item.eyebrow}
-                  title={item.title}
-                  meta={item.meta}
-                  badge={item.badge}
-                >
-                  <Link
-                    href={`/assignments/${item.id}`}
-                    className={`${buttonSecondary} min-h-11 w-full`}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {feed.items.map((item) =>
+                item.kind === "lesson" ? (
+                  <FeedCard
+                    key={`${item.kind}-${item.id}`}
+                    eyebrow={item.eyebrow}
+                    title={item.title}
+                    meta={item.meta}
+                    description={item.description}
+                    showMark
                   >
-                    {item.actionLabel}
-                  </Link>
-                </FeedCard>
-              ),
-            )
+                    <PrimaryButton href={`/lessons/${item.id}`} variant="feed">
+                      {item.actionLabel}
+                    </PrimaryButton>
+                  </FeedCard>
+                ) : (
+                  <FeedCard
+                    key={`${item.kind}-${item.id}`}
+                    eyebrow={item.eyebrow}
+                    title={item.title}
+                    meta={item.meta}
+                    badge={item.badge}
+                  >
+                    <Link
+                      href={`/assignments/${item.id}`}
+                      className={`${buttonSecondary} min-h-11 w-full`}
+                    >
+                      {item.actionLabel}
+                    </Link>
+                  </FeedCard>
+                ),
+              )}
+            </div>
           )}
         </section>
 
