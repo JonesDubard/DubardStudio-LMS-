@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { gradeSubmission } from "@/lib/queries/assessments";
 import type { SubmissionGradeView } from "@/lib/types/assessments";
+import { alertError, buttonPrimary, fieldControl, fieldControlBase, fieldLabel } from "@/lib/ui/styles";
 
 export function GradeSubmissionForm({
   submission,
@@ -52,10 +53,10 @@ export function GradeSubmissionForm({
           </div>
         </div>
         {error ? (
-          <p className="border border-[#333333] bg-[#E5E5E5] px-3 py-2 text-sm">{error}</p>
+          <p className={alertError}>{error}</p>
         ) : null}
         <div>
-          <label className="mb-2 block font-semibold" htmlFor="grade-score">
+          <label className={fieldLabel} htmlFor="grade-score">
             Grade
           </label>
           <div className="flex items-center gap-3">
@@ -63,13 +64,13 @@ export function GradeSubmissionForm({
               id="grade-score"
               value={score}
               onChange={(event) => setScore(event.target.value)}
-              className="w-24 border border-[#999999] px-3 py-3"
+              className={`${fieldControlBase} w-24`}
             />
-            <span className="text-[#666666]">/ {maxScore ?? "—"}</span>
+            <span className="text-ink-secondary">/ {maxScore ?? "—"}</span>
           </div>
         </div>
         <div>
-          <label className="mb-2 block font-semibold" htmlFor="teacher-feedback">
+          <label className={fieldLabel} htmlFor="teacher-feedback">
             Feedback
           </label>
           <textarea
@@ -77,14 +78,14 @@ export function GradeSubmissionForm({
             rows={6}
             value={feedback}
             onChange={(event) => setFeedback(event.target.value)}
-            className="w-full border border-[#999999] px-3 py-3"
+            className={fieldControl}
           />
         </div>
-        <div className="flex justify-end border-t border-[#999999] pt-5">
+        <div className="flex justify-end border-t border-line pt-5">
           <button
             type="button"
             disabled={pending}
-            className="border border-brand-primary bg-brand-primary px-5 py-3 text-white"
+            className={buttonPrimary}
             onClick={() => void save(true)}
           >
             Release

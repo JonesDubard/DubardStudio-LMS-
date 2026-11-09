@@ -1,60 +1,77 @@
 "use client";
 
+import {
+  BarChart3,
+  Building2,
+  CreditCard,
+  LayoutDashboard,
+  ScrollText,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
+import { navLink, navLinkActive } from "@/lib/ui/styles";
 
-const navItems = [
+const navItems: {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  match: (path: string) => boolean;
+}[] = [
   {
     label: "Dashboard",
     href: "/platform/dashboard",
+    icon: LayoutDashboard,
     match: (path: string) => path === "/platform/dashboard",
   },
   {
     label: "Tenants",
     href: "/platform/tenants",
+    icon: Building2,
     match: (path: string) => path.startsWith("/platform/tenants"),
   },
   {
     label: "Subscriptions",
     href: "#",
+    icon: CreditCard,
     match: () => false,
   },
   {
     label: "Usage",
     href: "#",
+    icon: BarChart3,
     match: () => false,
   },
   {
     label: "Audit",
     href: "/platform/audit",
+    icon: ScrollText,
     match: (path: string) => path.startsWith("/platform/audit"),
   },
-] as const;
+];
 
 export function PlatformSideNav() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 shrink-0 border-r border-[#E5E5E5] bg-white p-6">
-      <div className="mb-8">
-        <div className="mb-1 text-xs uppercase tracking-widest text-[#999999]">
+    <aside className="w-64 shrink-0 border-r border-line bg-surface px-4 py-6">
+      <div className="mb-8 px-2">
+        <div className="text-xs font-medium uppercase tracking-wide text-ink-muted">
           Platform Console
         </div>
-        <div className="text-lg font-semibold">LMS Administration</div>
+        <div className="text-lg font-semibold tracking-tight text-ink">
+          LMS Administration
+        </div>
       </div>
 
-      <nav className="space-y-1 text-sm">
+      <nav className="space-y-1">
         {navItems.map((item) => {
           const active = item.match(pathname);
-          const className = active
-            ? "flex items-center gap-3 rounded-md bg-[#E5E5E5] px-3 py-2 font-medium"
-            : "flex items-center gap-3 rounded-md px-3 py-2 text-[#666666]";
-
+          const className = active ? navLinkActive : navLink;
+          const Icon = item.icon;
           const content = (
             <>
-              <span className="flex h-5 w-5 items-center justify-center border border-[#999999] text-xs">
-                /
-              </span>
+              <Icon size={18} strokeWidth={1.75} aria-hidden />
               {item.label}
             </>
           );

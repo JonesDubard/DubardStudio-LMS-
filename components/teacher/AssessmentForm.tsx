@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { AssignmentForEdit } from "@/lib/stubs/get-assignment-for-edit";
+import { buttonPrimary, buttonSecondary, fieldControl, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 
 type AssessmentFormProps = {
   data: AssignmentForEdit;
@@ -14,32 +15,32 @@ export function AssessmentForm({ data }: AssessmentFormProps) {
 
   return (
     <form className="space-y-6">
-      <section className="border border-[#999999] bg-white p-6">
+      <section className={`${surfaceCard} p-6`}>
         <h2 className="text-lg font-semibold">Linked Lesson</h2>
 
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="border border-[#999999] p-4">
-            <p className="text-xs text-[#666666]">Class</p>
+          <div className="rounded-lg border border-line bg-surface-muted p-4">
+            <p className="text-xs text-ink-muted">Class</p>
             <p className="mt-1 font-medium">{data.assessment.className}</p>
           </div>
 
-          <div className="border border-[#999999] p-4">
-            <p className="text-xs text-[#666666]">Subject</p>
+          <div className="rounded-lg border border-line bg-surface-muted p-4">
+            <p className="text-xs text-ink-muted">Subject</p>
             <p className="mt-1 font-medium">{data.assessment.subject}</p>
           </div>
 
-          <div className="border border-[#999999] p-4">
-            <p className="text-xs text-[#666666]">Lesson</p>
+          <div className="rounded-lg border border-line bg-surface-muted p-4">
+            <p className="text-xs text-ink-muted">Lesson</p>
             <p className="mt-1 font-medium">{data.assessment.lessonTitle}</p>
           </div>
         </div>
       </section>
 
-      <section className="border border-[#999999] bg-white p-6">
+      <section className={`${surfaceCard} p-6`}>
         <h2 className="text-lg font-semibold">Assignment Details</h2>
 
         <div className="mt-5">
-          <label className="mb-2 block text-sm font-medium" htmlFor="assignment-title">
+          <label className={fieldLabel} htmlFor="assignment-title">
             Title
           </label>
           <input
@@ -47,13 +48,13 @@ export function AssessmentForm({ data }: AssessmentFormProps) {
             type="text"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            className="w-full border border-[#999999] px-3 py-3"
+            className={fieldControl}
           />
         </div>
 
         <div className="mt-5">
           <label
-            className="mb-2 block text-sm font-medium"
+            className={fieldLabel}
             htmlFor="assignment-instructions"
           >
             Instructions
@@ -63,13 +64,13 @@ export function AssessmentForm({ data }: AssessmentFormProps) {
             rows={6}
             value={instructions}
             onChange={(event) => setInstructions(event.target.value)}
-            className="w-full border border-[#999999] px-3 py-3"
+            className={fieldControl}
           />
         </div>
 
         <div className="mt-5">
           <label
-            className="mb-2 block text-sm font-medium"
+            className={fieldLabel}
             htmlFor="assignment-due"
           >
             Due Date
@@ -79,32 +80,32 @@ export function AssessmentForm({ data }: AssessmentFormProps) {
             type="text"
             value={dueLabel}
             onChange={(event) => setDueLabel(event.target.value)}
-            className="w-full border border-[#999999] px-3 py-3"
+            className={fieldControl}
           />
         </div>
       </section>
 
-      <section className="border border-[#999999] bg-white p-6">
+      <section className={`${surfaceCard} p-6`}>
         <h2 className="text-lg font-semibold">Materials</h2>
 
-        <div className="mt-4 border border-dashed border-[#999999] p-5">
+        <div className="mt-4 rounded-lg border border-dashed border-line-strong bg-surface-muted p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">{data.material.name}</p>
-              <p className="text-sm text-[#666666]">{data.material.meta}</p>
+              <p className="text-sm text-ink-secondary">{data.material.meta}</p>
             </div>
-            <button type="button" className="border border-[#999999] px-4 py-2">
+            <button type="button" className={buttonSecondary}>
               {data.material.actionLabel}
             </button>
           </div>
         </div>
       </section>
 
-      <div className="flex items-center justify-between border-t border-[#999999] pt-6">
+      <div className="flex items-center justify-between border-t border-line pt-6">
         <button
           type="button"
           disabled
-          className="cursor-not-allowed border border-[#999999] bg-[#E5E5E5] px-5 py-3 text-[#666666]"
+          className={buttonSecondary}
         >
           Preview
         </button>
@@ -112,14 +113,14 @@ export function AssessmentForm({ data }: AssessmentFormProps) {
         <div className="flex gap-3">
           <button
             type="button"
-            className="border border-[#999999] bg-white px-5 py-3"
+            className={buttonSecondary}
           >
             Save Draft
           </button>
 
           <button
             type="button"
-            className="border border-brand-primary bg-brand-primary px-5 py-3 text-white"
+            className={buttonPrimary}
           >
             Publish Assignment
           </button>

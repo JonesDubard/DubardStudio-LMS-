@@ -1,11 +1,10 @@
+import { badgeBase } from "@/lib/ui/styles";
+
 const toneClass = {
-  due: "shrink-0 border border-[#666666] bg-[#E5E5E5] px-2 py-1 text-[10px] font-bold text-[#333333]",
-  dueOnLight:
-    "border border-[#666666] bg-white px-2 py-1 text-[10px] font-bold text-[#333333]",
-  submitted:
-    "border border-[#666666] bg-[#E5E5E5] px-2 py-1 text-[10px] font-bold text-[#333333]",
-  ready:
-    "border border-[#999999] bg-white px-2 py-1 text-[10px] font-bold text-[#666666]",
+  due: `${badgeBase} border-warning-border bg-warning-subtle text-warning`,
+  dueOnLight: `${badgeBase} border-warning-border bg-surface text-warning`,
+  submitted: `${badgeBase} border-success-border bg-success-subtle text-success`,
+  ready: `${badgeBase} border-info-border bg-info-subtle text-info`,
 } as const;
 
 type StatusBadgeProps = {
@@ -17,7 +16,7 @@ type StatusBadgeProps = {
 export function StatusBadge({
   label,
   tone,
-  className = "border border-[#999999] px-2 py-1 text-xs",
+  className = `${badgeBase} border-line bg-surface-muted text-ink-secondary`,
 }: StatusBadgeProps) {
   return <span className={tone ? toneClass[tone] : className}>{label}</span>;
 }

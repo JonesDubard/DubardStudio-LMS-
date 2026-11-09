@@ -2,10 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Neutral gray fallback when a school has not configured branding (FR-2.3.5). */
+/*
+  Neutral fallback when a school has not configured branding (FR-2.3.5).
+  School colors override --brand-primary and --brand-secondary at runtime.
+  Hover, subtle, and focus tokens are derived from the primary so they follow it.
+*/
 :root {
   --brand-primary: #333333;
   --brand-secondary: #666666;
-  --brand-bg: #e5e5e5;
-  --brand-text: #333333;
+  --brand-bg: #f8fafc;
+  --brand-text: #0f172a;
+  --brand-hover: color-mix(in srgb, var(--brand-primary) 86%, black);
+  --brand-active: color-mix(in srgb, var(--brand-primary) 74%, black);
+  --brand-subtle: color-mix(in srgb, var(--brand-primary) 8%, white);
+  --brand-border: color-mix(in srgb, var(--brand-primary) 24%, white);
+  --brand-ring: color-mix(in srgb, var(--brand-primary) 32%, transparent);
+
+  --surface-page: #f8fafc;
+  --surface-primary: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-disabled: #f1f5f9;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
+
+  --border-primary: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-strong: #cbd5e1;
+
+  --success: #047857;
+  --success-subtle: #ecfdf5;
+  --success-border: #a7f3d0;
+  --warning: #b45309;
+  --warning-subtle: #fffbeb;
+  --warning-border: #fde68a;
+  --danger: #b91c1c;
+  --danger-subtle: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-ring: rgb(185 28 28 / 0.28);
+  --info: #0369a1;
+  --info-subtle: #f0f9ff;
+  --info-border: #bae6fd;
+}
+
+@layer base {
+  html {
+    @apply bg-canvas text-ink antialiased;
+  }
+
+  body {
+    @apply min-h-screen bg-canvas font-sans text-sm text-ink;
+    letter-spacing: -0.011em;
+    line-height: 1.5;
+  }
+
+  ::placeholder {
+    color: var(--text-disabled);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

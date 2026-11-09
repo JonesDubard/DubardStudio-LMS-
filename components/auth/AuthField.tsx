@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { alertError, buttonPrimary, fieldControl, fieldLabel } from "@/lib/ui/styles";
 
 export function AuthField({
   id,
@@ -19,7 +20,7 @@ export function AuthField({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-2 block text-sm font-medium">
+      <label htmlFor={id} className={fieldLabel}>
         {label}
       </label>
       <input
@@ -30,7 +31,7 @@ export function AuthField({
         required
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full border border-[#999999] px-3 py-3"
+        className={fieldControl}
       />
     </div>
   );
@@ -38,7 +39,7 @@ export function AuthField({
 
 export function AuthError({ children }: { children: ReactNode }) {
   return (
-    <p role="alert" className="border border-[#333333] bg-[#E5E5E5] px-3 py-2 text-sm">
+    <p role="alert" className={alertError}>
       {children}
     </p>
   );
@@ -62,7 +63,7 @@ export function AuthSubmit({
     <button
       type="submit"
       disabled={pending || !ready}
-      className="min-h-12 w-full border border-brand-primary bg-brand-primary px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
+      className={`${buttonPrimary} min-h-12 w-full`}
     >
       {pending ? pendingLabel : label}
     </button>

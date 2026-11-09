@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
+import { Inbox } from "lucide-react";
 import { FeedCard } from "@/components/student/FeedCard";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { getStudentFeed } from "@/lib/queries/student";
 import { createClient } from "@/lib/supabase/server";
+import { buttonSecondary } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Student Feed",
@@ -30,7 +33,7 @@ export default async function StudentFeedPage() {
       {devAuth ? (
         <p
           data-testid="auth-dev-banner"
-          className="border-b border-[#E5E5E5] bg-[#E5E5E5] px-4 py-2 font-mono text-xs text-[#333333]"
+          className="border-b border-line bg-surface-muted px-4 py-2 font-mono text-xs tracking-normal text-ink-secondary"
         >
           app_roles={devAuth.appRoles} tenant_id={devAuth.tenantId}
         </p>
@@ -44,18 +47,22 @@ export default async function StudentFeedPage() {
       <main className="space-y-5 px-4 py-5">
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-bold text-brand-primary">{feed.todayLabel}</h2>
-            <span className="text-xs text-[#666666]">{feed.todayDate}</span>
+            <h2 className="text-base font-semibold tracking-tight text-ink">
+              {feed.todayLabel}
+            </h2>
+            <span className="text-xs text-ink-muted">{feed.todayDate}</span>
           </div>
 
           {!feed.enrolled ? (
-            <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
-              You are not enrolled in any classes yet.
-            </p>
+            <EmptyState
+              icon={Inbox}
+              title="You are not enrolled in any classes yet."
+            />
           ) : feed.items.length === 0 ? (
-            <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
-              No published lessons or upcoming assignments yet.
-            </p>
+            <EmptyState
+              icon={Inbox}
+              title="No published lessons or upcoming assignments yet."
+            />
           ) : (
             feed.items.map((item) =>
               item.kind === "lesson" ? (
@@ -82,7 +89,7 @@ export default async function StudentFeedPage() {
                 >
                   <Link
                     href={`/assignments/${item.id}`}
-                    className="block min-h-11 w-full border border-[#333333] bg-[#E5E5E5] px-4 py-2 text-center text-sm font-semibold text-[#333333]"
+                    className={`${buttonSecondary} min-h-11 w-full`}
                   >
                     {item.actionLabel}
                   </Link>
@@ -94,12 +101,14 @@ export default async function StudentFeedPage() {
 
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-bold">{feed.recentlyViewedLabel}</h2>
-            <span className="text-xs text-[#666666]">
+            <h2 className="text-base font-semibold tracking-tight text-ink">
+              {feed.recentlyViewedLabel}
+            </h2>
+            <span className="text-xs text-ink-muted">
               {feed.recentlyViewedCountLabel}
             </span>
           </div>
-          <p className="text-xs text-[#666666]">No lessons viewed yet.</p>
+          <p className="text-sm text-ink-secondary">No lessons viewed yet.</p>
         </section>
       </main>
     </>
