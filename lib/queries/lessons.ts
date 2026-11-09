@@ -1,6 +1,7 @@
 /**
  * Teacher lesson reads. RLS applies the JWT tenant_id. Do not filter tenant_id here.
- * Course assignment is stubbed until migration 0005b. See lib/teacher/assignment-stub.ts.
+ * Assigned courses come from teacher_assignments. The email stub remains only when
+ * that teacher has no assignment rows.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isStubAssignedTeacher } from "@/lib/teacher/assignment-stub";
@@ -103,28 +104,63 @@ async function rowsById(
   return new Map(rows.map((row) => [row.id, row.name]));
 }
 
+/**
+ * class_subject ids from teacher_assignments. RLS returns this teacher's rows.
+ * null means the table is not available and the email stub should decide.
+ */
+async function assignedClassSubjectIds(
+  supabase: SupabaseClient,
+): Promise<string[] | null> {
+  const result = await supabase
+    .from("teacher_assignments")
+    .select("class_subject_id");
+  if (result.error) {
+    const message = result.error.message.toLowerCase();
+    if (
+      message.includes("does not exist") ||
+      message.includes("schema cache") ||
+      result.error.code === "PGRST205"
+    ) {
+      return null;
+    }
+    throw new Error(`teacher_assignments: ${result.error.message}`);
+  }
+  return [
+    ...new Set(
+      (result.data ?? []).map(
+        (row) => (row as { class_subject_id: string }).class_subject_id,
+      ),
+    ),
+  ];
+}
+
 export async function getTeacherCourses(
   supabase: SupabaseClient,
   teacherId: string,
 ): Promise<TeacherCourse[]> {
-  const assigned = await sessionIsAssignedTeacher(supabase, teacherId);
-  if (!assigned) return [];
-
-  const courseResult = await supabase
+  const classSubjectIds = await assignedClassSubjectIds(supabase);
+  let courseQuery = supabase
     .from("courses")
     .select(COURSE_COLUMNS)
-    .order("created_at", { ascending: true })
-    .returns<Course[]>();
-  const courses = unwrap("courses", courseResult);
+    .order("created_at", { ascending: true });
+
+  if (classSubjectIds && classSubjectIds.length > 0) {
+    courseQuery = courseQuery.in("class_subject_id", classSubjectIds);
+  } else {
+    const assigned = await sessionIsAssignedTeacher(supabase, teacherId);
+    if (!assigned) return [];
+  }
+
+  const courses = unwrap("courses", await courseQuery.returns<Course[]>());
   if (courses.length === 0) return [];
 
-  const classSubjectIds = [
+  const linkIds = [
     ...new Set(courses.map((course) => course.class_subject_id)),
   ];
   const linkResult = await supabase
     .from("class_subjects")
     .select(CLASS_SUBJECT_COLUMNS)
-    .in("id", classSubjectIds)
+    .in("id", linkIds)
     .returns<Pick<ClassSubject, "id" | "class_id" | "subject_id">[]>();
   const links = unwrap("class_subjects", linkResult);
   const linkById = new Map(links.map((link) => [link.id, link]));

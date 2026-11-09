@@ -60,6 +60,14 @@ export default async function LessonPage({ params }: LessonPageProps) {
               All Lessons
             </Link>
             {course && lesson ? (
+              <Link
+                href={`/teacher/lessons/${lesson.id}/assessments/new`}
+                className="border border-brand-primary bg-brand-primary px-4 py-2 text-sm text-white"
+              >
+                + Create Assessment
+              </Link>
+            ) : null}
+            {course && lesson ? (
               <StatusBadge
                 label={statusLabel(lesson.status)}
                 className="border border-[#999999] px-3 py-2 text-sm"
