@@ -1,0 +1,81 @@
+// POST /functions/v1/files-upload
+//
+//   Authorization: Bearer <the user's access token>
+//   x-upload-type: logos | materials | submissions
+//   x-file-name:   the file name, percent-encoded (encodeURIComponent)
+//   body:          the raw file bytes
+//
+// The school is NEVER taken from the request: it comes from the tenant_id claim
+// in the verified token. Every check lives in _shared/storage.ts.
+//
+// 201 -> { file: { id, storage_path, original_name, mime_type, size_bytes } }
+// 4xx -> { error: { code, message } }   (wrong type, too large, wrong school, ...)
+
+import {
+  assertMayUpload,
+  BUCKETS,
+  readBodyCapped,
+  StorageError,
+  UPLOAD_TYPES,
+  uploadFile,
+} from "../_shared/storage.ts";
+import type { UploadType } from "../_shared/storage.ts";
+import { corsHeaders, errorResponse, json } from "../_shared/http.ts";
+import { authenticate } from "../_shared/auth.ts";
+import type { Caller } from "../_shared/auth.ts";
+import { reportError } from "../_shared/sentry.ts";
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  let caller: Caller | undefined;
+  try {
+    if (req.method !== "POST") {
+      throw new StorageError("invalid_input", 405, "Use POST.");
+    }
+    caller = await authenticate(req);
+
+    const type = req.headers.get("x-upload-type") ?? "";
+    if (!(UPLOAD_TYPES as readonly string[]).includes(type)) {
+      throw new StorageError(
+        "invalid_input",
+        400,
+        `x-upload-type must be one of: ${UPLOAD_TYPES.join(", ")}.`,
+      );
+    }
+    assertMayUpload(type as UploadType, caller.roles);
+
+    let fileName = "";
+    try {
+      fileName = decodeURIComponent(req.headers.get("x-file-name") ?? "");
+    } catch {
+      throw new StorageError("invalid_input", 400, "x-file-name must be percent-encoded.");
+    }
+
+    // Stops reading as soon as the bucket limit is passed.
+    const bytes = await readBodyCapped(
+      req.body,
+      BUCKETS["tenant-files"].maxBytes,
+      req.headers.get("content-length"),
+    );
+
+    const result = await uploadFile(caller.client, {
+      tenantId: caller.tenantId,
+      type: type as UploadType,
+      file: bytes,
+      fileName,
+    });
+
+    return json({
+      file: {
+        id: result.fileId,
+        storage_path: result.storagePath,
+        original_name: result.originalName,
+        mime_type: result.mimeType,
+        size_bytes: result.sizeBytes,
+      },
+    }, 201);
+  } catch (e) {
+    await reportError(e, { fn: "files-upload", tenantId: caller?.tenantId, roles: caller?.roles });
+    return errorResponse(e);
+  }
+});
