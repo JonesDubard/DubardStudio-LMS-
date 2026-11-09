@@ -56,7 +56,7 @@ For the scripts, create `.env.local` with:
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_SERVICE_ROLE_KEY=<"Secret" key printed by supabase start>
 ```
-Seed test data: `npm run seed:dev`, then `npx tsx scripts/spike-second-tenant.ts`.
+Seed test data: `npx supabase db reset` applies `supabase/seed.sql` (pilot1 and pilot2).
 
 Rules:
 - New migrations go in `supabase/migrations/` named `NNNN_name.sql` (digits, then `_`).
