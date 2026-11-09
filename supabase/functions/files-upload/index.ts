@@ -1,6 +1,10 @@
-/** The school is NEVER taken from the request: it comes from the tenant_id claim
- * in the verified token. Every check lives in _shared/storage.ts.
- */
+// The school is NEVER taken from the request: it comes from the tenant_id claim
+// in the verified token. Likewise the user id (used as the folder for student
+// submissions, see 0009) comes from the verified token, never from a header or
+// the body. Every check lives in _shared/storage.ts.
+//
+// 201 -> { file: { id, storage_path, original_name, mime_type, size_bytes } }
+// 4xx -> { error: { code, message } }   (wrong type, too large, wrong school, ...)
 
 import {
   assertMayUpload,
@@ -39,7 +43,7 @@ Deno.serve(async (req) => {
       throw new StorageError("invalid_input", 400, "x-file-name must be percent-encoded.");
     }
 
-    /** Stops reading as soon as the bucket limit is passed. */
+    // Stops reading as soon as the bucket limit is passed.
     const bytes = await readBodyCapped(
       req.body,
       BUCKETS["tenant-files"].maxBytes,
@@ -51,6 +55,7 @@ Deno.serve(async (req) => {
       type: type as UploadType,
       file: bytes,
       fileName,
+      userId: caller.userId, // from the verified token, never from a header or the body
     });
 
     return json({
