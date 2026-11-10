@@ -36,9 +36,6 @@ export default async function NewLessonPage() {
             <Link href="/teacher/lessons" className={buttonSecondary}>
               All Lessons
             </Link>
-            <Link href="/teacher/lessons/1/reuse" className={buttonSecondary}>
-              Reuse Lesson
-            </Link>
             <StatusBadge label="DRAFT" />
           </div>
         </div>

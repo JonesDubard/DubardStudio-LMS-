@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, ClipboardList, Home } from "lucide-react";
+import { Award, ClipboardList, Home, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
@@ -8,6 +8,7 @@ const items = [
   { href: "/parent/home", label: "Home", icon: Home },
   { href: "/parent/assignments", label: "Assignments", icon: ClipboardList },
   { href: "/parent/grades", label: "Grades", icon: Award },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function ParentNav() {
@@ -22,7 +23,7 @@ export function ParentNav() {
       aria-label="Parent"
       className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:top-0 md:bottom-auto md:border-b md:border-t-0 md:pb-0"
     >
-      <div className="mx-auto grid w-full max-w-7xl grid-cols-3 md:flex md:h-14 md:items-center md:gap-1 md:px-8">
+      <div className="mx-auto grid w-full max-w-7xl grid-cols-4 md:flex md:h-14 md:items-center md:gap-1 md:px-8">
         {items.map((item) => {
           const active =
             item.href === "/parent/home"

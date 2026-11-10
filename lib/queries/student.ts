@@ -554,3 +554,132 @@ export async function getLessonDetails(
     }),
   };
 }
+
+export type StudentClass = {
+  id: string;
+  name: string;
+  yearName: string;
+};
+
+export type StudentGrade = {
+  id: string;
+  title: string;
+  scoreLabel: string;
+  feedback: string | null;
+};
+
+export type StudentGradeGroup = {
+  heading: string;
+  grades: StudentGrade[];
+};
+
+function scoreLabel(score: number | string | null, max: number | string | null): string {
+  const value = score === null || score === "" ? null : Number(score);
+  const maximum = max === null || max === "" ? null : Number(max);
+  if (value === null || !Number.isFinite(value)) return "—";
+  const shown = Number.isInteger(value) ? String(value) : String(value);
+  if (maximum === null || !Number.isFinite(maximum)) return shown;
+  return `${shown} / ${maximum}`;
+}
+
+/** Active classes for the signed-in student. RLS limits enrollments to that student. */
+export async function getStudentClasses(
+  supabase: SupabaseClient,
+): Promise<StudentClass[]> {
+  const enrollmentResult = await supabase
+    .from("enrollments")
+    .select("class_id, academic_year_id")
+    .eq("status", "active")
+    .returns<{ class_id: string; academic_year_id: string }[]>();
+  const enrollments = unwrap("enrollments", enrollmentResult);
+  if (enrollments.length === 0) return [];
+
+  const classIds = unique(enrollments.map((row) => row.class_id));
+  const yearIds = unique(enrollments.map((row) => row.academic_year_id));
+  const [classResult, yearResult] = await Promise.all([
+    supabase.from("classes").select("id, name").in("id", classIds).returns<NamedRow[]>(),
+    supabase
+      .from("academic_years")
+      .select("id, name")
+      .in("id", yearIds)
+      .returns<NamedRow[]>(),
+  ]);
+  const className = new Map(unwrap("classes", classResult).map((row) => [row.id, row.name]));
+  const yearName = new Map(
+    unwrap("academic_years", yearResult).map((row) => [row.id, row.name]),
+  );
+
+  const seen = new Set<string>();
+  const classes: StudentClass[] = [];
+  for (const enrollment of enrollments) {
+    const key = `${enrollment.class_id}:${enrollment.academic_year_id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    classes.push({
+      id: key,
+      name: className.get(enrollment.class_id) ?? "Class",
+      yearName: yearName.get(enrollment.academic_year_id) ?? "Year",
+    });
+  }
+  return classes.sort((a, b) => a.name.localeCompare(b.name) || a.yearName.localeCompare(b.yearName));
+}
+
+/** Released grades for the signed-in student, grouped by class and subject. */
+export async function getStudentGradeGroups(
+  supabase: SupabaseClient,
+): Promise<StudentGradeGroup[]> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw new Error(`auth: ${userError.message}`);
+  if (!userData.user) return [];
+
+  const gradeResult = await supabase
+    .from("grades")
+    .select("id, assessment_id, score, feedback, released_at")
+    .eq("student_id", userData.user.id)
+    .not("released_at", "is", null)
+    .order("released_at", { ascending: false })
+    .returns<
+      {
+        id: string;
+        assessment_id: string;
+        score: number | string | null;
+        feedback: string | null;
+      }[]
+    >();
+  const grades = unwrap("grades", gradeResult);
+  if (grades.length === 0) return [];
+
+  const assessmentResult = await supabase
+    .from("assessments")
+    .select("id, course_id, title, max_score")
+    .in(
+      "id",
+      unique(grades.map((grade) => grade.assessment_id)),
+    )
+    .returns<
+      { id: string; course_id: string; title: string; max_score: number | string | null }[]
+    >();
+  const assessments = unwrap("assessments", assessmentResult);
+  const assessmentById = new Map(assessments.map((row) => [row.id, row]));
+  const { courses } = await enrolledCourses(supabase);
+  const courseById = new Map(courses.map((course) => [course.id, course]));
+
+  const groups = new Map<string, StudentGrade[]>();
+  for (const grade of grades) {
+    const assessment = assessmentById.get(grade.assessment_id);
+    const course = assessment ? courseById.get(assessment.course_id) : undefined;
+    const heading = course ? `${course.className} · ${course.subjectName}` : "Class";
+    const feedback = grade.feedback?.trim() ?? "";
+    const item: StudentGrade = {
+      id: grade.id,
+      title: assessment?.title ?? "Assessment",
+      scoreLabel: scoreLabel(grade.score, assessment?.max_score ?? null),
+      feedback: feedback.length > 0 ? feedback : null,
+    };
+    const list = groups.get(heading) ?? [];
+    list.push(item);
+    groups.set(heading, list);
+  }
+
+  return [...groups.entries()].map(([heading, items]) => ({ heading, grades: items }));
+}

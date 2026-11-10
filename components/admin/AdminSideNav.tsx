@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Palette,
   School,
+  Settings,
   Users,
   Files,
 } from "lucide-react";
@@ -57,6 +58,12 @@ const navItems: {
     icon: BarChart3,
     match: () => false,
     title: "Usage is not available yet",
+  },
+  {
+    label: "Settings",
+    href: "/settings",
+    icon: Settings,
+    match: (path: string) => path.startsWith("/settings"),
   },
 ];
 

@@ -2,6 +2,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { readAccessTokenClaims } from "@/lib/auth/claims";
 import { firstZodMessage, type ActionResult } from "@/lib/academic/schema";
 import {
@@ -168,4 +169,97 @@ export async function updateLesson(
 
   revalidateLessons(lesson.id);
   return { ok: true };
+}
+
+const courseIdSchema = z.string().uuid("Choose a course.");
+
+export type DuplicateLessonResult =
+  | { ok: true; lessonId: string }
+  | { ok: false; error: string };
+
+/**
+ * Copies a lesson the teacher can read into one of their courses as a draft.
+ * Materials are copied. Assessments are not.
+ */
+export async function duplicateLesson(
+  lessonId: string,
+  courseId: string,
+): Promise<DuplicateLessonResult> {
+  const parsedCourse = courseIdSchema.safeParse(courseId);
+  if (!parsedCourse.success) return fail(firstZodMessage(parsedCourse.error));
+
+  const supabase = await createClient();
+  const session = await requireSession(supabase);
+  if (isSessionFailure(session)) return session;
+
+  const lesson = await getLessonById(supabase, lessonId);
+  if (!lesson) return fail("The lesson was not found.");
+
+  const courses = await getTeacherCourses(supabase, session.userId);
+  const sourceOwned = courses.some((course) => course.id === lesson.course_id);
+  const destination = courses.find((course) => course.id === parsedCourse.data);
+  if (!sourceOwned || !destination) {
+    return fail("Choose a course you are assigned to.");
+  }
+
+  const { data: created, error: createError } = await supabase
+    .from("lessons")
+    .insert({
+      tenant_id: session.tenantId,
+      course_id: destination.id,
+      title: lesson.title,
+      description: lesson.description,
+      status: "draft",
+      published_at: null,
+      created_by: session.userId,
+    })
+    .select("id")
+    .returns<{ id: string }[]>();
+
+  const rejected = wroteRows(created, createError, "The lesson was not copied.");
+  if (rejected || !created?.[0]) return rejected ?? fail("The lesson was not copied.");
+  const newLessonId = created[0].id;
+
+  const materialResult = await supabase
+    .from("lesson_materials")
+    .select("kind, file_id, external_url, sort_order")
+    .eq("lesson_id", lesson.id)
+    .returns<
+      {
+        kind: string;
+        file_id: string | null;
+        external_url: string | null;
+        sort_order: number;
+      }[]
+    >();
+  if (materialResult.error) {
+    await supabase.from("lessons").delete().eq("id", newLessonId);
+    return fail(materialResult.error.message);
+  }
+
+  const materials = materialResult.data ?? [];
+  if (materials.length > 0) {
+    const { data: copied, error: copyError } = await supabase
+      .from("lesson_materials")
+      .insert(
+        materials.map((material) => ({
+          tenant_id: session.tenantId,
+          lesson_id: newLessonId,
+          kind: material.kind,
+          file_id: material.file_id,
+          external_url: material.external_url,
+          sort_order: material.sort_order,
+        })),
+      )
+      .select("id")
+      .returns<{ id: string }[]>();
+    if (copyError || !copied || copied.length !== materials.length) {
+      await supabase.from("lessons").delete().eq("id", newLessonId);
+      return fail(copyError ? dbMessage(copyError) : "The lesson materials were not copied.");
+    }
+  }
+
+  revalidateLessons(newLessonId);
+  revalidatePath(`/teacher/lessons/${lesson.id}/reuse`);
+  return { ok: true, lessonId: newLessonId };
 }
