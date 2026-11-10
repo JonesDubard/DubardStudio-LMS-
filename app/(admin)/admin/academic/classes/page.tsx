@@ -19,7 +19,7 @@ export default async function AcademicClassesPage() {
         <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
           Classes
         </h1>
-        <p className="mt-1 text-sm text-ink-secondary">Classes and grade levels.</p>
+        <p className="mt-1 text-sm text-ink-secondary">Classes</p>
       </header>
 
       <div className="space-y-6 p-4 lg:p-8">

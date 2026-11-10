@@ -5,7 +5,6 @@ import {
   GraduationCap,
   LayoutDashboard,
   Palette,
-  School,
   Settings,
   Users,
   Files,
@@ -13,6 +12,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
+import { SchoolMark } from "@/components/shared/SchoolMark";
 import { navLabel, navLink, navLinkActive, sideNavAside } from "@/lib/ui/styles";
 
 const navItems: {
@@ -70,20 +70,20 @@ const navItems: {
 type AdminSideNavProps = {
   schoolName?: string;
   portalLabel?: string;
+  logoUrl?: string | null;
 };
 
 export function AdminSideNav({
   schoolName = "Pilot School #1",
   portalLabel = "School Admin",
+  logoUrl = null,
 }: AdminSideNavProps) {
   const pathname = usePathname();
 
   return (
     <aside className={sideNavAside}>
       <div className="mb-6 flex flex-col items-center lg:mb-8 lg:items-start lg:px-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-subtle text-brand-primary">
-          <School size={18} strokeWidth={1.75} aria-hidden />
-        </div>
+        <SchoolMark src={logoUrl} />
         <p className={`mt-3 text-xs font-medium text-ink-muted ${navLabel}`}>{portalLabel}</p>
         <p className={`font-semibold tracking-tight text-ink ${navLabel}`}>{schoolName}</p>
       </div>

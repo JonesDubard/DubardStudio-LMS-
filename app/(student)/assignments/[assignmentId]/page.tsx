@@ -70,8 +70,15 @@ export default async function AssignmentPage({
                 Handed in
               </h2>
               <p className="mt-2 max-w-prose whitespace-pre-wrap text-base leading-7 text-ink">
-                {submission.text}
+                {submission.text ?? "No written answer."}
               </p>
+              {submission.fileName ? (
+                <p className="mt-3 text-sm text-ink-secondary">File: {submission.fileName}</p>
+              ) : grade ? null : (
+                <div className="mt-4">
+                  <SubmitAssignmentForm assessmentId={assessment.id} mode="attach" />
+                </div>
+              )}
             </section>
           ) : (
             <SubmitAssignmentForm assessmentId={assessment.id} />

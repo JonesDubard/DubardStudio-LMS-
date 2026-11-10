@@ -13,6 +13,7 @@ export type ShellBrand = {
   secondaryColor: string | null;
   primary: string;
   secondary: string;
+  logoUrl: string | null;
 };
 
 const fallback: ShellBrand = {
@@ -21,7 +22,21 @@ const fallback: ShellBrand = {
   secondaryColor: null,
   primary: DEFAULT_BRAND_PRIMARY,
   secondary: DEFAULT_BRAND_SECONDARY,
+  logoUrl: null,
 };
+
+async function displayLogoUrl(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  headerPath: string | null,
+  logoPath: string | null,
+): Promise<string | null> {
+  const stored = headerPath || logoPath;
+  if (!stored) return null;
+  if (stored.startsWith("http://") || stored.startsWith("https://")) return stored;
+
+  const signed = await supabase.storage.from("tenant-files").createSignedUrl(stored, 60 * 60);
+  return signed.data?.signedUrl ?? null;
+}
 
 /**
  * Reads the signed-in school's colors for the HTML shell.
@@ -36,7 +51,7 @@ export const readShellBrand = cache(async (): Promise<ShellBrand> => {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("tenants")
-      .select("name, primary_color, secondary_color")
+      .select("name, primary_color, secondary_color, logo_url, header_logo_url")
       .eq("id", tenantId)
       .maybeSingle();
 
@@ -46,6 +61,8 @@ export const readShellBrand = cache(async (): Promise<ShellBrand> => {
       typeof data.primary_color === "string" ? data.primary_color : null;
     const secondaryColor =
       typeof data.secondary_color === "string" ? data.secondary_color : null;
+    const headerPath = typeof data.header_logo_url === "string" ? data.header_logo_url : null;
+    const logoPath = typeof data.logo_url === "string" ? data.logo_url : null;
 
     return {
       schoolName: typeof data.name === "string" ? data.name : null,
@@ -53,6 +70,7 @@ export const readShellBrand = cache(async (): Promise<ShellBrand> => {
       secondaryColor,
       primary: brandColorOrDefault(primaryColor, DEFAULT_BRAND_PRIMARY),
       secondary: brandColorOrDefault(secondaryColor, DEFAULT_BRAND_SECONDARY),
+      logoUrl: await displayLogoUrl(supabase, headerPath, logoPath),
     };
   } catch {
     return fallback;

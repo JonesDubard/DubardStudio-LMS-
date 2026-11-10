@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { TeacherSideNav } from "@/components/teacher/TeacherSideNav";
+import { readShellBrand } from "@/lib/branding/shell";
 import { createClient } from "@/lib/supabase/server";
 
 async function teacherFullName(): Promise<string> {
@@ -18,11 +19,11 @@ async function teacherFullName(): Promise<string> {
 }
 
 export default async function TeacherLayout({ children }: { children: ReactNode }) {
-  const teacherName = await teacherFullName();
+  const [teacherName, brand] = await Promise.all([teacherFullName(), readShellBrand()]);
 
   return (
     <div className="flex min-h-screen min-w-0 overflow-x-hidden bg-canvas text-ink">
-      <TeacherSideNav teacherName={teacherName} />
+      <TeacherSideNav teacherName={teacherName} logoUrl={brand.logoUrl} />
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );

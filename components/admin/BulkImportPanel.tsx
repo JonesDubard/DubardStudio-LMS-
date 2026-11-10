@@ -43,6 +43,7 @@ export function BulkImportPanel({
           title={uploadTitle}
           description={uploadDescription}
           buttonLabel={uploadButtonLabel}
+          note="Bulk import coming soon"
         />
       </div>
 

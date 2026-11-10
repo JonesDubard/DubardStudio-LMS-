@@ -90,6 +90,8 @@ export async function updateProfile(input: {
   revalidatePath("/feed");
   revalidatePath("/teacher/home");
   revalidatePath("/parent/home");
+  revalidatePath("/parent/assignments");
+  revalidatePath("/parent/grades");
   revalidatePath("/admin/dashboard");
   return { ok: true, notice: "Saved." };
 }
