@@ -4,6 +4,7 @@ import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { ElevatedAccessBanner } from "@/components/shared/ElevatedAccessBanner";
 import { TabBar } from "@/components/shared/TabBar";
 import { getTenant } from "@/lib/stubs/get-tenant";
+import { buttonSecondary, surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Platform Admin — Tenant Detail",
@@ -21,45 +22,37 @@ export default async function TenantDetailPage({
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1440px] p-4 md:p-8">
+      <div className="mx-auto max-w-[1440px] p-4 lg:p-8">
         <ElevatedAccessBanner tenantName={tenant.name} />
 
-        <header className="mb-6 flex items-end justify-between gap-6">
-          <div>
-            <div className="text-sm text-ink-secondary">
-              Tenants / {tenant.name}
-            </div>
-            <div className="mt-2 flex items-center gap-3">
-              <h1 className="text-2xl font-semibold">{tenant.name}</h1>
+        <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-ink-muted">Tenants / {tenant.name}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <h1 className="break-words text-xl font-semibold tracking-tight md:text-2xl">
+                {tenant.name}
+              </h1>
               <TenantStatusPill status={tenant.status} />
             </div>
-            <p className="mt-2 text-sm text-ink-secondary">
-              {tenant.subdomainHost}
-            </p>
+            <p className="mt-2 text-sm text-ink-secondary">{tenant.subdomainHost}</p>
           </div>
 
-          <Link
-            href="/platform/audit"
-            className="border border-line px-4 py-2.5 text-sm"
-          >
+          <Link href="/platform/audit" className={buttonSecondary}>
             {tenant.auditButtonLabel}
           </Link>
         </header>
 
         <TabBar tabs={tenant.tabs} />
 
-        <section className="border border-line-subtle">
-          <div className="flex items-center justify-between border-b border-line-subtle px-6 py-5">
+        <section className={surfaceCard}>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-subtle px-4 py-5 sm:px-6">
             <div>
               <h2 className="font-semibold">School Information</h2>
               <p className="mt-1 text-sm text-ink-secondary">
                 Core information for this tenant.
               </p>
             </div>
-            <button
-              type="button"
-              className="border border-line px-4 py-2.5 text-sm"
-            >
+            <button type="button" className={buttonSecondary}>
               {tenant.editButtonLabel}
             </button>
           </div>

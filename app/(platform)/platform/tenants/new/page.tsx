@@ -10,10 +10,12 @@ export default function CreateTenantPage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1100px] p-4 md:p-8">
+      <div className="mx-auto max-w-[1100px] p-4 lg:p-8">
         <header className="mb-8">
-          <div className="text-sm text-ink-secondary">Tenants</div>
-          <h1 className="mt-1 text-2xl font-semibold">Create Tenant</h1>
+          <p className="text-xs font-medium text-ink-muted">Tenants</p>
+          <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
+            Create Tenant
+          </h1>
           <p className="mt-2 text-sm text-ink-secondary">
             Provision a new school on the LMS platform.
           </p>

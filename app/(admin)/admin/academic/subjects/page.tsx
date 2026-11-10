@@ -42,7 +42,9 @@ export default async function AcademicSubjectsPage() {
     <main className="min-w-0 flex-1">
       <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
         <p className="text-sm text-ink-secondary">Academic / Setup</p>
-        <h1 className="mt-1 text-2xl font-semibold">Subjects</h1>
+        <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
+          Subjects
+        </h1>
         <p className="mt-1 text-sm text-ink-secondary">
           Subjects available to classes.
         </p>

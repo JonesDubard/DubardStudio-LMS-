@@ -19,6 +19,7 @@ const navItems: {
   href: string;
   icon: LucideIcon;
   match: (path: string) => boolean;
+  title?: string;
 }[] = [
   {
     label: "Dashboard",
@@ -55,6 +56,7 @@ const navItems: {
     href: "#",
     icon: BarChart3,
     match: () => false,
+    title: "Usage is not available yet",
   },
 ];
 
@@ -93,7 +95,7 @@ export function AdminSideNav({
 
           if (item.href === "#") {
             return (
-              <span key={item.label} className={className} title={item.label}>
+              <span key={item.label} className={className} title={item.title ?? item.label}>
                 {content}
               </span>
             );
@@ -104,7 +106,7 @@ export function AdminSideNav({
               key={item.label}
               href={item.href}
               className={className}
-              title={item.label}
+              title={item.title ?? item.label}
               aria-current={active ? "page" : undefined}
             >
               {content}

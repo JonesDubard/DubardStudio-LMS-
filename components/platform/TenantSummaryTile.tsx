@@ -1,3 +1,5 @@
+import { surfaceCard } from "@/lib/ui/styles";
+
 type TenantSummaryTileProps = {
   label: string;
   value: string;
@@ -5,9 +7,9 @@ type TenantSummaryTileProps = {
 
 export function TenantSummaryTile({ label, value }: TenantSummaryTileProps) {
   return (
-    <div className="border border-line-subtle p-5">
+    <div className={`${surfaceCard} p-5`}>
       <div className="text-sm text-ink-secondary">{label}</div>
-      <div className="mt-3 text-3xl font-semibold">{value}</div>
+      <div className="mt-3 text-3xl font-semibold tracking-tight text-ink">{value}</div>
     </div>
   );
 }

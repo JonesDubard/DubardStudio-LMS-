@@ -199,7 +199,7 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | File                                               | Purpose                                                                                                                                                                     |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app/(admin)/layout.tsx`                           | Side nav shell. Renders `AdminSideNav` on the left and `{children}` on the right                                                                                            |
-| `app/(admin)/admin/dashboard/page.tsx`             | School Admin dashboard. Reads `getAdminDashboard()`                                                                                                                         |
+| `app/(admin)/admin/dashboard/page.tsx`             | School Admin dashboard. School name from the signed-in tenant. Links to branding, people, academic setup, and assignments. Academic counts come from `lib/queries/academic.ts`. It does not read `getAdminDashboard()` |
 | `app/(admin)/admin/branding/page.tsx`              | School branding. Reads the signed-in school's name and colors through `readShellBrand()`                                                                                   |
 | `app/(admin)/admin/branding/actions.ts`            | `updateBranding` and `resetBranding`. Validates hex, updates the session tenant row, then `revalidatePath`                                                                  |
 | `app/(admin)/admin/branding/_components/BrandingForm.tsx` | Color pickers, live preview, save, and reset. Logo and favicon sections stay disabled                                                                                 |
@@ -212,7 +212,7 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | `app/(admin)/admin/people/admins/page.tsx`         | School Admins list. Reads `getSchoolAdmins()`                                                                                                                               |
 | `app/(admin)/admin/people/parents/page.tsx`        | Parent-child linking. Reads `getParents()`                                                                                                                                  |
 | `app/(admin)/admin/assignments/page.tsx`           | Assignments overview. Reads `getAdminAssignments()`                                                                                                                         |
-| `lib/stubs/get-admin-dashboard.ts`                 | `getAdminDashboard()` returns setup progress, summary tiles, and usage metrics                                                                                              |
+| `lib/stubs/get-admin-dashboard.ts`                 | `getAdminDashboard()` remains in the repo. The dashboard page no longer imports it                                                                                         |
 | `lib/stubs/get-school-branding.ts`                 | Unused by the branding page. Colors are read from `tenants`. The stub remains from the shell session                                                                        |
 | `lib/types/academic.ts`                            | Row types for years, terms, classes, subjects, and class_subjects. Column names match migration 0002                                                                        |
 | `lib/queries/academic.ts`                          | Read functions `getAcademicYears`, `getTerms`, `getClasses`, `getSubjects`, `getClassSubjects`. The caller passes a Supabase client. RLS scopes rows. No `tenant_id` filter |
@@ -467,7 +467,7 @@ School Admin page, after the same middleware step:
 2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
 3. Role check is a stub for now. There is no auth gate; the `(admin)` layout always renders.
 4. `app/(admin)/layout.tsx` wraps the page with `AdminSideNav`.
-5. People, dashboard, and assignments pages still call their stubs (`getAdminDashboard`, `getTeachers`, `getStudents`, `getSchoolAdmins`, `getParents`, or `getAdminAssignments`). Branding reads `tenants`. Academic setup does not use a stub. See "Server data flow" and "Branding system".
+5. People and assignments pages still call their stubs (`getTeachers`, `getStudents`, `getSchoolAdmins`, `getParents`, or `getAdminAssignments`). The dashboard reads the signed-in tenant and academic counts. Branding reads `tenants`. Academic setup does not use a stub. See "Server data flow" and "Branding system".
 6. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
 7. The page renders admin and shared components. Client panels hold input state only; buttons do not save.
 
