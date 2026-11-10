@@ -43,9 +43,13 @@ function fail(error: string): { ok: false; error: string } {
   return { ok: false, error };
 }
 
-function dbMessage(error: DbError, foreignKeyMessage: string): string {
-  if (error.code === "23505") {
-    return "This subject is already linked to that class.";
+function dbMessage(
+  error: DbError,
+  foreignKeyMessage: string,
+  uniqueMessage = "This subject is already linked to that class.",
+): string {
+  if (error.code === "23505" || error.message.toLowerCase().includes("unique")) {
+    return uniqueMessage;
   }
   if (error.code === "23503") {
     return foreignKeyMessage;
@@ -61,8 +65,9 @@ function wroteRows(
   error: DbError | null,
   emptyMessage: string,
   foreignKeyMessage: string,
+  uniqueMessage?: string,
 ): { ok: false; error: string } | null {
-  if (error) return fail(dbMessage(error, foreignKeyMessage));
+  if (error) return fail(dbMessage(error, foreignKeyMessage, uniqueMessage));
   if (!data || data.length === 0) return fail(emptyMessage);
   return null;
 }
@@ -549,10 +554,6 @@ export async function deleteTerm(id: string): Promise<ActionResult> {
   return { ok: true };
 }
 
-function gradeLevel(value: string): string | null {
-  return value.length > 0 ? value : null;
-}
-
 export async function createClass(input: ClassInput): Promise<ActionResult> {
   const parsed = classSchema.safeParse(input);
   if (!parsed.success) return fail(firstZodMessage(parsed.error));
@@ -561,20 +562,11 @@ export async function createClass(input: ClassInput): Promise<ActionResult> {
   const tenant = await requireTenantId(supabase);
   if (isTenantFailure(tenant)) return tenant;
 
-  const duplicate = await nameTaken(
-    supabase,
-    "classes",
-    parsed.data.name,
-    "A class with this name already exists.",
-  );
-  if (duplicate) return duplicate;
-
   const { data, error } = await supabase
     .from("classes")
     .insert({
       tenant_id: tenant.tenantId,
       name: parsed.data.name,
-      grade_level: gradeLevel(parsed.data.grade_level),
     })
     .select("id")
     .returns<{ id: string }[]>();
@@ -584,6 +576,7 @@ export async function createClass(input: ClassInput): Promise<ActionResult> {
     error,
     "The class was not created.",
     "The class was not created.",
+    "A class with this name already exists.",
   );
   if (rejected) return rejected;
 
@@ -604,20 +597,10 @@ export async function updateClass(
   const denied = await requireUser(supabase);
   if (denied) return denied;
 
-  const duplicate = await nameTaken(
-    supabase,
-    "classes",
-    parsed.data.name,
-    "A class with this name already exists.",
-    id,
-  );
-  if (duplicate) return duplicate;
-
   const { data, error } = await supabase
     .from("classes")
     .update({
       name: parsed.data.name,
-      grade_level: gradeLevel(parsed.data.grade_level),
     })
     .eq("id", id)
     .select("id")
@@ -628,6 +611,7 @@ export async function updateClass(
     error,
     "That class could not be updated.",
     "That class could not be updated.",
+    "A class with this name already exists.",
   );
   if (rejected) return rejected;
 
@@ -707,6 +691,7 @@ export async function createSubject(
     error,
     "The subject was not created.",
     "The subject was not created.",
+    "A subject with this name already exists.",
   );
   if (rejected) return rejected;
 
@@ -748,6 +733,7 @@ export async function updateSubject(
     error,
     "That subject could not be updated.",
     "That subject could not be updated.",
+    "A subject with this name already exists.",
   );
   if (rejected) return rejected;
 

@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { gradeSubmission } from "@/lib/queries/assessments";
+import { gradeSubmission, openSubmissionFile } from "@/lib/queries/assessments";
 import type { SubmissionGradeView } from "@/lib/types/assessments";
-import { alertError, buttonPrimary, fieldControl, fieldControlBase, fieldLabel, surfaceCard } from "@/lib/ui/styles";
+import { alertError, buttonPrimary, buttonSecondary, fieldControl, fieldControlBase, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 
 export function GradeSubmissionForm({
   submission,
@@ -20,6 +20,18 @@ export function GradeSubmissionForm({
   const [feedback, setFeedback] = useState(submission.feedback ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  async function viewFile() {
+    setError(null);
+    setPending(true);
+    const result = await openSubmissionFile(submission.id);
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    window.open(result.url, "_blank", "noopener,noreferrer");
+  }
 
   async function save(release: boolean) {
     setError(null);
@@ -51,6 +63,19 @@ export function GradeSubmissionForm({
               {submission.text ?? "No written answer."}
             </p>
           </div>
+          {submission.fileName ? (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line p-4">
+              <p className="font-medium">{submission.fileName}</p>
+              <button
+                type="button"
+                className={buttonSecondary}
+                disabled={pending}
+                onClick={() => void viewFile()}
+              >
+                View File
+              </button>
+            </div>
+          ) : null}
         </div>
         {error ? (
           <p className={alertError}>{error}</p>
@@ -88,7 +113,7 @@ export function GradeSubmissionForm({
             className={buttonPrimary}
             onClick={() => void save(true)}
           >
-            Release
+            Release Grade
           </button>
         </div>
       </div>

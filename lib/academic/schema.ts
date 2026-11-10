@@ -97,14 +97,12 @@ export function termFormSchema(years: YearBounds[]) {
 
 export const classSchema = z.object({
   name: requiredName,
-  grade_level: z.string().trim(),
 });
 
 export type ClassInput = z.infer<typeof classSchema>;
 
 export const emptyClass: ClassInput = {
   name: "",
-  grade_level: "",
 };
 
 export const subjectSchema = z.object({

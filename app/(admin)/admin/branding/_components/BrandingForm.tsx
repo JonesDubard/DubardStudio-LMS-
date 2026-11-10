@@ -10,7 +10,7 @@ import {
   DEFAULT_BRAND_SECONDARY,
   hexColorSchema,
 } from "@/lib/branding/colors";
-import { resetBranding, updateBranding } from "../actions";
+import { resetBranding, updateBranding, uploadSchoolLogo } from "../actions";
 
 const COMING_SOON = "Logo upload coming soon";
 
@@ -47,6 +47,20 @@ export function BrandingForm({
     ? secondary.trim()
     : secondaryColor;
 
+  async function onLogo(kind: "logo" | "header", list: FileList | null) {
+    const file = list?.[0];
+    if (!file) return;
+    setError(null);
+    setPending(true);
+    const result = await uploadSchoolLogo(kind, file);
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
   async function onSave() {
     setError(null);
     setPending(true);
@@ -79,25 +93,47 @@ export function BrandingForm({
         <h2 className="text-lg font-semibold">Branding Settings</h2>
 
         <div className="mt-6 space-y-6">
-          <fieldset disabled className="space-y-6">
-            <FormField id="school-logo" label="School Logo">
-              <UploadZone
-                title="Upload School Logo"
-                description="PNG, JPG or SVG"
-                buttonLabel="Choose File"
-                note={COMING_SOON}
+          <FormField id="school-logo" label="School Logo">
+            <div className="rounded-lg border border-dashed border-line-strong bg-surface-muted p-6">
+              <p className="font-medium text-ink">Upload School Logo</p>
+              <p className="mt-1 text-sm text-ink-secondary">
+                JPEG, PNG, or WebP. 10 MB maximum. Used when no header logo is set.
+              </p>
+              <input
+                id="school-logo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={pending}
+                className="mt-3 block w-full text-sm text-ink-secondary file:mr-3 file:rounded-md file:border file:border-line file:bg-surface file:px-3 file:py-2 file:text-sm file:font-medium file:text-ink"
+                onChange={(event) => {
+                  void onLogo("logo", event.target.files);
+                  event.target.value = "";
+                }}
               />
-            </FormField>
+            </div>
+          </FormField>
 
-            <FormField id="header-logo" label="Header Logo">
-              <UploadZone
-                title="Upload Header Logo"
-                description="Used in the application header."
-                buttonLabel="Choose File"
-                note={COMING_SOON}
+          <FormField id="header-logo" label="Header Logo">
+            <div className="rounded-lg border border-dashed border-line-strong bg-surface-muted p-6">
+              <p className="font-medium text-ink">Upload Header Logo</p>
+              <p className="mt-1 text-sm text-ink-secondary">
+                Shown in the sidebar. JPEG, PNG, or WebP. 10 MB maximum.
+              </p>
+              <input
+                id="header-logo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={pending}
+                className="mt-3 block w-full text-sm text-ink-secondary file:mr-3 file:rounded-md file:border file:border-line file:bg-surface file:px-3 file:py-2 file:text-sm file:font-medium file:text-ink"
+                onChange={(event) => {
+                  void onLogo("header", event.target.files);
+                  event.target.value = "";
+                }}
               />
-            </FormField>
+            </div>
+          </FormField>
 
+          <fieldset disabled>
             <FormField id="favicon" label="Favicon">
               <UploadZone
                 title="Upload Favicon"

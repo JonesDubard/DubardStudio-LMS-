@@ -41,14 +41,13 @@ export function ClassesPanel({ classes }: { classes: SchoolClass[] }) {
           <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
             <tr>
               <th className="px-4 py-3">Class</th>
-              <th className="px-4 py-3">Grade level</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
             {classes.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-sm text-ink-secondary" colSpan={3}>
+                <td className="px-4 py-6 text-sm text-ink-secondary" colSpan={2}>
                   No classes yet.
                 </td>
               </tr>
@@ -56,7 +55,6 @@ export function ClassesPanel({ classes }: { classes: SchoolClass[] }) {
               classes.map((row) => (
                 <tr key={row.id}>
                   <td className="px-4 py-3">{row.name}</td>
-                  <td className="px-4 py-3">{row.grade_level ?? "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -92,7 +90,6 @@ export function ClassesPanel({ classes }: { classes: SchoolClass[] }) {
             classId={editing.id}
             defaultValues={{
               name: editing.name,
-              grade_level: editing.grade_level ?? "",
             }}
             onDone={() => {
               setEditing(null);

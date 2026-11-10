@@ -12,15 +12,20 @@ export type SubscriptionRadioOption = {
 type SubscriptionRadioGroupProps = {
   options: SubscriptionRadioOption[];
   defaultValue: SubscriptionStatus;
+  value?: SubscriptionStatus;
+  onChange?: (value: SubscriptionStatus) => void;
   name?: string;
 };
 
 export function SubscriptionRadioGroup({
   options,
   defaultValue,
+  value,
+  onChange,
   name = "status",
 }: SubscriptionRadioGroupProps) {
-  const [selected, setSelected] = useState<SubscriptionStatus>(defaultValue);
+  const [uncontrolled, setUncontrolled] = useState<SubscriptionStatus>(defaultValue);
+  const selected = value ?? uncontrolled;
 
   return (
     <div className="space-y-4">
@@ -41,7 +46,10 @@ export function SubscriptionRadioGroup({
               name={name}
               value={option.value}
               checked={isSelected}
-              onChange={() => setSelected(option.value)}
+              onChange={() => {
+                if (onChange) onChange(option.value);
+                else setUncontrolled(option.value);
+              }}
             />
             <div>
               <div className="text-sm font-medium">{option.label}</div>

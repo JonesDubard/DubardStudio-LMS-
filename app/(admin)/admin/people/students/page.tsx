@@ -1,45 +1,95 @@
 import type { Metadata } from "next";
+import { AssignPersonButton } from "@/components/admin/AssignPersonButton";
 import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
+import { InvitePersonForm } from "@/components/admin/InvitePersonForm";
+import { PendingInvites } from "@/components/admin/PendingInvites";
 import { PeopleSubNav } from "@/components/admin/PeopleSubNav";
 import { DataTable } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { getStudents } from "@/lib/stubs/get-students";
-import { buttonPrimary, buttonSecondary } from "@/lib/ui/styles";
+import { assignStudentClass } from "@/app/(admin)/admin/people/actions";
+import { getClasses } from "@/lib/queries/academic";
+import { listPeople } from "@/lib/queries/people";
+import { createClient } from "@/lib/supabase/server";
+import { buttonSecondary } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Manage Students",
 };
 
-export default function AdminStudentsPage() {
-  const data = getStudents();
+export default async function AdminStudentsPage() {
+  const supabase = await createClient();
+  const [students, classes, yearResult] = await Promise.all([
+    listPeople(supabase, "student", "Student"),
+    getClasses(supabase),
+    supabase
+      .from("academic_years")
+      .select("id")
+      .eq("is_current", true)
+      .maybeSingle<{ id: string }>(),
+  ]);
+  if (yearResult.error) throw new Error(`academic_years: ${yearResult.error.message}`);
+
+  const className = new Map(classes.map((row) => [row.id, row.name]));
+  const classByStudent = new Map<string, string>();
+  if (yearResult.data) {
+    const enrollmentResult = await supabase
+      .from("enrollments")
+      .select("student_id, class_id")
+      .eq("academic_year_id", yearResult.data.id)
+      .eq("status", "active")
+      .returns<{ student_id: string; class_id: string }[]>();
+    if (enrollmentResult.error) {
+      throw new Error(`enrollments: ${enrollmentResult.error.message}`);
+    }
+    for (const row of enrollmentResult.data ?? []) {
+      const name = className.get(row.class_id);
+      if (!name) continue;
+      const current = classByStudent.get(row.student_id);
+      classByStudent.set(row.student_id, current ? `${current}, ${name}` : name);
+    }
+  }
+
+  const options = classes.map((row) => ({ id: row.id, label: row.name }));
+  const blockedMessage = yearResult.data
+    ? options.length === 0
+      ? "Add a class under Academic before assigning one."
+      : null
+    : "Set a current academic year under Academic before assigning a class.";
 
   return (
     <main className="min-w-0 flex-1">
       <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
-        <p className="text-xs font-medium text-ink-muted">{data.eyebrow}</p>
+        <p className="text-xs font-medium text-ink-muted">People / Students</p>
         <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
-          {data.title}
+          Students
         </h1>
-        <p className="mt-1 text-sm text-ink-secondary">{data.subtitle}</p>
+        <p className="mt-1 text-sm text-ink-secondary">
+          Manage student invitations and class assignments.
+        </p>
       </header>
 
       <div className="space-y-6 p-4 lg:p-8">
         <PeopleSubNav />
 
-        <div className="flex flex-wrap justify-between gap-4">
-          <div>
-            <p className="text-sm text-ink-secondary">{data.countLabel}</p>
-            <p className="mt-1 text-sm">{data.breakdownLabel}</p>
+        <section className="rounded-lg border border-line bg-surface p-5 shadow-card">
+          <h2 className="text-lg font-semibold">Invite a student</h2>
+          <p className="mt-1 text-sm text-ink-secondary">
+            Saves a pending invitation. No email is sent.
+          </p>
+          <div className="mt-4">
+            <InvitePersonForm role="student" />
           </div>
+        </section>
 
-          <div className="flex flex-wrap gap-3">
-            <button type="button" className={buttonSecondary}>
-              {data.bulkImportButtonLabel}
-            </button>
-            <button type="button" className={buttonPrimary}>
-              {data.inviteButtonLabel}
-            </button>
-          </div>
+        <PendingInvites role="student" />
+
+        <div className="flex flex-wrap justify-between gap-4">
+          <p className="text-sm text-ink-secondary">
+            {students.length} {students.length === 1 ? "student" : "students"}
+          </p>
+          <button type="button" disabled className={buttonSecondary}>
+            Bulk Import CSV
+          </button>
         </div>
 
         <DataTable
@@ -50,44 +100,53 @@ export default function AdminStudentsPage() {
             { key: "status", header: "Status" },
             { key: "actions", header: "Actions" },
           ]}
-          rows={data.students.map((student) => ({
+          rows={students.map((student) => ({
             id: student.id,
             cells: [
               <span key="name" className="font-medium">
                 {student.name}
               </span>,
               student.email,
-              student.className,
-              <StatusBadge key="status" label={student.status} />,
-              <button
+              classByStudent.get(student.id) ?? "Not assigned",
+              <StatusBadge key="status" label={student.status.toUpperCase()} />,
+              <AssignPersonButton
                 key="action"
-                type="button"
-                className={buttonSecondary}
-              >
-                {student.actionLabel}
-              </button>,
+                personId={student.id}
+                personName={student.name}
+                options={options}
+                fieldName="Class"
+                blockedMessage={blockedMessage}
+                assign={assignStudentClass}
+              />,
             ],
           }))}
         />
 
         <BulkImportPanel
-          title={data.importTitle}
-          description={data.importDescription}
-          uploadTitle={data.uploadTitle}
-          uploadDescription={data.uploadDescription}
-          uploadButtonLabel={data.uploadButtonLabel}
-          previewTitle={data.previewTitle}
-          columns={data.csvColumns}
-          rows={data.csvRows.map((row) => ({
-            id: row.id,
-            cells: [row.name, row.email, row.className],
-          }))}
+          title="Bulk Import Students"
+          description="Upload a CSV containing student information."
+          uploadTitle="Drop CSV file here"
+          uploadDescription="or choose a file from your computer"
+          uploadButtonLabel="Choose CSV File"
+          previewTitle="CSV Column Preview"
+          columns={[
+            { key: "name", header: "name" },
+            { key: "email", header: "email" },
+            { key: "class", header: "class" },
+          ]}
+          rows={[
+            {
+              id: "preview",
+              cells: ["Amara Johnson", "amara.johnson@example.com", "JSS 2A"],
+            },
+          ]}
         />
 
         <div className="border border-line bg-surface p-5">
-          <p className="font-medium">{data.parentLinkTitle}</p>
+          <p className="font-medium">Parent Linking</p>
           <p className="mt-1 text-sm text-ink-secondary">
-            {data.parentLinkDescription}
+            After students are added, use People → Parents to invite parents and link them to one
+            or more students.
           </p>
         </div>
       </div>

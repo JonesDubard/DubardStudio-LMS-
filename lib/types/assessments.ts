@@ -22,6 +22,7 @@ export type SubmissionGradeView = {
   studentId: string;
   studentName: string;
   text: string | null;
+  fileName: string | null;
   submittedAt: string;
   status: string;
   score: number | null;
