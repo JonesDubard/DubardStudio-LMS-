@@ -41,7 +41,7 @@ const reasons: { title: string; body: string }[] = [
   },
   {
     title: "Beside the tools you already use",
-    body: "LearnGrid carries the academic work. It does not replace the messages, calls, or SMS your school already relies on.",
+    body: "TerraLearn carries the academic work. It does not replace the messages, calls, or SMS your school already relies on.",
   },
 ];
 
@@ -56,7 +56,7 @@ export function MarketingHome() {
           </h1>
           <p className="mt-5 text-base leading-7 text-ink-secondary sm:text-lg">
             Students open lessons and assignments on a phone. Each school has its
-            own address, name, colours, and logo. LearnGrid sits beside the
+            own address, name, colours, and logo. TerraLearn sits beside the
             communication tools your school already uses.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -111,7 +111,7 @@ export function MarketingHome() {
       <section id="why" className="scroll-mt-20 border-t border-line">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-12 md:gap-16 md:py-24">
           <div className="md:col-span-4">
-            <p className="text-sm font-medium text-brand-primary">Why LearnGrid</p>
+            <p className="text-sm font-medium text-brand-primary">Why TerraLearn</p>
             <h2 className="mt-3 text-balance text-3xl font-semibold tracking-tight text-ink md:text-4xl">
               One place for the academic work.
             </h2>
@@ -151,7 +151,7 @@ export function MarketingHome() {
               Bring your school into the future of academic delivery.
             </h2>
             <p className="mt-5 max-w-xl text-base leading-7 text-white md:text-lg">
-              LearnGrid is accepting a limited number of pilot schools.
+              TerraLearn is accepting a limited number of pilot schools.
             </p>
             <Link href="/contact" className={`${buttonSecondary} mt-8`}>
               Apply for a Pilot
@@ -164,7 +164,7 @@ export function MarketingHome() {
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-16 md:flex-row md:items-end md:justify-between md:py-24">
           <div className="max-w-xl">
             <h2 className="text-balance text-3xl font-semibold tracking-tight text-ink md:text-4xl">
-              Let&apos;s explore what LearnGrid could do for your school.
+              Let&apos;s explore what TerraLearn could do for your school.
             </h2>
             <p className="mt-4 text-base leading-7 text-ink-secondary">
               Tell us a little about your school, and our team will get in touch to

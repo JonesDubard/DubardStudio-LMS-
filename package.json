@@ -2,7 +2,7 @@
   "name": "dubardstudio-lms",
   "version": "0.1.0",
   "private": true,
-  "description": "LearnGrid — a white-label LMS for Liberian schools.",
+  "description": "TerraLearn — a white-label LMS for Liberian schools.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

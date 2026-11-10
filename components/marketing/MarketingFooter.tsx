@@ -9,7 +9,7 @@ export function MarketingFooter() {
         <div className="max-w-sm">
           <Logo />
           <p className="mt-2 text-sm leading-6 text-ink-secondary">
-            LearnGrid is a white-label learning platform for Liberian schools. Each
+            TerraLearn is a white-label learning platform for Liberian schools. Each
             school gets its own subdomain and branding.
           </p>
         </div>
@@ -43,7 +43,7 @@ export function MarketingFooter() {
       </div>
       <div className="border-t border-line-subtle">
         <p className="mx-auto max-w-6xl px-4 py-4 text-xs text-ink-muted">
-          © {new Date().getFullYear()} LearnGrid
+          © {new Date().getFullYear()} TerraLearn
         </p>
       </div>
     </footer>

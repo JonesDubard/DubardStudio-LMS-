@@ -33,7 +33,7 @@ export function DemoRequestForm() {
           Thank you! We will reach out within 24 hours.
         </p>
         <Link href="/" className={`${buttonSecondary} mt-6`}>
-          Back to LearnGrid
+          Back to TerraLearn
         </Link>
       </div>
     );

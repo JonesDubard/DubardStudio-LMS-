@@ -5,9 +5,9 @@ import { notFound } from "next/navigation";
 import { buttonSecondary } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
-  title: "School Login | LearnGrid",
+  title: "School Login | TerraLearn",
   description:
-    "LearnGrid is opened from your school's own web address. Ask your school administrator for the link.",
+    "TerraLearn is opened from your school's own web address. Ask your school administrator for the link.",
 };
 
 export default async function SchoolAccessPage() {
@@ -23,7 +23,7 @@ export default async function SchoolAccessPage() {
         Use your school&apos;s own address.
       </h1>
       <p className="mt-5 text-base leading-7 text-ink-secondary">
-        LearnGrid is accessed through your school&apos;s unique web address. Please
+        TerraLearn is accessed through your school&apos;s unique web address. Please
         use the link provided by your school administrator.
       </p>
       <p className="mt-4 text-sm leading-6 text-ink-secondary">
@@ -37,7 +37,7 @@ export default async function SchoolAccessPage() {
         </p>
       ) : null}
       <Link href="/" className={`${buttonSecondary} mt-8`}>
-        Back to LearnGrid
+        Back to TerraLearn
       </Link>
     </main>
   );

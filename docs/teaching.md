@@ -39,7 +39,7 @@ Other commands:
 
 ## The big picture
 
-LearnGrid is a white-label LMS for Liberian schools. Each school is a tenant, reached by a subdomain such as `pilotschool.ourlms.com`. The product docs in `docs/ia.md`, `docs/flows.md`, `docs/data-model.md`, and `docs/living-doc.md` describe five personas (platform admin, school admin, teacher, student, parent) sharing one academic data model. Isolation will be Postgres row-level security on `tenant_id`, not application filters.
+TerraLearn is a white-label LMS for Liberian schools. Each school is a tenant, reached by a subdomain such as `pilotschool.ourlms.com`. The product docs in `docs/ia.md`, `docs/flows.md`, `docs/data-model.md`, and `docs/living-doc.md` describe five personas (platform admin, school admin, teacher, student, parent) sharing one academic data model. Isolation will be Postgres row-level security on `tenant_id`, not application filters.
 
 This session only built the shell: the Next.js app, empty route groups, Supabase client factories, hostname-to-subdomain resolution, a neutral branding token set, a service worker that caches nothing, and CI. There is no login, no database, and no persona screens.
 
@@ -63,7 +63,7 @@ A later session on the same day added the four student P0 screens as server comp
 | `.prettierrc`                          | Prettier defaults for this repo                                                                         |
 | `.prettierignore`                      | Keeps format from rewriting generated files, `designs/`, and `Livedoc/`                                 |
 | `.gitignore`                           | Ignores `node_modules`, `.next`, `.env*`, `.vercel`, and the compiled service worker                    |
-| `.env.example`                         | Placeholders for the Supabase URL, anon key, service role key, and `NEXT_PUBLIC_ROOT_DOMAIN=ourlms.com` |
+| `.env.example`                         | Placeholders for the Supabase URL, anon key, service role key, and `NEXT_PUBLIC_ROOT_DOMAIN=terralearn.space` |
 | `next-env.d.ts`                        | Next.js TypeScript references                                                                           |
 | `vitest.config.ts`                     | Runs `tests/unit/**/*.test.ts`                                                                          |
 | `playwright.config.ts`                 | Points e2e tests at `tests/e2e` and `http://localhost:3000`                                             |
@@ -844,7 +844,7 @@ Items marked **Not in the prompt** need a human review. The others follow the se
 - **Empty Supabase env skips session refresh.** `createClient()` still throws if called without the URL and anon key. Middleware does not, so the placeholder page loads before credentials exist.
 - **Serwist caches nothing, but the build must see `self.__SW_MANIFEST`.** The worker discards the injected list. `precacheEntries` and `runtimeCaching` are empty. Serwist is disabled when `NODE_ENV` is `development` so the dev server is not intercepted. Re-enable real caching with lesson pages.
 - **Dexie is installed and unused.** It is in the locked stack for later offline lesson storage. No Dexie code was added.
-- **`app/layout.tsx` was required.** Next.js will not render `app/page.tsx` without a root layout. Title and description use the LearnGrid name from `docs/living-doc.md` section 11.
+- **`app/layout.tsx` was required.** Next.js will not render `app/page.tsx` without a root layout. Title and description use the TerraLearn name from `docs/living-doc.md` section 11.
 - **Home page is `force-dynamic`.** Reading `headers()` already opts the route into dynamic rendering. The export keeps a future edit from accidentally static-rendering every host as `root`.
 - **`allowedDevOrigins: ["*.localhost"]`.** Lets the dev server accept `pilotschool.localhost`.
 - **`outputFileTracingRoot`.** A lockfile in the parent `dubardstudio` folder made Next treat that folder as the workspace root. Tracing is pinned to this app.
