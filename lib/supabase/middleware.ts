@@ -41,6 +41,34 @@ function applyPending(
   return response;
 }
 
+function finish(
+  request: NextRequest,
+  requestHeaders: Headers,
+  user: { id: string } | null,
+  cookies: PendingCookie[],
+  headers: Record<string, string>,
+) {
+  const marketingOnRoot = allowsRootMarketing(
+    request.nextUrl.pathname,
+    requestHeaders.get("x-tenant-subdomain"),
+  );
+
+  if (!user && !isPublicPath(request.nextUrl.pathname) && !marketingOnRoot) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/login";
+    redirectUrl.search = "";
+    return applyPending(NextResponse.redirect(redirectUrl), cookies, headers);
+  }
+
+  return applyPending(
+    NextResponse.next({
+      request: { headers: requestHeaders },
+    }),
+    cookies,
+    headers,
+  );
+}
+
 export async function updateSession(
   request: NextRequest,
   requestHeaders: Headers,
@@ -53,22 +81,17 @@ export async function updateSession(
   requestHeaders.delete("x-app-roles");
   requestHeaders.delete("x-tenant-id");
 
-  if (!url || !anonKey) {
-    return NextResponse.next({
-      request: { headers: requestHeaders },
-    });
-  }
-
-  if (!isHttpUrl(url)) {
-    console.error("NEXT_PUBLIC_SUPABASE_URL is not a valid URL.");
-    return NextResponse.next({
-      request: { headers: requestHeaders },
-    });
-  }
-
   const pendingCookies: PendingCookie[] = [];
   const pendingHeaders: Record<string, string> = {};
   let user: { id: string } | null = null;
+
+  if (url && !isHttpUrl(url)) {
+    console.error("NEXT_PUBLIC_SUPABASE_URL is not a valid URL.");
+  }
+
+  if (!url || !anonKey || !isHttpUrl(url)) {
+    return finish(request, requestHeaders, null, pendingCookies, pendingHeaders);
+  }
 
   try {
     const supabase = createServerClient(url, anonKey, {
@@ -117,27 +140,5 @@ export async function updateSession(
     requestHeaders.delete("x-tenant-id");
   }
 
-  const marketingOnRoot = allowsRootMarketing(
-    request.nextUrl.pathname,
-    requestHeaders.get("x-tenant-subdomain"),
-  );
-
-  if (!user && !isPublicPath(request.nextUrl.pathname) && !marketingOnRoot) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.search = "";
-    return applyPending(
-      NextResponse.redirect(redirectUrl),
-      pendingCookies,
-      pendingHeaders,
-    );
-  }
-
-  return applyPending(
-    NextResponse.next({
-      request: { headers: requestHeaders },
-    }),
-    pendingCookies,
-    pendingHeaders,
-  );
+  return finish(request, requestHeaders, user, pendingCookies, pendingHeaders);
 }
