@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { FormField } from "@/components/shared/FormField";
 import { alertError, buttonPrimary, fieldControl, surfaceCard } from "@/lib/ui/styles";
@@ -19,6 +19,11 @@ export function ProfileForm({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(true);
+  }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,7 +79,7 @@ export function ProfileForm({
           {notice}
         </p>
       ) : null}
-      <button type="submit" disabled={pending} className={buttonPrimary}>
+      <button type="submit" disabled={pending || !ready} className={buttonPrimary}>
         {pending ? "Saving..." : "Save"}
       </button>
     </form>

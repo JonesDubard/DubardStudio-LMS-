@@ -15,13 +15,16 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "LearnGrid",
   description: "White-label learning platform for Liberian schools.",
+  icons: {
+    icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const brand = await readShellBrand();
 
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} scroll-smooth`}>
       <body suppressHydrationWarning>
         {process.env.NODE_ENV === "development" ? <DevServiceWorkerReset /> : null}
         <style>{brandStyleText(brand.primary, brand.secondary)}</style>
