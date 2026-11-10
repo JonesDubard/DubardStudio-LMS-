@@ -5,7 +5,7 @@ const HOME_BY_ROLE: { role: string; path: string }[] = [
   { role: "school_admin", path: "/admin/dashboard" },
   { role: "teacher", path: "/teacher/home" },
   { role: "student", path: "/feed" },
-  { role: "parent", path: "/feed" },
+  { role: "parent", path: "/parent/home" },
 ];
 
 /** Picks a home screen from the session roles. Platform outranks a school role. */

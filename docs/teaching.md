@@ -492,7 +492,7 @@ Browser → `middleware.ts` → session refresh → `x-app-roles` and `x-tenant-
 5. If there is a user, the middleware reads `app_roles` (an array) and `tenant_id` from the access-token payload and sets request headers `x-app-roles` (comma-joined) and `x-tenant-id`. A legacy token that still has a single `app_role` string is treated as a one-item list. Incoming copies of those headers are deleted first so a browser cannot spoof them. The reserved JWT `role` claim stays `authenticated` and is not copied onto a header.
 6. There is no role-based route gate yet. A signed-in student can still open `/admin` or `/platform`.
 7. The feed no longer prints `x-app-roles` or `x-tenant-id`. Middleware still sets those headers for server code.
-8. After a successful password sign-in, invite acceptance, or password reset, the form reads `app_roles` from the access token and opens that role's home: platform admin `/platform/dashboard`, school admin `/admin/dashboard`, teacher `/teacher/home`, student and parent `/feed`. `lib/auth/home-path.ts` is the single map. There is still no route gate, so a signed-in user can open another role's URL directly.
+8. After a successful password sign-in, invite acceptance, or password reset, the form reads `app_roles` from the access token and opens that role's home: platform admin `/platform/dashboard`, school admin `/admin/dashboard`, teacher `/teacher/home`, student `/feed`, parent `/parent/home`. `lib/auth/home-path.ts` is the single map. There is still no route gate, so a signed-in user can open another role's URL directly.
 
 Sign-in, invite, and reset call Supabase Auth from the browser. They are not stubs.
 
@@ -713,7 +713,7 @@ Counts after the 2026-09-24 final verification audit (page routes only; layouts 
 
 **Known issues / tech debt (flagged, not changed unless noted):**
 
-- Parent persona screens are absent (only `app/(tenant)/(parent)/.gitkeep`).
+- Parent home, assignments, and grades live at `/parent/home`, `/parent/assignments`, and `/parent/grades`. They read linked children through RLS. The empty state tells a parent with no links to contact the school administrator.
 - Auth pages and session middleware are wired. Persona screens still read stubs. The JWT `tenant_id` claim is not proven. See "What the auth spike proved".
 - Student BottomNav Classes / Grades are non-links (no built routes). Teacher Classes, Admin Usage, Platform Subscriptions / Usage are `#` placeholders.
 - Stub structural duplication: `AssignmentMaterial` defined in two stubs; teachers/students list+CSV shapes are near-clones; tenant profile/subscription `tabs` arrays are copied; lesson content repeated across three lesson stubs; audit snippets overlap dashboard and audit-log.

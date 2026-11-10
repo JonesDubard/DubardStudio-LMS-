@@ -11,9 +11,10 @@ describe("homePathForRoles", () => {
     expect(homePathForRoles(["school_admin"])).toBe("/admin/dashboard");
   });
 
-  it("sends a teacher to teacher home and a student to the feed", () => {
+  it("sends a teacher to teacher home, a student to the feed, and a parent to parent home", () => {
     expect(homePathForRoles(["teacher"])).toBe("/teacher/home");
     expect(homePathForRoles(["student"])).toBe("/feed");
+    expect(homePathForRoles(["parent"])).toBe("/parent/home");
   });
 
   it("prefers the platform console when that role is present", () => {
