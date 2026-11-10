@@ -25,7 +25,9 @@ export function FeedCard({
   children,
 }: FeedCardProps) {
   return (
-    <article className={`${surfaceCard} p-4 ${className}`.trim()}>
+    <article
+      className={`${surfaceCard} flex h-full flex-col p-4 transition-colors duration-150 hover:border-line-strong motion-reduce:transition-none ${className}`.trim()}
+    >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
@@ -34,7 +36,7 @@ export function FeedCard({
           <h3 className="mt-1 break-words text-base font-semibold tracking-tight text-ink">
             {title}
           </h3>
-          <p className="mt-1 text-[13px] text-ink-secondary">{meta}</p>
+          <p className="mt-1 text-sm text-ink-secondary">{meta}</p>
         </div>
 
         {showMark ? (
@@ -47,10 +49,10 @@ export function FeedCard({
       </div>
 
       {description ? (
-        <p className="mb-3 text-sm leading-6 text-ink-secondary">{description}</p>
+        <p className="mb-3 line-clamp-3 text-sm leading-6 text-ink-secondary">{description}</p>
       ) : null}
 
-      {children}
+      <div className="mt-auto">{children}</div>
     </article>
   );
 }

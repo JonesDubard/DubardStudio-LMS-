@@ -116,7 +116,7 @@ A later session on the same day added the four student P0 screens as server comp
 
 | File                                                       | Purpose                                                                                                                                                                                       |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/(student)/layout.tsx`                                 | Phone frame (`max-w-[390px]`) and `BottomNav` for the student routes                                                                                                                          |
+| `app/(student)/layout.tsx`                                 | Student shell (`max-w-7xl`). Bottom nav below `md`; the same items sit in a top bar from `md` up.                                                                                              |
 | `app/(student)/feed/page.tsx`                              | Student home. Server component. Reads `getStudentFeed()` from `lib/queries/student.ts`                                                                                                        |
 | `app/(student)/lessons/[lessonId]/page.tsx`                | Lesson viewer. Server component. Reads `getLessonDetails(lessonId)`. Missing or unpublished lessons call `notFound()`                                                                        |
 | `app/(student)/assignments/[assignmentId]/page.tsx`        | Assignment detail. Reads `getAssignment(assignmentId)`                                                                                                                                        |
@@ -127,8 +127,8 @@ A later session on the same day added the four student P0 screens as server comp
 | `lib/stubs/get-assignment.ts`                              | `getAssignment(assignmentId)` returns English — Reading Response: due date, instructions, Reading Passage.pdf, and the empty answer/file area                                                 |
 | `lib/stubs/get-submission-status.ts`                       | `getSubmissionStatus(assignmentId)` returns the received submission: Sep 23, 1:42 PM, status SUBMITTED, written answer, and Reading Response.pdf                                              |
 | `components/student/BottomNav.tsx`                         | Home / Classes / Grades bar. Used by `app/(student)/layout.tsx` on all four screens. Home is marked Current, matching the mockups                                                             |
-| `components/student/FeedCard.tsx`                          | Today card on the feed. Used twice: the new lesson and the due assignment                                                                                                                     |
-| `components/student/RecentlyViewedRow.tsx`                 | Compact lesson row. Used twice in the feed's recently viewed list                                                                                                                             |
+| `components/student/FeedCard.tsx`                          | Assignment or lesson card on the feed. The page groups `items` into "To hand in" and "Lessons".                                                                                                |
+| `components/student/RecentlyViewedRow.tsx`                 | Compact lesson row. Not rendered: the feed has no view history, so recently viewed stays a one-line empty state                                                                                |
 | `components/student/MaterialRow.tsx`                       | Title, meta, and action. Used for the lesson PDF and video, the assignment PDF, and the submitted attachment                                                                                  |
 | `components/shared/PageHeader.tsx`                         | Greeting header on the feed. Section header (mark, subject, title) on the lesson, assignment, and status pages                                                                                |
 | `components/shared/PrimaryButton.tsx`                      | Dark full-width action. Open Lesson, Back to Learning Feed, and Submit Work                                                                                                                   |
@@ -344,7 +344,7 @@ Tenant names match the mockups (not the prompt's alternate set): Pilot School #1
 | `supabase/seed.sql`                                     | Pilot School #1 and #2, one user per persona, applied by `npx supabase db reset` |
 | `scripts/load-env.ts`                                   | Loads `.env.local` for the scripts and the e2e test |
 | `tests/e2e/auth-jwt.spec.ts`                            | Proves the JWT claim reaches RLS. This is the spike |
-| `app/(student)/feed/page.tsx`                           | Dev-only banner for `x-app-roles` and `x-tenant-id` |
+| `app/(student)/feed/page.tsx`                           | Student home. The development role banner has been removed. |
 
 ### Academic structure reads (2026-10-09)
 
@@ -485,13 +485,13 @@ Platform Admin page, after the same middleware step:
 
 Browser → `middleware.ts` → session refresh → `x-app-roles` and `x-tenant-id` → page.
 
-1. The browser requests any page except the public allowlist: `/login`, `/invite/*`, `/reset/*`, `/_next/*`, `/api/health`.
+1. The browser requests any page except the public allowlist: `/login`, `/invite/*`, `/reset/*`, `/_next/*`, `/api/health`, `/manifest.webmanifest`.
 2. Root `middleware.ts` still resolves the hostname to `x-tenant-subdomain`. Next.js does not run `app/middleware.ts`.
 3. `lib/supabase/middleware.ts` calls `supabase.auth.getUser()`, which refreshes the session cookie when the access token is due.
 4. If there is no user, the response is a redirect to `/login`. `/login` is on the allowlist, so this is not a loop.
 5. If there is a user, the middleware reads `app_roles` (an array) and `tenant_id` from the access-token payload and sets request headers `x-app-roles` (comma-joined) and `x-tenant-id`. A legacy token that still has a single `app_role` string is treated as a one-item list. Incoming copies of those headers are deleted first so a browser cannot spoof them. The reserved JWT `role` claim stays `authenticated` and is not copied onto a header.
 6. There is no role-based route gate yet. A signed-in student can still open `/admin` or `/platform`.
-7. In development, `app/(student)/feed/page.tsx` prints those headers in a banner. Production builds omit the banner. Remove the banner before the pilot.
+7. The feed no longer prints `x-app-roles` or `x-tenant-id`. Middleware still sets those headers for server code.
 8. After a successful password sign-in, invite acceptance, or password reset, the form reads `app_roles` from the access token and opens that role's home: platform admin `/platform/dashboard`, school admin `/admin/dashboard`, teacher `/teacher/home`, student and parent `/feed`. `lib/auth/home-path.ts` is the single map. There is still no route gate, so a signed-in user can open another role's URL directly.
 
 Sign-in, invite, and reset call Supabase Auth from the browser. They are not stubs.
@@ -514,7 +514,7 @@ browser → middleware (sets `x-tenant-id` from the JWT) → server component �
 5. An empty list renders the empty-state sentence inside the table. A PostgREST error is thrown and is not turned into an empty list.
 6. Terms are loaded for the academic year whose `is_current` is true.
 
-Student feed (`/feed`) and the lesson viewer (`/lessons/[lessonId]`) use the same cookie client and `lib/queries/student.ts`. Those reads do not filter `student_id` or `tenant_id`. `getStudentFeed` starts at `enrollments`, then the class's courses, then published lessons and published assignments whose due date is still ahead. The merged list is sorted by date descending and limited to 20. `getLessonDetails` loads one published lesson, its `lesson_materials`, and the linked `files` rows (name and size). The Download button does not call Storage yet.
+Student feed (`/feed`) and the lesson viewer (`/lessons/[lessonId]`) use the same cookie client and `lib/queries/student.ts`. Those reads do not filter `student_id` or `tenant_id`. `getStudentFeed` starts at `enrollments`, then the class's courses, then published lessons and published assignments whose due date is still ahead. The query still returns one merged `items` list, sorted by date descending and limited to 20. The feed page groups that list into "To hand in" and "Lessons". Recently viewed stays an empty line because there is no view-history table. `getLessonDetails` loads one published lesson, its `lesson_materials`, and the linked `files` rows (name and size). The Download button does not call Storage yet.
 
 ## Server Actions pattern
 
@@ -623,7 +623,7 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | JWT has no `tenant_id` claim                                                     | The hook is not registered. Dashboard → Authentication → Hooks → Custom Access Token → `public.custom_access_token_hook`. Sign in again after saving                                                                            |
 | Queries fail with 'role X does not exist'                                        | JWT claim collision with Supabase's reserved `role` claim. The app role must be `app_role`. The `profiles.role` column stays `role`                                                                                             |
 | RLS blocks everything including own-tenant rows                                  | The hook is reading the wrong column. `0001_custom_access_token_hook.sql` must select `profiles.tenant_id` and `profiles.role`                                                                                                  |
-| Redirect loop on `/login`                                                        | `lib/auth/public-paths.ts`. `/login`, `/invite/*`, `/reset/*`, `/_next/*`, and `/api/health` must stay public                                                                                                                   |
+| Redirect loop on `/login`                                                        | `lib/auth/public-paths.ts`. `/login`, `/invite/*`, `/reset/*`, `/_next/*`, `/api/health`, and `/manifest.webmanifest` must stay public                                                                                          |
 | Academic Setup shows no rows                                                     | `npx supabase db reset` applies `supabase/seed.sql`. The seed `tenant_id` must match the JWT `tenant_id` claim                                                                                                                  |
 | Academic pages show empty list                                                   | Check the RLS policy, the JWT `tenant_id` claim in dev tools, and seed data. Do not add a `tenant_id` filter in the page query                                                                                                  |
 | Create action returns 0 rows but no error                                        | RLS blocks INSERT. Check the policy allows authenticated INSERT for the session tenant. The insert must include `tenant_id` from the JWT, because the 0002 policies use `USING` as the insert check                             |
@@ -860,7 +860,7 @@ Items marked **Not in the prompt** need a human review. The others follow the se
 
 - **Routes live in `app/(student)/`, not `app/(tenant)/(student)/`.** This session's table asked for `app/(student)/feed` and the other three paths. The empty foundation group `app/(tenant)/(student)/` was left as-is. Route groups do not appear in the URL, so the pages are `/feed`, `/lessons/1`, `/assignments/1`, and `/assignments/1/status`.
 - **`app/(student)/layout.tsx`.** The phone frame and bottom nav are shared by all four mockups. A student layout keeps that chrome off the foundation home page.
-- **`getStudentFeed()` returns an object, not only an array.** `items` is the today array. Greeting, date, and recently viewed rows are on the same object so the page does not hardcode mockup copy.
+- **`getStudentFeed()` returns an object, not only an array.** `items` is the merged lesson and assignment list. The feed page groups it into "To hand in" and "Lessons". Greeting and date stay on the same object. Recently viewed is an empty line; `RecentlyViewedRow` is not rendered.
 - **Sample strings come from the HTML, not the prompt example.** The prompt mentioned "Mathematics — Week 3 Quiz". That sentence is not in the mockups. The feed lesson is "Mathematics — Fractions".
 - **Once-only blocks stayed in the page.** The extraction list named lesson body, instructions, answer field, and confirmation cards. Each is used on one screen, so they were not given their own files. `StatusBadge`, `MaterialRow`, and `RecentlyViewedRow` were extracted because the same markup is repeated.
 - **Submit Work does not navigate or save.** It is a button with no handler. Download, View Image, Watch Video, and Choose File are the same. Open Lesson, Open Assignment, and Back to Learning Feed are static links. Link versions add `block text-center` so the anchor fills the row the way the mockup button does.

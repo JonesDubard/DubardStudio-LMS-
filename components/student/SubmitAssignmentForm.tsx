@@ -25,7 +25,7 @@ export function SubmitAssignmentForm({ assessmentId }: { assessmentId: string })
   }
 
   return (
-    <form className={`space-y-4 p-4 ${surfaceCard}`} onSubmit={onSubmit}>
+    <form className={`space-y-4 p-5 ${surfaceCard}`} onSubmit={onSubmit}>
       {error ? (
         <p className={alertError}>{error}</p>
       ) : null}
