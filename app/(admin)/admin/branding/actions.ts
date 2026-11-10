@@ -70,7 +70,6 @@ async function writeColors(
     .update({
       primary_color: primary,
       secondary_color: secondary,
-      updated_at: new Date().toISOString(),
     })
     .eq("id", tenant.tenantId)
     .select("id")

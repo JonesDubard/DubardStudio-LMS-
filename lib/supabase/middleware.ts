@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { readAccessTokenClaims } from "@/lib/auth/claims";
 import { isPublicPath } from "@/lib/auth/public-paths";
+import { allowsRootMarketing } from "@/lib/marketing/paths";
 
 type PendingCookie = {
   name: string;
@@ -63,7 +64,12 @@ export async function updateSession(
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
 
-  if (!user && !isPublicPath(request.nextUrl.pathname)) {
+  const marketingOnRoot = allowsRootMarketing(
+    request.nextUrl.pathname,
+    requestHeaders.get("x-tenant-subdomain"),
+  );
+
+  if (!user && !isPublicPath(request.nextUrl.pathname) && !marketingOnRoot) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.search = "";

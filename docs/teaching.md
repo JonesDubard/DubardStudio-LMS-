@@ -32,7 +32,7 @@ Other commands:
 | `npm run lint`      | ESLint through `next lint`                                          |
 | `npm run typecheck` | `tsc --noEmit`                                                      |
 | `npm run test`      | Vitest unit tests                                                   |
-| `npm run test:e2e`  | Playwright. `tests/e2e/auth-jwt.spec.ts` is the JWT → RLS spike     |
+| `npm run test:e2e`  | Playwright on `tests/e2e/`. Journeys plus the JWT and RLS specs. Use one worker against the dev server on port 3000 |
 | `npx supabase db reset` | Rebuilds the local database and applies `supabase/seed.sql` (pilot1 and pilot2) |
 | `npm run format`    | Prettier                                                            |
 | `npm run db:types`  | Stub. Prints a message until migrations exist                       |
@@ -910,3 +910,21 @@ Items marked **Not in the prompt** need a human review. The others follow the se
 - The hook function body matches `docs/data-model.md` §10. Grants for `supabase_auth_admin`, the three auth tables, and `auth_spike_exec` are in the same migration because the function cannot run without them.
 - Post-login navigation goes to `/feed` so the dev banner is the next screen. That is not role routing.
 - The RLS test did not pass. The project host in `.env.local` does not resolve, so no JWT was issued. See "What the auth spike proved". The hook was not registered.
+
+### 2026-11-10 — Persona journeys
+
+Playwright journeys for the four school roles, against the seeded Pilot School #1 accounts. Run `npx playwright test tests/e2e/` with the dev server on port 3000 (`reuseExistingServer` is on).
+
+| File | What it checks |
+| --- | --- |
+| `tests/e2e/sign-in.ts` | Shared sign-in. Password is the seed password for every `*@pilot1.test` account |
+| `tests/e2e/student-journey.spec.ts` | Feed, Classes (Grade 5), released Fractions grades, a lesson, and a display-name save that is then restored |
+| `tests/e2e/teacher-journey.spec.ts` | Home, a new draft lesson, a duplicate of that draft, and releasing a grade on the Fractions assignment |
+| `tests/e2e/admin-journey.spec.ts` | Dashboard, a pending teacher invite, and a branding color save that is then restored |
+| `tests/e2e/parent-journey.spec.ts` | Home for Pat and Sam, assignments, and the released Fractions grades |
+
+The older RLS specs now create a `memberships` row instead of `profiles.role`. `auth-jwt.spec.ts` checks the issued `tenant_id` and `app_roles` claims. Migration 0005 removed `auth_spike_exec`, so that spec no longer builds a throwaway table. `lesson_materials` inserts no longer send `file_size` (dropped in 0007).
+
+Two product bugs showed up while writing the journeys. Settings Save was enabled before hydration, so the browser submitted a GET and the display name never saved; the button stays disabled until the form is mounted. Branding updates were writing `updated_at`, which is not in the tenants column grant; the trigger sets that column, and the action now writes only the two colors.
+
+The teacher journey leaves extra draft lessons and re-releases the Fractions assignment (score 16). The admin journey leaves a pending `e2e.teacher.*@pilot1.test` invite. Student name and branding colors are restored at the end of those tests. Full `tests/e2e/` passed with `--workers=1` on 2026-11-10 (8 tests).

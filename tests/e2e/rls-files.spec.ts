@@ -86,11 +86,17 @@ test("files RLS returns only the signed-in tenant", async ({ page }) => {
     const { error: profileError } = await admin.from("profiles").insert({
       id: userId,
       tenant_id: TENANT_A,
-      role: "teacher",
       full_name: "RLS Files Teacher",
       email,
     });
     if (profileError) throw profileError;
+
+    const { error: membershipError } = await admin.from("memberships").insert({
+      tenant_id: TENANT_A,
+      profile_id: userId,
+      role: "teacher",
+    });
+    if (membershipError) throw membershipError;
 
     const { data: files, error: fileError } = await admin
       .from("files")
@@ -162,7 +168,7 @@ test("files RLS returns only the signed-in tenant", async ({ page }) => {
     const debug = JSON.stringify(
       {
         jwt: {
-          app_role: claims.app_role ?? null,
+          app_roles: claims.app_roles ?? null,
           tenant_id: claims.tenant_id ?? null,
         },
         policy: "tenant_id = (auth.jwt() ->> 'tenant_id')::uuid",
@@ -173,7 +179,7 @@ test("files RLS returns only the signed-in tenant", async ({ page }) => {
       2,
     );
 
-    expect(claims.app_role, debug).toBe("teacher");
+    expect(claims.app_roles, debug).toEqual(expect.arrayContaining(["teacher"]));
     expect(claims.tenant_id, debug).toBe(TENANT_A);
     expect(listed.error, debug).toBeNull();
     expect(listed.data, debug).toEqual([
