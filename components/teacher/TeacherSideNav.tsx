@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Home,
   School,
+  Settings,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -51,6 +52,12 @@ const navItems: {
     icon: CheckCheck,
     match: (path: string) =>
       path.includes("/submissions") || path.includes("/grade-entry"),
+  },
+  {
+    label: "Settings",
+    href: "/settings",
+    icon: Settings,
+    match: (path: string) => path.startsWith("/settings"),
   },
 ];
 

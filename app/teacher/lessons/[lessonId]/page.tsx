@@ -59,6 +59,14 @@ export default async function LessonPage({ params }: LessonPageProps) {
             </Link>
             {course && lesson ? (
               <Link
+                href={`/teacher/lessons/${lesson.id}/reuse`}
+                className={buttonSecondary}
+              >
+                Duplicate
+              </Link>
+            ) : null}
+            {course && lesson ? (
+              <Link
                 href={`/teacher/lessons/${lesson.id}/assessments/new`}
                 className={buttonPrimary}
               >
