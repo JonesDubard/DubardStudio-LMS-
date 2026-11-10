@@ -69,9 +69,6 @@ export default async function TenantSubscriptionPage({
               href: `/platform/tenants/${school.id}/subscription`,
               active: true,
             },
-            { label: "Onboarding", href: "#", active: false },
-            { label: "Usage", href: "#", active: false },
-            { label: "Authorized Access", href: "#", active: false },
           ]}
         />
 

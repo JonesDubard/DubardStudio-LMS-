@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SubscriptionStatus } from "@/lib/stubs/get-tenants";
+import type { SubscriptionStatus } from "@/lib/platform/schools";
 
 export type SubscriptionRadioOption = {
   value: SubscriptionStatus;

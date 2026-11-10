@@ -63,6 +63,7 @@ export type StudentLessonMaterial = {
   name: string;
   sizeBytes: number | null;
   externalUrl: string | null;
+  downloadable: boolean;
 };
 
 export type StudentLessonDetails = {
@@ -550,6 +551,7 @@ export async function getLessonDetails(
         name: file?.original_name ?? material.external_url ?? "Material",
         sizeBytes: file ? Number(file.size_bytes) : null,
         externalUrl: material.external_url,
+        downloadable: Boolean(material.file_id && file),
       };
     }),
   };

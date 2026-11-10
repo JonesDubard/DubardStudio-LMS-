@@ -1,4 +1,4 @@
-import type { SubscriptionStatus } from "@/lib/stubs/get-tenants";
+import type { SubscriptionStatus } from "@/lib/platform/schools";
 import { badgeBase } from "@/lib/ui/styles";
 
 type TenantStatusPillProps = {

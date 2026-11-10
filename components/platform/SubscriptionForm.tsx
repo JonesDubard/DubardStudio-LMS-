@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateTenantSubscription } from "@/app/(platform)/platform/actions";
 import { SubscriptionRadioGroup } from "@/components/platform/SubscriptionRadioGroup";
-import type { SubscriptionStatus } from "@/lib/stubs/get-tenants";
+import type { SubscriptionStatus } from "@/lib/platform/schools";
 import { alertError, buttonPrimary, buttonSecondary } from "@/lib/ui/styles";
 
 const options: { value: SubscriptionStatus; label: string; description: string }[] = [

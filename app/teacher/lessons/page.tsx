@@ -11,7 +11,7 @@ import {
   getTeacherLessons,
   parseLessonStatus,
 } from "@/lib/queries/lessons";
-import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/assignment-stub";
+import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/messages";
 import { createClient } from "@/lib/supabase/server";
 import type { LessonStatus, TeacherCourse } from "@/lib/types/lessons";
 
@@ -75,7 +75,7 @@ export default async function TeacherLessonsPage({
 
   const supabase = await createClient();
   const teacherId = await getSignedInTeacherId(supabase);
-  const courses = await getTeacherCourses(supabase, teacherId);
+  const courses = await getTeacherCourses(supabase);
   const lessons = await getTeacherLessons(supabase, {
     teacherId,
     classId: classId || undefined,

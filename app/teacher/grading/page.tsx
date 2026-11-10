@@ -5,8 +5,8 @@ import { DataTable } from "@/components/shared/DataTable";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { getTeacherAssessments } from "@/lib/queries/assessments";
-import { getSignedInTeacherId, getTeacherCourses } from "@/lib/queries/lessons";
-import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/assignment-stub";
+import { getTeacherCourses } from "@/lib/queries/lessons";
+import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/messages";
 import { createClient } from "@/lib/supabase/server";
 import type { AssessmentStatus } from "@/lib/types/assessments";
 
@@ -33,8 +33,7 @@ function formatDue(value: string | null): string {
 
 export default async function TeacherGradingPage() {
   const supabase = await createClient();
-  const teacherId = await getSignedInTeacherId(supabase);
-  const courses = await getTeacherCourses(supabase, teacherId);
+  const courses = await getTeacherCourses(supabase);
   const grouped = await Promise.all(
     courses.map(async (course) => {
       const rows = await getTeacherAssessments(supabase, course.id);

@@ -29,10 +29,9 @@ const navItems: {
   },
   {
     label: "Classes",
-    href: "#",
+    href: "/teacher/classes",
     icon: School,
-    match: () => false,
-    title: "Classes are not available yet",
+    match: (path: string) => path.startsWith("/teacher/classes"),
   },
   {
     label: "Lessons",

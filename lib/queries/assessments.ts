@@ -617,7 +617,6 @@ export async function submitAssignment(
   }
 
   revalidatePath(`/assignments/${assessmentId}`);
-  revalidatePath(`/assignments/${assessmentId}/status`);
   revalidatePath(`/teacher/assessments/${assessmentId}/submissions`);
   return { ok: true };
 }
@@ -641,6 +640,38 @@ export async function openSubmissionFile(
     .from("files")
     .select("storage_path")
     .eq("id", submission.data.file_id)
+    .maybeSingle<{ storage_path: string }>();
+  if (file.error) return fail(dbMessage(file.error));
+  if (!file.data) return fail("That file is not available.");
+
+  const signed = await supabase.storage
+    .from("tenant-files")
+    .createSignedUrl(file.data.storage_path, 120);
+  if (signed.error || !signed.data?.signedUrl) {
+    return fail(signed.error?.message ?? "The file could not be opened.");
+  }
+  return { ok: true, url: signed.data.signedUrl };
+}
+
+export async function openLessonMaterial(
+  materialId: string,
+): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const supabase = await createClient();
+  const session = await requireSession(supabase);
+  if ("ok" in session) return session;
+
+  const material = await supabase
+    .from("lesson_materials")
+    .select("file_id")
+    .eq("id", materialId)
+    .maybeSingle<{ file_id: string | null }>();
+  if (material.error) return fail(dbMessage(material.error));
+  if (!material.data?.file_id) return fail("This material has no file.");
+
+  const file = await supabase
+    .from("files")
+    .select("storage_path")
+    .eq("id", material.data.file_id)
     .maybeSingle<{ storage_path: string }>();
   if (file.error) return fail(dbMessage(file.error));
   if (!file.data) return fail("That file is not available.");
