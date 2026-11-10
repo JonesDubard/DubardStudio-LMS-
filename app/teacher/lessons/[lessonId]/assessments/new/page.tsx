@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CreateAssessmentForm } from "@/components/teacher/CreateAssessmentForm";
-import {
-  getLessonById,
-  getSignedInTeacherId,
-  getTeacherCourses,
-} from "@/lib/queries/lessons";
+import { getLessonById, getTeacherCourses } from "@/lib/queries/lessons";
 import { createClient } from "@/lib/supabase/server";
 import { buttonSecondary, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 
@@ -20,9 +16,8 @@ export default async function NewAssessmentPage({
 }) {
   const { lessonId } = await params;
   const supabase = await createClient();
-  const teacherId = await getSignedInTeacherId(supabase);
   const [courses, lesson] = await Promise.all([
-    getTeacherCourses(supabase, teacherId),
+    getTeacherCourses(supabase),
     getLessonById(supabase, lessonId),
   ]);
   const course = lesson

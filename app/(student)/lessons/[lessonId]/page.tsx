@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { LessonDownloadButton } from "@/components/student/LessonDownloadButton";
 import { MaterialRow } from "@/components/student/MaterialRow";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { getLessonDetails } from "@/lib/queries/student";
 import { createClient } from "@/lib/supabase/server";
-import { buttonPrimaryCompact, buttonSecondary } from "@/lib/ui/styles";
+import { buttonSecondary } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Lesson Viewer",
 };
 
 const outlineButtonClass = `${buttonSecondary} min-h-11 px-3 text-xs`;
-const solidButtonClass = `${buttonPrimaryCompact} min-h-11 px-3 text-xs`;
 
 function formatPublished(value: string | null): string {
   if (!value) return "Published";
@@ -102,11 +102,9 @@ export default async function LessonPage({
                         >
                           Watch
                         </a>
-                      ) : (
-                        <button className={solidButtonClass} type="button">
-                          Download
-                        </button>
-                      )
+                      ) : material.downloadable ? (
+                        <LessonDownloadButton materialId={material.id} />
+                      ) : null
                     }
                   />
                 );

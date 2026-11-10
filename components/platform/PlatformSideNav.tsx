@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  BarChart3,
-  Building2,
-  CreditCard,
-  LayoutDashboard,
-  ScrollText,
-} from "lucide-react";
+import { Building2, LayoutDashboard, ScrollText } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
@@ -30,20 +24,6 @@ const navItems: {
     href: "/platform/tenants",
     icon: Building2,
     match: (path: string) => path.startsWith("/platform/tenants"),
-  },
-  {
-    label: "Subscriptions",
-    href: "#",
-    icon: CreditCard,
-    match: () => false,
-    title: "Subscriptions are not available yet",
-  },
-  {
-    label: "Usage",
-    href: "#",
-    icon: BarChart3,
-    match: () => false,
-    title: "Usage is not available yet",
   },
   {
     label: "Audit",

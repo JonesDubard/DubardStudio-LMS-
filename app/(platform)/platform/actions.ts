@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import type { SubscriptionStatus } from "@/lib/stubs/get-tenants";
+import type { SubscriptionStatus } from "@/lib/platform/schools";
 
 type ActionResult = { ok: true; id?: string } | { ok: false; error: string };
 

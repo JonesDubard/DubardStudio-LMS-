@@ -1,10 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { createLesson, updateLesson } from "@/app/teacher/lessons/actions";
+import {
+  addLessonFile,
+  addLessonLink,
+  createLesson,
+  updateLesson,
+} from "@/app/teacher/lessons/actions";
+import type { LessonMaterialItem } from "@/lib/queries/lessons";
 import {
   createLessonSchema,
   emptyLessonContent,
@@ -25,7 +31,7 @@ import {
 
 type LessonEditorFormProps =
   | { mode: "create"; courses: TeacherCourse[] }
-  | { mode: "edit"; lesson: Lesson; course: TeacherCourse };
+  | { mode: "edit"; lesson: Lesson; course: TeacherCourse; materials: LessonMaterialItem[] };
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
@@ -61,6 +67,92 @@ function ReadOnlyValue({ label, value }: { label: string; value: string }) {
     <div>
       <p className={fieldLabel}>{label}</p>
       <p className="rounded-md border border-line bg-surface-muted px-3 py-2.5 text-sm text-ink">{value}</p>
+    </div>
+  );
+}
+
+function LessonMaterials({
+  lessonId,
+  materials,
+}: {
+  lessonId: string;
+  materials: LessonMaterialItem[];
+}) {
+  const router = useRouter();
+  const [file, setFile] = useState<File | null>(null);
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function onFile(event: FormEvent) {
+    event.preventDefault();
+    if (!file) {
+      setError("Choose a file to attach.");
+      return;
+    }
+    setError(null);
+    setPending(true);
+    const result = await addLessonFile(lessonId, file);
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setFile(null);
+    router.refresh();
+  }
+
+  async function onLink(event: FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setPending(true);
+    const result = await addLessonLink(lessonId, url);
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setUrl("");
+    router.refresh();
+  }
+
+  return (
+    <div className="mt-4 space-y-4">
+      {materials.length === 0 ? (
+        <p className="text-sm text-ink-secondary">No materials on this lesson yet.</p>
+      ) : (
+        <ul className="divide-y divide-line border border-line">
+          {materials.map((material) => (
+            <li key={material.id} className="px-4 py-3 text-sm font-medium">
+              {material.name}
+            </li>
+          ))}
+        </ul>
+      )}
+      {error ? <p className={alertError}>{error}</p> : null}
+      <form onSubmit={(event) => void onFile(event)} className="flex flex-wrap items-center gap-3">
+        <input
+          type="file"
+          accept=".pdf,.doc,.docx,image/jpeg,image/png,image/webp"
+          className="block min-w-0 flex-1 text-sm"
+          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+        />
+        <button type="submit" className={buttonSecondary} disabled={pending}>
+          Add file
+        </button>
+      </form>
+      <form onSubmit={(event) => void onLink(event)} className="flex flex-wrap items-center gap-3">
+        <input
+          type="url"
+          value={url}
+          onChange={(event) => setUrl(event.target.value)}
+          placeholder="https://"
+          className={`${fieldControl} min-w-0 flex-1`}
+        />
+        <button type="submit" className={buttonSecondary} disabled={pending}>
+          Add link
+        </button>
+      </form>
     </div>
   );
 }
@@ -315,24 +407,18 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
         </div>
       </section>
 
-      {/* TODO: wire uploads to public.files and lesson_materials.file_id.
-          The table lands in 0005a_files.sql. Do not upload in this session. */}
       <section className={`${surfaceCard} p-6`}>
         <h2 className="text-lg font-semibold">Materials</h2>
-        <p className="mt-1 text-sm text-ink-secondary">
-          No materials on this lesson yet. Attachment uploads are not available.
-        </p>
+        {props.mode === "create" ? (
+          <p className="mt-1 text-sm text-ink-secondary">
+            Save the lesson, then add a file or a link.
+          </p>
+        ) : (
+          <LessonMaterials lessonId={props.lesson.id} materials={props.materials} />
+        )}
       </section>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
-        <button
-          type="button"
-          disabled
-          className={`${buttonSecondary} cursor-not-allowed`}
-        >
-          Preview
-        </button>
-
+      <div className="flex flex-wrap justify-end gap-3 border-t border-line pt-6">
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"

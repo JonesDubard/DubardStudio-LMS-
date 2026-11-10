@@ -4,15 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrandingPreviewPanel } from "@/components/admin/BrandingPreviewPanel";
 import { FormField } from "@/components/shared/FormField";
-import { UploadZone } from "@/components/shared/UploadZone";
 import {
   DEFAULT_BRAND_PRIMARY,
   DEFAULT_BRAND_SECONDARY,
   hexColorSchema,
 } from "@/lib/branding/colors";
 import { resetBranding, updateBranding, uploadSchoolLogo } from "../actions";
-
-const COMING_SOON = "Logo upload coming soon";
 
 function pickerHex(value: string, fallback: string): string {
   const parsed = hexColorSchema.safeParse(value);
@@ -132,18 +129,6 @@ export function BrandingForm({
               />
             </div>
           </FormField>
-
-          <fieldset disabled>
-            <FormField id="favicon" label="Favicon">
-              <UploadZone
-                title="Upload Favicon"
-                description="Small browser tab image."
-                buttonLabel="Choose File"
-                variant="inline"
-                note={COMING_SOON}
-              />
-            </FormField>
-          </fieldset>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>

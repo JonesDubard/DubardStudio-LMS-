@@ -12,7 +12,7 @@ import {
   getTeacherCourses,
   getTeacherLessons,
 } from "@/lib/queries/lessons";
-import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/assignment-stub";
+import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/messages";
 import { createClient } from "@/lib/supabase/server";
 import type { AssessmentStatus } from "@/lib/types/assessments";
 import type { LessonStatus, TeacherCourse } from "@/lib/types/lessons";
@@ -144,7 +144,7 @@ export default async function TeacherHomePage() {
   const teacherId = await getSignedInTeacherId(supabase);
   const [teacherName, courses] = await Promise.all([
     teacherFullName(supabase),
-    getTeacherCourses(supabase, teacherId),
+    getTeacherCourses(supabase),
   ]);
   const [recentLessons, assessments] = await Promise.all([
     getTeacherLessons(supabase, { teacherId, limit: 5 }),

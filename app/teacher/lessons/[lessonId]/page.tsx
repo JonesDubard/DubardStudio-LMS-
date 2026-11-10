@@ -5,10 +5,10 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { buttonPrimary, buttonSecondary } from "@/lib/ui/styles";
 import {
   getLessonById,
-  getSignedInTeacherId,
+  getLessonMaterials,
   getTeacherCourses,
 } from "@/lib/queries/lessons";
-import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/assignment-stub";
+import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/messages";
 import { createClient } from "@/lib/supabase/server";
 import type { LessonStatus } from "@/lib/types/lessons";
 
@@ -29,10 +29,10 @@ function statusLabel(status: LessonStatus): string {
 export default async function LessonPage({ params }: LessonPageProps) {
   const { lessonId } = await params;
   const supabase = await createClient();
-  const teacherId = await getSignedInTeacherId(supabase);
-  const [courses, lesson] = await Promise.all([
-    getTeacherCourses(supabase, teacherId),
+  const [courses, lesson, materials] = await Promise.all([
+    getTeacherCourses(supabase),
     getLessonById(supabase, lessonId),
+    getLessonMaterials(supabase, lessonId),
   ]);
   const course = lesson
     ? courses.find((row) => row.id === lesson.course_id)
@@ -91,10 +91,11 @@ export default async function LessonPage({ params }: LessonPageProps) {
           </p>
         ) : (
           <LessonEditorForm
-            key={lesson.updated_at}
+            key={`${lesson.updated_at}-${materials.map((item) => item.id).join()}`}
             mode="edit"
             lesson={lesson}
             course={course}
+            materials={materials}
           />
         )}
       </div>

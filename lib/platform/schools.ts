@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import type { SubscriptionStatus } from "@/lib/stubs/get-tenants";
+
+export type SubscriptionStatus = "Trial" | "Active" | "Suspended" | "Cancelled";
 
 export type SchoolRow = {
   id: string;

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { DataTable } from "@/components/shared/DataTable";
-import { FilterRow } from "@/components/shared/FilterRow";
 import { assertPlatformAdmin, listSchools, subscriptionLabel } from "@/lib/platform/schools";
 import { buttonPrimary, buttonSecondary, fieldControl, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 
@@ -20,9 +19,31 @@ function formatCreated(value: string): string {
   }).format(date);
 }
 
-export default async function PlatformTenantsPage() {
+const STATUS_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "trial", label: "Trial" },
+  { value: "active", label: "Active" },
+  { value: "suspended", label: "Suspended" },
+  { value: "cancelled", label: "Cancelled" },
+] as const;
+
+export default async function PlatformTenantsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; search?: string }>;
+}) {
   await assertPlatformAdmin();
-  const schools = await listSchools();
+  const { status, search } = await searchParams;
+  const selected = STATUS_OPTIONS.some((option) => option.value === status) ? status : "all";
+  const query = (search ?? "").trim().toLowerCase();
+  const schools = (await listSchools()).filter((school) => {
+    const matchesStatus = !selected || selected === "all" || school.subscription_status === selected;
+    const matchesQuery =
+      query.length === 0 ||
+      school.name.toLowerCase().includes(query) ||
+      school.subdomain.toLowerCase().includes(query);
+    return matchesStatus && matchesQuery;
+  });
   const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN?.trim() || "localhost";
 
   return (
@@ -44,34 +65,39 @@ export default async function PlatformTenantsPage() {
           </Link>
         </header>
 
-        <FilterRow
-          className={`mb-5 p-4 ${surfaceCard}`}
-          gridClassName="grid grid-cols-1 gap-4 lg:grid-cols-[220px_minmax(0,1fr)_auto_auto]"
-          labelClassName={fieldLabel}
-          controlClassName={fieldControl}
-          fields={[
-            {
-              id: "status",
-              label: "Status",
-              options: ["All", "Trial", "Active", "Suspended", "Cancelled"].map((option) => ({
-                value: option,
-                label: option,
-              })),
-            },
-          ]}
-          search={{
-            id: "search",
-            label: "Search by name or subdomain",
-            placeholder: "Search tenants...",
-          }}
+        <form
+          className={`mb-5 grid grid-cols-1 items-end gap-4 p-4 lg:grid-cols-[220px_minmax(0,1fr)_auto] ${surfaceCard}`}
+          action="/platform/tenants"
         >
-          <button type="button" disabled className={`${buttonSecondary} self-end`}>
-            Suspend
+          <div>
+            <label htmlFor="status" className={fieldLabel}>
+              Status
+            </label>
+            <select id="status" name="status" defaultValue={selected} className={fieldControl}>
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="search" className={fieldLabel}>
+              Search by name or subdomain
+            </label>
+            <input
+              id="search"
+              name="search"
+              type="search"
+              defaultValue={search ?? ""}
+              placeholder="Search tenants..."
+              className={fieldControl}
+            />
+          </div>
+          <button type="submit" className={buttonSecondary}>
+            Apply
           </button>
-          <button type="button" disabled className={`${buttonSecondary} self-end`}>
-            Export
-          </button>
-        </FilterRow>
+        </form>
 
         <DataTable
           wrapperClassName="overflow-x-auto rounded-lg border border-line bg-surface shadow-card"

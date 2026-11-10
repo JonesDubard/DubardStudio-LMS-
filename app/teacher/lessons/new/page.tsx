@@ -3,11 +3,8 @@ import Link from "next/link";
 import { LessonEditorForm } from "@/components/teacher/LessonEditorForm";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { buttonSecondary } from "@/lib/ui/styles";
-import {
-  getSignedInTeacherId,
-  getTeacherCourses,
-} from "@/lib/queries/lessons";
-import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/assignment-stub";
+import { getTeacherCourses } from "@/lib/queries/lessons";
+import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/messages";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -16,8 +13,7 @@ export const metadata: Metadata = {
 
 export default async function NewLessonPage() {
   const supabase = await createClient();
-  const teacherId = await getSignedInTeacherId(supabase);
-  const courses = await getTeacherCourses(supabase, teacherId);
+  const courses = await getTeacherCourses(supabase);
 
   return (
     <main className="min-w-0 flex-1">

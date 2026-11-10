@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  getLessonById,
-  getSignedInTeacherId,
-  getTeacherCourses,
-} from "@/lib/queries/lessons";
+import { getLessonById, getTeacherCourses } from "@/lib/queries/lessons";
 import { buttonSecondary, surfaceCard } from "@/lib/ui/styles";
 import { createClient } from "@/lib/supabase/server";
 import { DuplicateForm } from "./DuplicateForm";
@@ -20,9 +16,8 @@ type LessonReusePageProps = {
 export default async function LessonReusePage({ params }: LessonReusePageProps) {
   const { lessonId } = await params;
   const supabase = await createClient();
-  const teacherId = await getSignedInTeacherId(supabase);
   const [courses, lesson] = await Promise.all([
-    getTeacherCourses(supabase, teacherId),
+    getTeacherCourses(supabase),
     getLessonById(supabase, lessonId),
   ]);
   const course = lesson ? courses.find((row) => row.id === lesson.course_id) : undefined;

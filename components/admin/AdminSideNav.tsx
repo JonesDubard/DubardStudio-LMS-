@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BarChart3,
   GraduationCap,
   LayoutDashboard,
   Palette,
@@ -51,13 +50,6 @@ const navItems: {
     href: "/admin/assignments",
     icon: Files,
     match: (path: string) => path.startsWith("/admin/assignments"),
-  },
-  {
-    label: "Usage",
-    href: "#",
-    icon: BarChart3,
-    match: () => false,
-    title: "Usage is not available yet",
   },
   {
     label: "Settings",
