@@ -3,14 +3,14 @@ import { headers } from "next/headers";
 import type { ReactNode } from "react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 
-const title = "LearnGrid | Academic Delivery for Modern Schools";
+const title = "TerraLearn | Academic Delivery for Modern Schools";
 const description =
-  "LearnGrid helps schools deliver academic content through a school-branded, accessible digital learning platform.";
+  "TerraLearn helps schools deliver academic content through a school-branded, accessible digital learning platform.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const subdomain = (await headers()).get("x-tenant-subdomain");
   if (subdomain) {
-    return { title: "LearnGrid" };
+    return { title: "TerraLearn" };
   }
 
   return {
@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       type: "website",
-      siteName: "LearnGrid",
+      siteName: "TerraLearn",
     },
   };
 }

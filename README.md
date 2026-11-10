@@ -1,6 +1,6 @@
-# LearnGrid
+# TerraLearn
 
-LearnGrid is a white-label learning platform for Liberian schools. Each school gets its own subdomain and branding. Teachers publish lessons and assignments, students open them on a phone, and parents check upcoming work and grades. The app is meant to sit beside a school's existing administrative system, not replace it.
+TerraLearn is a white-label learning platform for Liberian schools. Each school gets its own subdomain and branding. Teachers publish lessons and assignments, students open them on a phone, and parents check upcoming work and grades. The app is meant to sit beside a school's existing administrative system, not replace it.
 
 This repository is the foundation scaffold only: the Next.js app, tenant hostname resolution, Supabase client factories, and an empty folder map. Login, database tables, and persona screens are not built yet.
 

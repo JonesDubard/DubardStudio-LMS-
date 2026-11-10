@@ -5,9 +5,9 @@ import { DemoRequestForm } from "@/components/marketing/DemoRequestForm";
 import { surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
-  title: "Book a Pilot | LearnGrid",
+  title: "Book a Pilot | TerraLearn",
   description:
-    "Tell LearnGrid about your school and request a conversation about a pilot.",
+    "Tell TerraLearn about your school and request a conversation about a pilot.",
 };
 
 export default async function ContactPage() {
@@ -19,7 +19,7 @@ export default async function ContactPage() {
       <div className="lg:col-span-5">
         <p className="text-sm font-medium text-brand-primary">Book a pilot</p>
         <h1 className="mt-3 text-balance text-3xl font-semibold tracking-tight text-ink md:text-4xl">
-          Let&apos;s explore what LearnGrid could do for your school.
+          Let&apos;s explore what TerraLearn could do for your school.
         </h1>
         <p className="mt-4 text-base leading-7 text-ink-secondary">
           Tell us a little about your school, and our team will get in touch to

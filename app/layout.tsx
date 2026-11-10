@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "LearnGrid",
+  title: "TerraLearn",
   description: "White-label learning platform for Liberian schools.",
   icons: {
     icon: [{ url: "/logo.svg", type: "image/svg+xml" }],

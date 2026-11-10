@@ -35,7 +35,7 @@ export function Logo({ className = "" }: LogoProps) {
         />
         <rect x="17" y="17" width="12" height="12" rx="2" fill="#1F3A5F" />
       </svg>
-      LearnGrid
+      TerraLearn
     </span>
   );
 }
