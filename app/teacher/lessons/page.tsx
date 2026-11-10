@@ -1,6 +1,9 @@
 import { buttonPrimary, buttonSecondary, fieldControl, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Inbox } from "lucide-react";
+import { DataTable } from "@/components/shared/DataTable";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
   getSignedInTeacherId,
@@ -89,18 +92,17 @@ export default async function TeacherLessonsPage({
   return (
     <main className="min-w-0 flex-1">
       <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
-        <p className="text-sm text-ink-secondary">Lessons</p>
-        <div className="mt-1 flex items-center justify-between gap-6">
-          <div>
-            <h1 className="text-2xl font-semibold">My Lessons</h1>
+        <p className="text-xs font-medium text-ink-muted">Lessons</p>
+        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-semibold tracking-tight md:text-2xl">
+              My Lessons
+            </h1>
             <p className="text-sm text-ink-secondary">
               Lessons on the courses assigned to you.
             </p>
           </div>
-          <Link
-            href="/teacher/lessons/new"
-            className={buttonPrimary}
-          >
+          <Link href="/teacher/lessons/new" className={buttonPrimary}>
             Create Lesson
           </Link>
         </div>
@@ -108,9 +110,7 @@ export default async function TeacherLessonsPage({
 
       <div className="space-y-6 p-4 lg:p-8">
         {courses.length === 0 ? (
-          <p className="border border-line bg-surface px-4 py-6 text-sm">
-            {NO_CLASSES_ASSIGNED_MESSAGE}
-          </p>
+          <EmptyState icon={Inbox} title={NO_CLASSES_ASSIGNED_MESSAGE} />
         ) : (
           <>
             <form
@@ -202,7 +202,7 @@ export default async function TeacherLessonsPage({
                   </select>
                 </div>
               </div>
-              <div className="mt-4 flex gap-3">
+              <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   type="submit"
                   className={buttonPrimary}
@@ -220,58 +220,44 @@ export default async function TeacherLessonsPage({
               </div>
             </form>
 
-            <div className={`overflow-x-auto ${surfaceCard}`}>
-              <table className="w-full min-w-[40rem] text-sm">
-                <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
-                  <tr>
-                    <th className="px-4 py-3">Title</th>
-                    <th className="px-4 py-3">Class</th>
-                    <th className="px-4 py-3">Subject</th>
-                    <th className="px-4 py-3">Course</th>
-                    <th className="px-4 py-3">Updated</th>
-                    <th className="px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {lessons.length === 0 ? (
-                    <tr>
-                      <td
-                        className="px-4 py-6 text-sm text-ink-secondary"
-                        colSpan={6}
-                      >
-                        {filtersActive
-                          ? "No lessons match these filters."
-                          : "No lessons yet."}
-                      </td>
-                    </tr>
-                  ) : (
-                    lessons.map((lesson) => (
-                      <tr key={lesson.id} className="transition-colors duration-150 hover:bg-surface-muted">
-                        <td className="px-4 py-4">
-                          <Link
-                            href={`/teacher/lessons/${lesson.id}`}
-                            className="font-medium underline"
-                          >
-                            {lesson.title}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-4">{lesson.class_name}</td>
-                        <td className="px-4 py-4">{lesson.subject_name}</td>
-                        <td className="px-4 py-4">
-                          {courseName(lesson.course_name)}
-                        </td>
-                        <td className="px-4 py-4">
-                          {formatUpdated(lesson.updated_at)}
-                        </td>
-                        <td className="px-4 py-4">
-                          <StatusBadge label={statusLabel(lesson.status)} />
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            {lessons.length === 0 ? (
+              <EmptyState
+                icon={Inbox}
+                title={
+                  filtersActive
+                    ? "No lessons match these filters."
+                    : "No lessons yet."
+                }
+              />
+            ) : (
+              <DataTable
+                columns={[
+                  { key: "title", header: "Title" },
+                  { key: "class", header: "Class" },
+                  { key: "subject", header: "Subject" },
+                  { key: "course", header: "Course" },
+                  { key: "updated", header: "Updated" },
+                  { key: "status", header: "Status" },
+                ]}
+                rows={lessons.map((lesson) => ({
+                  id: lesson.id,
+                  cells: [
+                    <Link
+                      key="title"
+                      href={`/teacher/lessons/${lesson.id}`}
+                      className="font-medium text-ink underline-offset-2 hover:underline"
+                    >
+                      {lesson.title}
+                    </Link>,
+                    lesson.class_name,
+                    lesson.subject_name,
+                    courseName(lesson.course_name),
+                    formatUpdated(lesson.updated_at),
+                    <StatusBadge key="status" label={statusLabel(lesson.status)} />,
+                  ],
+                }))}
+              />
+            )}
           </>
         )}
       </div>

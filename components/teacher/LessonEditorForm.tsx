@@ -14,6 +14,7 @@ import {
 } from "@/lib/lessons/schema";
 import type { Lesson, TeacherCourse } from "@/lib/types/lessons";
 import {
+  alertError,
   buttonPrimary,
   buttonSecondary,
   fieldControl,
@@ -185,15 +186,15 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
       onSubmit={form.handleSubmit(onSubmit)}
     >
       {serverError ? (
-        <p
-          role="alert"
-          className={buttonSecondary}
-        >
+        <p role="alert" className={alertError}>
           {serverError}
         </p>
       ) : null}
       {saved ? (
-        <p role="status" className="text-sm">
+        <p
+          role="status"
+          className="rounded-lg border border-success-border bg-success-subtle px-3 py-2 text-sm text-success"
+        >
           Saved.
         </p>
       ) : null}
@@ -319,14 +320,11 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
       <section className={`${surfaceCard} p-6`}>
         <h2 className="text-lg font-semibold">Materials</h2>
         <p className="mt-1 text-sm text-ink-secondary">
-          Attach PDF, document, or image materials.
+          No materials on this lesson yet. Attachment uploads are not available.
         </p>
-        <div className="mt-5 rounded-lg border border-dashed border-line-strong bg-surface-muted p-5">
-          <p className="font-medium">Attachment uploads coming soon</p>
-        </div>
       </section>
 
-      <div className="flex items-center justify-between border-t border-line pt-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
         <button
           type="button"
           disabled
@@ -335,7 +333,7 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
           Preview
         </button>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             type="submit"
             disabled={form.formState.isSubmitting}

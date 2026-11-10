@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { gradeSubmission } from "@/lib/queries/assessments";
 import type { SubmissionGradeView } from "@/lib/types/assessments";
-import { alertError, buttonPrimary, fieldControl, fieldControlBase, fieldLabel } from "@/lib/ui/styles";
+import { alertError, buttonPrimary, fieldControl, fieldControlBase, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 
 export function GradeSubmissionForm({
   submission,
@@ -34,7 +34,7 @@ export function GradeSubmissionForm({
   }
 
   return (
-    <section className="border border-line bg-surface">
+    <section className={surfaceCard}>
       <div className="border-b border-line p-6">
         <p className="text-sm text-ink-secondary">Selected student</p>
         <h2 className="mt-1 text-xl font-semibold">{submission.studentName}</h2>

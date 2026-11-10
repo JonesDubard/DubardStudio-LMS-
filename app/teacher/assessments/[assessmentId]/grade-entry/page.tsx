@@ -16,12 +16,14 @@ export default async function GradeEntryPage({ params }: GradeEntryPageProps) {
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b border-line bg-surface px-4 py-5 md:px-8 md:py-6">
-        <p className="text-sm text-ink-secondary">{roster.eyebrow}</p>
+      <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
+        <p className="text-xs font-medium text-ink-muted">{roster.eyebrow}</p>
 
-        <div className="mt-1 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <h1 className="text-2xl font-semibold">{roster.title}</h1>
+        <div className="mt-1 flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-semibold tracking-tight md:text-2xl">
+              {roster.title}
+            </h1>
             <p className="mt-1 text-sm text-ink-secondary">{roster.classLabel}</p>
           </div>
 
@@ -38,7 +40,7 @@ export default async function GradeEntryPage({ params }: GradeEntryPageProps) {
         </div>
       </header>
 
-      <div className="p-4 md:p-8">
+      <div className="p-4 lg:p-8">
         <GradeEntryTable
           maxScore={roster.assessment.maxScore ?? 20}
           studentCountLabel={roster.studentCountLabel}

@@ -143,7 +143,7 @@ Left in the page, not extracted, because each appears on only one screen: feed s
 | File                                                          | Purpose                                                                                                                          |
 | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `app/teacher/layout.tsx`                                      | Side nav shell. Renders `TeacherSideNav` on the left and `{children}` on the right                                               |
-| `app/teacher/home/page.tsx`                                   | Teacher home. My Classes and Recent Lessons read `lib/queries/lessons.ts`. Pending Grading and Upcoming Assignments still read `getTeacherHome()` |
+| `app/teacher/home/page.tsx`                                   | Teacher home. Greeting uses the signed-in profile. My Classes and Recent Lessons read `lib/queries/lessons.ts`. Assessments read `getTeacherAssessments`. The page does not read `getTeacherHome()` |
 | `app/teacher/lessons/page.tsx`                                | My Lessons. Lists the signed-in teacher's lessons and filters by class, subject, term, and status                                |
 | `app/teacher/lessons/new/page.tsx`                            | Create Lesson. Cascades class, subject, and course, then saves a draft or publishes through the lesson Server Actions           |
 | `app/teacher/lessons/[lessonId]/page.tsx`                     | Lesson editor for one lesson. Title and description save. Publish sets `status` and `published_at`                               |
@@ -159,21 +159,21 @@ Left in the page, not extracted, because each appears on only one screen: feed s
 | `app/teacher/assessments/[assessmentId]/submissions/page.tsx` | Assignment submission list, or score-only grade entry, chosen by `assessments.type` |
 | `lib/lessons/schema.ts`                                       | Zod schemas shared by the lesson form and Server Actions. Title required, max 200. Description optional, max 5000               |
 | `lib/teacher/assignment-stub.ts`                              | Until migration 0005b, the pilot teacher is assigned to every course the session can read. Other teachers are assigned to none |
-| `lib/stubs/get-teacher-home.ts`                               | `getTeacherHome()` still supplies Pending Grading and Upcoming Assignments. My Classes on the home page no longer read it       |
+| `lib/stubs/get-teacher-home.ts`                               | `getTeacherHome()` remains in the repo. Teacher Home no longer imports it                                                      |
 | `lib/stubs/get-lesson-for-edit.ts`                            | `getLessonForEdit(lessonId)` returns one lesson draft with class/subject/term options, materials, and video URL                  |
 | `lib/stubs/get-assignment-for-edit.ts`                        | `getAssignmentForEdit(assignmentId)` returns an `Assessment` (type assignment) plus linked lesson fields and one material        |
 | `lib/stubs/get-submissions-for-assessment.ts`                 | `getSubmissionsForAssessment(assessmentId)` returns the assignment `Assessment`, submission list, and selected submission detail |
 | `lib/stubs/get-grade-entry-roster.ts`                         | `getGradeEntryRoster(assessmentId)` returns a quiz `Assessment` and roster rows for score entry                                  |
 | `lib/stubs/get-lesson-for-reuse.ts`                           | `getLessonForReuse(lessonId)` returns the published lesson plus available terms and draft preview                                |
 | `components/teacher/TeacherSideNav.tsx`                       | Left nav. Used by `app/teacher/layout.tsx` on every Teacher page                                                                 |
-| `components/teacher/ClassCard.tsx`                            | Class tile. Used three times on Teacher Home                                                                                     |
-| `components/teacher/GradingQueueRow.tsx`                      | Pending grading table row. Used twice on Teacher Home                                                                            |
+| `components/teacher/ClassCard.tsx`                            | Class tile on Teacher Home. Links to `/teacher/lessons?class=` for that class                                                   |
+| `components/teacher/GradingQueueRow.tsx`                      | Pending grading table row. Teacher Home no longer renders it                                                                    |
 | `components/teacher/SubmissionList.tsx`                       | Left column student list on submission grading                                                                                   |
 | `components/teacher/SubmissionDetail.tsx`                     | Right column grade + feedback form (client). Used on submission grading                                                          |
 | `components/teacher/GradeEntryTable.tsx`                      | Bulk score entry table (client). Used on grade entry                                                                             |
 | `components/teacher/AssessmentForm.tsx`                       | Assignment create form (client). Used on `/teacher/assignments/new`                                                              |
 | `components/teacher/LessonEditorForm.tsx`                     | Create and edit lesson form (client). React Hook Form and the Zod schemas in `lib/lessons/schema.ts`. Materials stay a placeholder |
-| `components/shared/StatusBadge.tsx`                           | Status chip. Used on Teacher Home upcoming rows, lesson draft badge, submission pending badge, and submission list statuses      |
+| `components/shared/StatusBadge.tsx`                           | Status chip. Used on Teacher Home lesson and assessment rows, the lesson draft badge, and submission list statuses             |
 
 #### Final Teacher route map
 
@@ -457,9 +457,9 @@ Teacher page, after the same middleware step:
 2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
 3. Role check is a stub for now. There is no auth gate; the `teacher` layout always renders.
 4. `app/teacher/layout.tsx` wraps the page with `TeacherSideNav`.
-5. The page calls its stub (`getTeacherHome`, `getLessonForEdit`, `getAssignmentForEdit`, `getSubmissionsForAssessment`, `getGradeEntryRoster`, or `getLessonForReuse`).
-6. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
-7. The page renders Teacher and shared components. Client forms hold input state only; buttons do not save.
+5. Teacher Home reads the signed-in profile, `getTeacherCourses`, `getTeacherLessons`, and `getTeacherAssessments`. It does not call `getTeacherHome()`.
+6. The assignment creator, stub submission list, stub grade entry, and lesson reuse pages still call their stubs. Those stubs return hardcoded copy and do not read Supabase.
+7. Live lesson and assessment pages read Supabase. Their forms save through the existing Server Actions. Stub screens keep their buttons unwired.
 
 School Admin page, after the same middleware step:
 
@@ -654,7 +654,7 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | Feed shows wrong data                                                            | `lib/queries/student.ts`, `app/(student)/feed/page.tsx`. RLS on `lessons` only returns published lessons in `student_course_ids()`                                                                                             |
 | Styling looks off                                                                | `components/student/*`, `components/shared/PageHeader.tsx`, `components/shared/PrimaryButton.tsx`, `tailwind.config.ts`. Mockup grays are arbitrary values (`#E5E5E5`, `#999999`, `#666666`, `#333333`), not `gray-*` utilities |
 | Tenant name wrong in header                                                      | `middleware.ts`. The prompt named `app/middleware.ts`; that file does not exist and Next.js would not run it. Student headers currently show the mockup labels (Student Home, Mathematics, English), not the subdomain          |
-| Pending Grading list empty                                                       | `lib/stubs/get-teacher-home.ts`                                                                                                                                                                                                 |
+| Teacher Home shows no assessments                                                | `getTeacherAssessments` for each course from `getTeacherCourses`. Home does not read `lib/stubs/get-teacher-home.ts`                                                                             |
 | Grade Entry table missing students                                               | `lib/stubs/get-grade-entry-roster.ts`                                                                                                                                                                                           |
 | Submission view shows wrong student                                              | `components/teacher/SubmissionDetail.tsx`                                                                                                                                                                                       |
 | Form inputs don't hold state                                                     | confirm component has `"use client"`                                                                                                                                                                                            |
