@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { AssignPersonButton } from "@/components/admin/AssignPersonButton";
-import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
+import { BulkImportDialog } from "@/components/admin/BulkImportDialog";
 import { InvitePersonForm } from "@/components/admin/InvitePersonForm";
 import { PendingInvites } from "@/components/admin/PendingInvites";
 import { PeopleSubNav } from "@/components/admin/PeopleSubNav";
 import { DataTable } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { assignStudentClass } from "@/app/(admin)/admin/people/actions";
+import { classDisplayName } from "@/lib/academic/labels";
 import { getClasses } from "@/lib/queries/academic";
 import { listPeople } from "@/lib/queries/people";
 import { createClient } from "@/lib/supabase/server";
-import { buttonSecondary } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Manage Students",
@@ -29,7 +29,10 @@ export default async function AdminStudentsPage() {
   ]);
   if (yearResult.error) throw new Error(`academic_years: ${yearResult.error.message}`);
 
-  const className = new Map(classes.map((row) => [row.id, row.name]));
+  const classNames = classes.map((row) => row.name);
+  const className = new Map(
+    classes.map((row) => [row.id, classDisplayName(row.name, row.id, classNames)]),
+  );
   const classByStudent = new Map<string, string>();
   if (yearResult.data) {
     const enrollmentResult = await supabase
@@ -49,7 +52,10 @@ export default async function AdminStudentsPage() {
     }
   }
 
-  const options = classes.map((row) => ({ id: row.id, label: row.name }));
+  const options = classes.map((row) => ({
+    id: row.id,
+    label: className.get(row.id) ?? row.name,
+  }));
   const blockedMessage = yearResult.data
     ? options.length === 0
       ? "Add a class under Academic before assigning one."
@@ -87,9 +93,7 @@ export default async function AdminStudentsPage() {
           <p className="text-sm text-ink-secondary">
             {students.length} {students.length === 1 ? "student" : "students"}
           </p>
-          <button type="button" disabled className={buttonSecondary}>
-            Bulk Import CSV
-          </button>
+          <BulkImportDialog role="student" />
         </div>
 
         <DataTable
@@ -120,26 +124,6 @@ export default async function AdminStudentsPage() {
               />,
             ],
           }))}
-        />
-
-        <BulkImportPanel
-          title="Bulk Import Students"
-          description="Upload a CSV containing student information."
-          uploadTitle="Drop CSV file here"
-          uploadDescription="or choose a file from your computer"
-          uploadButtonLabel="Choose CSV File"
-          previewTitle="CSV Column Preview"
-          columns={[
-            { key: "name", header: "name" },
-            { key: "email", header: "email" },
-            { key: "class", header: "class" },
-          ]}
-          rows={[
-            {
-              id: "preview",
-              cells: ["Amara Johnson", "amara.johnson@example.com", "JSS 2A"],
-            },
-          ]}
         />
 
         <div className="border border-line bg-surface p-5">

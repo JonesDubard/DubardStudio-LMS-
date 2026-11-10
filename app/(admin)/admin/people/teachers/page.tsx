@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { AssignPersonButton } from "@/components/admin/AssignPersonButton";
-import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
+import { BulkImportDialog } from "@/components/admin/BulkImportDialog";
 import { PeopleSubNav } from "@/components/admin/PeopleSubNav";
 import { DataTable } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { assignTeacherClass } from "@/app/(admin)/admin/people/actions";
+import { classDisplayName } from "@/lib/academic/labels";
 import { getClasses, getSubjects } from "@/lib/queries/academic";
 import { listPeople } from "@/lib/queries/people";
 import { createClient } from "@/lib/supabase/server";
@@ -48,7 +49,10 @@ export default async function AdminTeachersPage() {
   }
   if (invitationResult.error) throw new Error(`invitations: ${invitationResult.error.message}`);
 
-  const className = new Map(classes.map((row) => [row.id, row.name]));
+  const classNames = classes.map((row) => row.name);
+  const className = new Map(
+    classes.map((row) => [row.id, classDisplayName(row.name, row.id, classNames)]),
+  );
   const subjectName = new Map(subjects.map((row) => [row.id, row.name]));
   const linkLabel = new Map(
     (linkResult.data ?? []).map((row) => [
@@ -152,25 +156,9 @@ export default async function AdminTeachersPage() {
           />
         </section>
 
-        <BulkImportPanel
-          title="Bulk Import Teachers"
-          description="Upload a CSV containing teacher information."
-          uploadTitle="Drop CSV file here"
-          uploadDescription="or choose a file from your computer"
-          uploadButtonLabel="Choose CSV File"
-          previewTitle="CSV Column Preview"
-          columns={[
-            { key: "name", header: "name" },
-            { key: "email", header: "email" },
-            { key: "subjects", header: "subjects" },
-          ]}
-          rows={[
-            {
-              id: "preview",
-              cells: ["Mrs. Abena Kollie", "abena.kollie@example.com", "Mathematics; English"],
-            },
-          ]}
-        />
+        <div className="flex justify-end">
+          <BulkImportDialog role="teacher" />
+        </div>
       </div>
     </main>
   );

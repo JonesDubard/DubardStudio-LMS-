@@ -42,7 +42,7 @@ const navItems: {
   },
   {
     label: "Assignments",
-    href: "/teacher/assignments/new",
+    href: "/teacher/assignments",
     icon: ClipboardList,
     match: (path: string) =>
       path.startsWith("/teacher/assignments") && !path.includes("/submissions"),

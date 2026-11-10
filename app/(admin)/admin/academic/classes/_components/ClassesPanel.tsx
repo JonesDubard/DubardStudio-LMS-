@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { classDisplayName } from "@/lib/academic/labels";
 import type { Class as SchoolClass } from "@/lib/types/academic";
 import { deleteClass } from "../../actions";
 import { DeleteConfirm } from "../../_components/DeleteConfirm";
@@ -10,7 +11,13 @@ import { Modal } from "../../_components/Modal";
 import { AddClassButton } from "./AddClassButton";
 import { ClassForm } from "./ClassForm";
 
-export function ClassesPanel({ classes }: { classes: SchoolClass[] }) {
+export function ClassesPanel({
+  classes,
+  teachersByClass,
+}: {
+  classes: SchoolClass[];
+  teachersByClass: Record<string, string[]>;
+}) {
   const router = useRouter();
   const [editing, setEditing] = useState<SchoolClass | null>(null);
   const [removing, setRemoving] = useState<SchoolClass | null>(null);
@@ -41,20 +48,30 @@ export function ClassesPanel({ classes }: { classes: SchoolClass[] }) {
           <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
             <tr>
               <th className="px-4 py-3">Class</th>
+              <th className="px-4 py-3">Teachers</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
             {classes.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-sm text-ink-secondary" colSpan={2}>
+                <td className="px-4 py-6 text-sm text-ink-secondary" colSpan={3}>
                   No classes yet.
                 </td>
               </tr>
             ) : (
               classes.map((row) => (
                 <tr key={row.id}>
-                  <td className="px-4 py-3">{row.name}</td>
+                  <td className="px-4 py-3">
+                    {classDisplayName(
+                      row.name,
+                      row.id,
+                      classes.map((item) => item.name),
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {(teachersByClass[row.id] ?? []).join(", ") || "No teachers"}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
                       <button
