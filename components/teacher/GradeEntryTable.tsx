@@ -35,7 +35,7 @@ export function GradeEntryTable({
 
   return (
     <section className={surfaceCard}>
-      <div className="flex items-center justify-between border-b border-line p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line p-4">
         <div>
           <h2 className="font-semibold">Grade Entry</h2>
           <p className="mt-1 text-sm text-ink-secondary">
@@ -49,38 +49,40 @@ export function GradeEntryTable({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
+        <table className="w-full min-w-[40rem] text-sm">
+          <thead className="border-b border-line bg-surface text-left">
             <tr>
-              <th className="w-16 px-5 py-4">#</th>
-              <th className="px-5 py-4">Student Name</th>
-              <th className="w-48 px-5 py-4">Score</th>
-              <th className="px-5 py-4">Comment</th>
+              <th className="w-16 px-4 py-3 text-xs font-medium text-ink-secondary">#</th>
+              <th className="px-4 py-3 text-xs font-medium text-ink-secondary">Student Name</th>
+              <th className="w-48 px-4 py-3 text-xs font-medium text-ink-secondary">Score</th>
+              <th className="px-4 py-3 text-xs font-medium text-ink-secondary">Comment</th>
             </tr>
           </thead>
 
           <tbody className="divide-y divide-line">
             {rows.map((row) => (
               <tr key={row.id} className="transition-colors duration-150 hover:bg-surface-muted">
-                <td className="px-5 py-4 text-ink-secondary">{row.indexLabel}</td>
-                <td className="px-5 py-4 font-medium">{row.studentName}</td>
-                <td className="px-5 py-4">
+                <td className="px-4 py-3 text-ink-secondary">{row.indexLabel}</td>
+                <td className="px-4 py-3 font-medium">{row.studentName}</td>
+                <td className="px-4 py-3">
                   <input
                     value={row.score}
                     onChange={(event) =>
                       updateRow(row.id, "score", event.target.value)
                     }
                     className={`${fieldControlBase} w-24`}
+                    aria-label={`Score for ${row.studentName}`}
                   />
                   <span className="ml-2 text-ink-secondary">/ {maxScore}</span>
                 </td>
-                <td className="px-5 py-4">
+                <td className="px-4 py-3">
                   <input
                     value={row.comment}
                     onChange={(event) =>
                       updateRow(row.id, "comment", event.target.value)
                     }
                     className={fieldControl}
+                    aria-label={`Comment for ${row.studentName}`}
                   />
                 </td>
               </tr>
@@ -89,7 +91,7 @@ export function GradeEntryTable({
         </table>
       </div>
 
-      <div className="flex items-center justify-between border-t border-line p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line p-4">
         <div>
           <p className="text-sm text-ink-secondary">{lastSavedLabel}</p>
           <p className="text-sm">{lastSavedAt}</p>

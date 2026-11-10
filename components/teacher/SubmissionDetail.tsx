@@ -30,12 +30,12 @@ export function SubmissionDetail({ submission }: SubmissionDetailProps) {
             <p className="text-sm leading-6">{submission.writtenAnswer}</p>
           </div>
 
-          <div className="mt-3 flex items-center justify-between border border-line p-4">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line p-4">
             <div>
               <p className="font-medium">{submission.fileName}</p>
               <p className="text-sm text-ink-secondary">{submission.fileMeta}</p>
             </div>
-            <button type="button" className="border border-line px-4 py-2">
+            <button type="button" className={buttonSecondary}>
               View File
             </button>
           </div>
@@ -73,7 +73,7 @@ export function SubmissionDetail({ submission }: SubmissionDetailProps) {
           />
         </div>
 
-        <div className="flex items-center justify-between border-t border-line pt-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
           <button
             type="button"
             disabled

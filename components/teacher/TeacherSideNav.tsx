@@ -17,6 +17,7 @@ const navItems: {
   href: string;
   icon: LucideIcon;
   match: (path: string) => boolean;
+  title?: string;
 }[] = [
   {
     label: "Home",
@@ -24,7 +25,13 @@ const navItems: {
     icon: Home,
     match: (path: string) => path === "/teacher/home",
   },
-  { label: "Classes", href: "#", icon: School, match: () => false },
+  {
+    label: "Classes",
+    href: "#",
+    icon: School,
+    match: () => false,
+    title: "Classes are not available yet",
+  },
   {
     label: "Lessons",
     href: "/teacher/lessons",
@@ -53,7 +60,7 @@ type TeacherSideNavProps = {
 };
 
 export function TeacherSideNav({
-  teacherName = "Mrs. Sarah Johnson",
+  teacherName = "",
   portalLabel = "Teacher Portal",
 }: TeacherSideNavProps) {
   const pathname = usePathname();
@@ -65,7 +72,9 @@ export function TeacherSideNav({
           <School size={18} strokeWidth={1.75} aria-hidden />
         </div>
         <p className={`mt-3 text-xs font-medium text-ink-muted ${navLabel}`}>{portalLabel}</p>
-        <p className={`font-semibold tracking-tight text-ink ${navLabel}`}>{teacherName}</p>
+        {teacherName ? (
+          <p className={`font-semibold tracking-tight text-ink ${navLabel}`}>{teacherName}</p>
+        ) : null}
       </div>
 
       <nav className="space-y-1">
@@ -82,7 +91,11 @@ export function TeacherSideNav({
 
           if (item.href === "#") {
             return (
-              <span key={item.label} className={className} title={item.label}>
+              <span
+                key={item.label}
+                className={className}
+                title={item.title ?? item.label}
+              >
                 {content}
               </span>
             );
@@ -93,7 +106,7 @@ export function TeacherSideNav({
               key={item.label}
               href={item.href}
               className={className}
-              title={item.label}
+              title={item.title ?? item.label}
               aria-current={active ? "page" : undefined}
             >
               {content}

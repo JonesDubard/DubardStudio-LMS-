@@ -26,8 +26,8 @@ export function SubmissionList({
             type="button"
             className={
               submission.selected
-                ? "w-full border-l-4 border-line-strong bg-surface-muted p-5 text-left"
-                : "w-full p-5 text-left"
+                ? "w-full border-l-4 border-brand-primary bg-brand-subtle p-5 text-left"
+                : "w-full p-5 text-left hover:bg-surface-muted"
             }
           >
             <div className="flex justify-between gap-3">

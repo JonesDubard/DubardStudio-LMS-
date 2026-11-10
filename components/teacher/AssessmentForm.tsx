@@ -89,7 +89,7 @@ export function AssessmentForm({ data }: AssessmentFormProps) {
         <h2 className="text-lg font-semibold">Materials</h2>
 
         <div className="mt-4 rounded-lg border border-dashed border-line-strong bg-surface-muted p-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="font-medium">{data.material.name}</p>
               <p className="text-sm text-ink-secondary">{data.material.meta}</p>
@@ -101,7 +101,7 @@ export function AssessmentForm({ data }: AssessmentFormProps) {
         </div>
       </section>
 
-      <div className="flex items-center justify-between border-t border-line pt-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
         <button
           type="button"
           disabled
@@ -110,7 +110,7 @@ export function AssessmentForm({ data }: AssessmentFormProps) {
           Preview
         </button>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
             className={buttonSecondary}

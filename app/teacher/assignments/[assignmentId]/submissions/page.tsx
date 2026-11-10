@@ -20,24 +20,23 @@ export default async function AssignmentSubmissionsPage({
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b border-line bg-surface px-4 py-5 md:px-8 md:py-6">
-        <p className="text-sm text-ink-secondary">{data.eyebrow}</p>
-        <div className="mt-1 flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-2xl font-semibold">{data.assessment.title}</h1>
+      <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
+        <p className="text-xs font-medium text-ink-muted">{data.eyebrow}</p>
+        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-semibold tracking-tight md:text-2xl">
+              {data.assessment.title}
+            </h1>
             <p className="mt-1 text-sm text-ink-secondary">
               {data.assessment.subject} · {data.assessment.className} · Due{" "}
               {data.assessment.dueLabel}
             </p>
           </div>
-          <StatusBadge
-            label={data.pendingLabel}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-semibold tracking-tight text-ink shadow-card transition-colors duration-150 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          />
+          <StatusBadge label={data.pendingLabel} />
         </div>
       </header>
 
-      <div className="p-6">
+      <div className="p-4 lg:p-8">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
           <SubmissionList
             title={data.listTitle}

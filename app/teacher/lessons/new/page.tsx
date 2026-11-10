@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LessonEditorForm } from "@/components/teacher/LessonEditorForm";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { buttonSecondary } from "@/lib/ui/styles";
 import {
   getSignedInTeacherId,
   getTeacherCourses,
@@ -21,36 +22,29 @@ export default async function NewLessonPage() {
   return (
     <main className="min-w-0 flex-1">
       <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
-        <p className="text-sm text-ink-secondary">Lessons / Create Lesson</p>
-        <div className="mt-1 flex items-center justify-between gap-6">
-          <div>
-            <h1 className="text-2xl font-semibold">Create Lesson</h1>
+        <p className="text-xs font-medium text-ink-muted">Lessons / Create Lesson</p>
+        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-semibold tracking-tight md:text-2xl">
+              Create Lesson
+            </h1>
             <p className="text-sm text-ink-secondary">
               Build a lesson for your selected class and subject.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/teacher/lessons"
-              className="border border-line bg-surface px-4 py-2 text-sm"
-            >
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/teacher/lessons" className={buttonSecondary}>
               All Lessons
             </Link>
-            <Link
-              href="/teacher/lessons/1/reuse"
-              className="border border-line bg-surface px-4 py-2 text-sm"
-            >
+            <Link href="/teacher/lessons/1/reuse" className={buttonSecondary}>
               Reuse Lesson
             </Link>
-            <StatusBadge
-              label="DRAFT"
-              className="border border-line px-3 py-2 text-sm"
-            />
+            <StatusBadge label="DRAFT" />
           </div>
         </div>
       </header>
 
-      <div className="max-w-5xl p-8">
+      <div className="max-w-5xl p-4 lg:p-8">
         {courses.length === 0 ? (
           <p className="border border-line bg-surface px-4 py-6 text-sm">
             {NO_CLASSES_ASSIGNED_MESSAGE}

@@ -1,4 +1,4 @@
-import { fieldControl } from "@/lib/ui/styles";
+import { buttonPrimary, buttonSecondary, fieldControl, surfaceCard } from "@/lib/ui/styles";
 import type { Metadata } from "next";
 import { getLessonForReuse } from "@/lib/stubs/get-lesson-for-reuse";
 
@@ -17,33 +17,32 @@ export default async function LessonReusePage({ params }: LessonReusePageProps) 
   return (
     <main className="min-w-0 flex-1">
       <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
-        <p className="text-sm text-ink-secondary">{lesson.eyebrow}</p>
-        <div className="mt-1 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">{lesson.title}</h1>
+        <p className="text-xs font-medium text-ink-muted">{lesson.eyebrow}</p>
+        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-semibold tracking-tight md:text-2xl">
+              {lesson.title}
+            </h1>
             <p className="mt-1 text-sm text-ink-secondary">{lesson.meta}</p>
           </div>
 
-          <button
-            type="button"
-            className="border border-line bg-surface-muted px-4 py-2"
-          >
+          <button type="button" className={buttonSecondary}>
             More
           </button>
         </div>
       </header>
 
-      <div className="p-8">
-        <div className="max-w-4xl border border-line bg-surface p-6 opacity-60">
+      <div className="flex flex-col gap-6 p-4 lg:flex-row lg:items-start lg:p-8">
+        <div className={`${surfaceCard} min-w-0 flex-1 p-6 opacity-60`}>
           <p className="text-sm text-ink-secondary">{lesson.publishedLabel}</p>
           <h2 className="mt-2 text-xl font-semibold">{lesson.title}</h2>
 
-          <div className="mt-5 border border-line-subtle p-4">
-            <p className="text-sm">{lesson.description}</p>
+          <div className="mt-5 rounded-lg border border-line-subtle p-4">
+            <p className="text-sm leading-6">{lesson.description}</p>
           </div>
         </div>
 
-        <div className="fixed inset-y-0 right-0 w-full max-w-lg border-l border-line bg-surface shadow-none">
+        <div className={`${surfaceCard} w-full lg:max-w-lg lg:shrink-0`}>
           <div className="border-b border-line p-6">
             <p className="text-sm text-ink-secondary">{lesson.panelEyebrow}</p>
             <h2 className="mt-1 text-xl font-semibold">{lesson.panelTitle}</h2>
@@ -55,7 +54,7 @@ export default async function LessonReusePage({ params }: LessonReusePageProps) 
               <h3 className="font-semibold">Choose Action</h3>
 
               <div className="mt-4 space-y-3">
-                <label className="block border border-ink bg-surface-muted p-4">
+                <label className="block rounded-lg border border-brand-primary bg-brand-subtle p-4">
                   <div className="flex gap-3">
                     <input
                       type="radio"
@@ -71,7 +70,7 @@ export default async function LessonReusePage({ params }: LessonReusePageProps) 
                   </div>
                 </label>
 
-                <label className="block border border-line p-4">
+                <label className="block rounded-lg border border-line p-4">
                   <div className="flex gap-3">
                     <input
                       type="radio"
@@ -112,7 +111,7 @@ export default async function LessonReusePage({ params }: LessonReusePageProps) 
               </select>
             </section>
 
-            <section className="border border-line p-5">
+            <section className="rounded-lg border border-line p-5">
               <p className="text-sm text-ink-secondary">New draft</p>
               <p className="mt-1 font-medium">{lesson.draftTitle}</p>
 
@@ -129,19 +128,12 @@ export default async function LessonReusePage({ params }: LessonReusePageProps) 
               </div>
             </section>
 
-            <div className="flex justify-between gap-3 border-t border-line pt-5">
-              <button
-                type="button"
-                disabled
-                className="cursor-not-allowed border border-line bg-surface-muted px-5 py-3 text-ink-secondary"
-              >
+            <div className="flex flex-wrap justify-between gap-3 border-t border-line pt-5">
+              <button type="button" disabled className={buttonSecondary}>
                 Review
               </button>
 
-              <button
-                type="button"
-                className="border border-brand-primary bg-brand-primary px-5 py-3 text-white"
-              >
+              <button type="button" className={buttonPrimary}>
                 Create Copy
               </button>
             </div>
