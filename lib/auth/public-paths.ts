@@ -13,6 +13,7 @@ export function isPublicPath(pathname: string): boolean {
   if (path === "/reset" || path.startsWith("/reset/")) return true;
   if (pathname.startsWith("/_next/")) return true;
   if (path === "/api/health") return true;
+  if (path === "/manifest.webmanifest") return true;
 
   return false;
 }

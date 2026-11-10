@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MaterialRow } from "@/components/student/MaterialRow";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { getLessonDetails } from "@/lib/queries/student";
 import { createClient } from "@/lib/supabase/server";
-import { buttonPrimaryCompact, buttonSecondary, surfaceCard } from "@/lib/ui/styles";
+import { buttonPrimaryCompact, buttonSecondary } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Lesson Viewer",
@@ -57,89 +57,67 @@ export default async function LessonPage({
     <>
       <PageHeader
         variant="section"
-        eyebrow={lesson.subjectName}
-        title="Lesson"
+        eyebrow={`${lesson.className} · ${lesson.subjectName}`}
+        title={lesson.title}
       />
 
-      <main className="mx-auto w-full max-w-3xl space-y-5 px-4 py-5 md:px-8">
-        <section>
-          <h2 className="break-words text-xl font-semibold leading-7 tracking-tight text-ink">
-            {lesson.title}
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-ink-secondary">
-            {lesson.className} · {lesson.subjectName} · {formatPublished(lesson.publishedAt)}
-          </p>
-        </section>
+      <main className="mx-auto w-full max-w-3xl space-y-8 px-4 py-6 md:px-8">
+        <p className="text-sm leading-6 text-ink-secondary">
+          {formatPublished(lesson.publishedAt)}
+        </p>
 
-        <section className="space-y-4">
-          <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
-              Lesson Content
-            </p>
-            <div className={`${surfaceCard} p-4`}>
-              {paragraphs.length === 0 ? (
-                <p className="text-sm leading-6 text-ink">No description yet.</p>
-              ) : (
-                paragraphs.map((paragraph, index) => (
-                  <p
-                    key={paragraph}
-                    className={
-                      index === 0
-                        ? "break-words text-sm leading-6 text-ink"
-                        : "mt-4 break-words text-sm leading-6 text-ink"
-                    }
-                  >
-                    {paragraph}
-                  </p>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
-              Materials
-            </p>
-            {lesson.materials.length === 0 ? (
-              <p className={`${surfaceCard} p-3 text-sm text-ink-secondary`}>
-                No materials on this lesson.
+        <article className="max-w-prose">
+          {paragraphs.length === 0 ? (
+            <p className="text-base leading-7 text-ink-secondary">No description yet.</p>
+          ) : (
+            paragraphs.map((paragraph) => (
+              <p key={paragraph} className="mt-4 break-words text-base leading-7 text-ink first:mt-0">
+                {paragraph}
               </p>
-            ) : (
-              <div className="space-y-2">
-                {lesson.materials.map((material) => {
-                  const size =
-                    material.sizeBytes === null ? null : formatBytes(material.sizeBytes);
-                  const meta = [kindLabel(material.kind), size].filter(Boolean).join(" · ");
-                  return (
-                    <MaterialRow
-                      key={material.id}
-                      title={material.name}
-                      meta={meta}
-                      action={
-                        material.externalUrl ? (
-                          <a
-                            className={`inline-block ${outlineButtonClass}`}
-                            href={material.externalUrl}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
-                            Watch
-                          </a>
-                        ) : (
-                          <button className={solidButtonClass} type="button">
-                            Download
-                          </button>
-                        )
-                      }
-                    />
-                  );
-                })}
-              </div>
-            )}
-          </div>
+            ))
+          )}
+        </article>
+
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold tracking-tight text-ink">Materials</h2>
+          {lesson.materials.length === 0 ? (
+            <p className="text-sm leading-6 text-ink-secondary">No materials on this lesson.</p>
+          ) : (
+            <div className="space-y-2">
+              {lesson.materials.map((material) => {
+                const size = material.sizeBytes === null ? null : formatBytes(material.sizeBytes);
+                const meta = [kindLabel(material.kind), size].filter(Boolean).join(" · ");
+                return (
+                  <MaterialRow
+                    key={material.id}
+                    title={material.name}
+                    meta={meta}
+                    action={
+                      material.externalUrl ? (
+                        <a
+                          className={`inline-flex ${outlineButtonClass}`}
+                          href={material.externalUrl}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          Watch
+                        </a>
+                      ) : (
+                        <button className={solidButtonClass} type="button">
+                          Download
+                        </button>
+                      )
+                    }
+                  />
+                );
+              })}
+            </div>
+          )}
         </section>
 
-        <PrimaryButton href="/feed">Back to Learning Feed</PrimaryButton>
+        <Link href="/feed" className={`${buttonSecondary} w-full sm:w-auto`}>
+          Back to Learning Feed
+        </Link>
       </main>
     </>
   );

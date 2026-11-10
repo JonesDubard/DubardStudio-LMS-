@@ -1,13 +1,16 @@
+import { ClipboardList } from "lucide-react";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 
 export default function AssignmentNotFound() {
   return (
-    <main className="space-y-4 px-4 py-5">
-      <h1 className="text-lg font-bold">Assignment not found</h1>
-      <p className="text-sm text-ink-secondary">
-        This assignment is not available.
-      </p>
-      <PrimaryButton href="/feed">Back to Learning Feed</PrimaryButton>
+    <main className="px-4 py-8 md:px-8">
+      <EmptyState
+        icon={ClipboardList}
+        title="Assignment not found"
+        description="This assignment is not available."
+        action={<PrimaryButton href="/feed">Back to Learning Feed</PrimaryButton>}
+      />
     </main>
   );
 }

@@ -8,6 +8,7 @@ import {
   getMySubmission,
 } from "@/lib/queries/assessments";
 import { createClient } from "@/lib/supabase/server";
+import { surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Assignment",
@@ -32,38 +33,43 @@ export default async function AssignmentPage({
 
   return (
     <>
-      <PageHeader variant="section" eyebrow={assessment.type} title="Assignment" />
-      <main className="mx-auto w-full max-w-3xl space-y-5 px-4 py-5 md:px-8">
-        <section>
-          <h2 className="text-xl font-bold leading-7">{assessment.title}</h2>
-          {assessment.dueDate ? (
-            <p className="mt-2 text-sm text-ink-secondary">
-              Due {new Date(assessment.dueDate).toLocaleString()}
+      <PageHeader variant="section" eyebrow={assessment.type} title={assessment.title} />
+      <main className="mx-auto w-full max-w-3xl space-y-8 px-4 py-6 md:px-8">
+        {assessment.dueDate ? (
+          <p className="text-sm leading-6 text-ink-secondary">
+            Due {new Date(assessment.dueDate).toLocaleString()}
+          </p>
+        ) : null}
+
+        {assessment.instructions ? (
+          <section className="max-w-prose space-y-2">
+            <h2 className="text-sm font-semibold tracking-tight text-ink">Instructions</h2>
+            <p className="whitespace-pre-wrap text-base leading-7 text-ink">
+              {assessment.instructions}
             </p>
-          ) : null}
-          {assessment.instructions ? (
-            <p className="mt-3 text-sm leading-6">{assessment.instructions}</p>
-          ) : null}
-        </section>
+          </section>
+        ) : null}
 
         {grade ? (
-          <section className="border border-line bg-surface-muted p-4">
-            <p className="text-xs font-bold uppercase text-ink-secondary">Grade</p>
-            <p className="mt-1 text-lg font-bold">
+          <section className={`${surfaceCard} p-4`}>
+            <h2 className="text-xs font-medium uppercase tracking-wide text-ink-muted">Grade</h2>
+            <p className="mt-1 text-lg font-semibold text-ink">
               {grade.score ?? "—"}
               {assessment.maxScore !== null ? ` / ${assessment.maxScore}` : ""}
             </p>
             {grade.feedback ? (
-              <p className="mt-2 text-sm leading-6">{grade.feedback}</p>
+              <p className="mt-2 max-w-prose text-sm leading-6 text-ink-secondary">{grade.feedback}</p>
             ) : null}
           </section>
         ) : null}
 
         {assessment.type === "assignment" ? (
           submission ? (
-            <section className="border border-line p-4">
-              <p className="text-xs font-bold uppercase text-ink-secondary">Handed in</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
+            <section className={`${surfaceCard} p-4`}>
+              <h2 className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+                Handed in
+              </h2>
+              <p className="mt-2 max-w-prose whitespace-pre-wrap text-base leading-7 text-ink">
                 {submission.text}
               </p>
             </section>
@@ -71,7 +77,7 @@ export default async function AssignmentPage({
             <SubmitAssignmentForm assessmentId={assessment.id} />
           )
         ) : (
-          <p className="text-sm text-ink-secondary">
+          <p className="max-w-prose text-sm leading-6 text-ink-secondary">
             This {assessment.type} is scored by your teacher. There is nothing to hand in.
           </p>
         )}

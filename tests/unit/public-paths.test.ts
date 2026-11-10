@@ -9,6 +9,7 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/reset")).toBe(true);
     expect(isPublicPath("/reset/confirm")).toBe(true);
     expect(isPublicPath("/api/health")).toBe(true);
+    expect(isPublicPath("/manifest.webmanifest")).toBe(true);
     expect(isPublicPath("/_next/static/chunk.js")).toBe(true);
   });
 

@@ -1,4 +1,4 @@
-import { BookOpen, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 
 type GreetingHeader = {
   variant: "greeting";
@@ -17,11 +17,11 @@ type PageHeaderProps = GreetingHeader | SectionHeader;
 export function PageHeader(props: PageHeaderProps) {
   if (props.variant === "greeting") {
     return (
-      <header className="bg-brand-primary px-4 py-5 text-white md:px-8">
+      <header className="bg-brand-primary px-4 py-6 text-white md:px-8 md:py-8">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-medium text-white/80">{props.eyebrow}</p>
-            <h1 className="mt-0.5 break-words text-2xl font-semibold tracking-tight">
+            <p className="text-sm font-medium text-white/80">{props.eyebrow}</p>
+            <h1 className="mt-1 break-words text-2xl font-semibold tracking-tight md:text-3xl">
               {props.title}
             </h1>
           </div>
@@ -35,19 +35,11 @@ export function PageHeader(props: PageHeaderProps) {
   }
 
   return (
-    <header className="border-b border-line bg-surface px-4 py-4 md:px-8">
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-ink-secondary">
-          <BookOpen size={18} strokeWidth={1.75} aria-hidden />
-        </div>
-
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-ink-muted">{props.eyebrow}</p>
-          <h1 className="truncate text-base font-semibold tracking-tight text-ink">
-            {props.title}
-          </h1>
-        </div>
-      </div>
+    <header className="border-b border-line bg-surface px-4 py-5 md:px-8">
+      <p className="text-xs font-medium text-ink-muted">{props.eyebrow}</p>
+      <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
+        {props.title}
+      </h1>
     </header>
   );
 }
