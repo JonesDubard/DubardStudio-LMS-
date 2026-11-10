@@ -3,6 +3,7 @@ import { OnboardingProgressCell } from "@/components/platform/OnboardingProgress
 import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { TenantSummaryTile } from "@/components/platform/TenantSummaryTile";
 import { getPlatformDashboard } from "@/lib/stubs/get-platform-dashboard";
+import { surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Platform Admin — Dashboard",
@@ -13,10 +14,12 @@ export default function PlatformDashboardPage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1440px] p-4 md:p-8">
+      <div className="mx-auto max-w-[1440px] p-4 lg:p-8">
         <header className="mb-8">
-          <div className="text-sm text-ink-secondary">{data.eyebrow}</div>
-          <h1 className="mt-1 text-2xl font-semibold">{data.title}</h1>
+          <p className="text-xs font-medium text-ink-muted">{data.eyebrow}</p>
+          <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
+            {data.title}
+          </h1>
           <p className="mt-2 text-sm text-ink-secondary">{data.subtitle}</p>
         </header>
 
@@ -40,9 +43,9 @@ export default function PlatformDashboardPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto border border-line-subtle">
-            <table className="w-full min-w-[900px] border-collapse text-sm">
-              <thead className="border-b border-line bg-surface text-left text-sm font-medium text-ink-secondary">
+          <div className={`overflow-x-auto ${surfaceCard}`}>
+            <table className="w-full min-w-[40rem] border-collapse text-sm">
+              <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
                 <tr>
                   <th className="px-4 py-3 font-medium">Tenant</th>
                   <th className="px-4 py-3 font-medium">Subscription</th>
@@ -78,7 +81,7 @@ export default function PlatformDashboardPage() {
           </div>
         </section>
 
-        <section className="border border-line-subtle">
+        <section className={surfaceCard}>
           <div className="border-b border-line-subtle px-5 py-4">
             <h2 className="font-semibold">{data.recentAuditTitle}</h2>
           </div>

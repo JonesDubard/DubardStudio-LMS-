@@ -4,6 +4,7 @@ import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { DataTable } from "@/components/shared/DataTable";
 import { FilterRow } from "@/components/shared/FilterRow";
 import { getTenants } from "@/lib/stubs/get-tenants";
+import { buttonPrimary, buttonSecondary, fieldControl, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Platform Admin — Tenants",
@@ -14,27 +15,26 @@ export default function PlatformTenantsPage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1440px] p-4 md:p-8">
-        <header className="mb-8 flex items-end justify-between gap-6">
-          <div>
-            <div className="text-sm text-ink-secondary">{data.eyebrow}</div>
-            <h1 className="mt-1 text-2xl font-semibold">{data.title}</h1>
+      <div className="mx-auto max-w-[1440px] p-4 lg:p-8">
+        <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-ink-muted">{data.eyebrow}</p>
+            <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
+              {data.title}
+            </h1>
             <p className="mt-2 text-sm text-ink-secondary">{data.subtitle}</p>
           </div>
 
-          <Link
-            href="/platform/tenants/new"
-            className="shrink-0 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-transparent bg-brand-primary px-4 py-2.5 text-sm font-semibold tracking-tight text-white transition-colors duration-150 hover:bg-brand-hover active:bg-brand-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Link href="/platform/tenants/new" className={buttonPrimary}>
             {data.createLabel}
           </Link>
         </header>
 
         <FilterRow
-          className="mb-5 border border-line-subtle p-4"
-          gridClassName="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr_auto_auto]"
-          labelClassName="mb-2 block text-xs font-medium uppercase tracking-wide text-ink-secondary"
-          controlClassName="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-sm text-ink shadow-card transition-colors duration-150 placeholder:text-ink-disabled hover:border-line-strong focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-ring disabled:cursor-not-allowed disabled:bg-surface-disabled disabled:text-ink-disabled.5 text-sm"
+          className={`mb-5 p-4 ${surfaceCard}`}
+          gridClassName="grid grid-cols-1 gap-4 lg:grid-cols-[220px_minmax(0,1fr)_auto_auto]"
+          labelClassName={fieldLabel}
+          controlClassName={fieldControl}
           fields={[
             {
               id: "status",
@@ -51,16 +51,10 @@ export default function PlatformTenantsPage() {
             placeholder: data.searchPlaceholder,
           }}
         >
-          <button
-            type="button"
-            className="self-end border border-line px-4 py-2.5 text-sm"
-          >
+          <button type="button" className={`${buttonSecondary} self-end`}>
             {data.suspendLabel}
           </button>
-          <button
-            type="button"
-            className="self-end border border-line px-4 py-2.5 text-sm"
-          >
+          <button type="button" className={`${buttonSecondary} self-end`}>
             {data.exportLabel}
           </button>
         </FilterRow>
@@ -95,7 +89,7 @@ export default function PlatformTenantsPage() {
               <Link
                 key="action"
                 href={`/platform/tenants/${tenant.id}`}
-                className="inline-block inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-semibold tracking-tight text-ink shadow-card transition-colors duration-150 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-xs"
+                className={buttonSecondary}
               >
                 View Tenant
               </Link>,

@@ -84,8 +84,10 @@ export default async function AdminAcademicPage() {
   return (
     <main className="min-w-0 flex-1">
       <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
-        <p className="text-sm text-ink-secondary">Academic / Setup</p>
-        <h1 className="mt-1 text-2xl font-semibold">Academic Setup</h1>
+        <p className="text-xs font-medium text-ink-muted">Academic / Setup</p>
+        <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
+          Academic Setup
+        </h1>
         <p className="mt-1 text-sm text-ink-secondary">
           Configure the academic structure for the school.
         </p>
@@ -94,39 +96,30 @@ export default async function AdminAcademicPage() {
       <div className="space-y-6 p-4 lg:p-8">
         <AcademicSubNav />
 
-        <section className="border border-line bg-surface p-5">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm text-ink-secondary">Setup Progress</p>
-              <p className="mt-1 font-semibold">Academic Structure</p>
-            </div>
-          </div>
+        <section className="rounded-lg border border-line bg-surface p-5 shadow-card">
+          <p className="text-sm text-ink-secondary">Setup Progress</p>
+          <p className="mt-1 font-semibold">Academic Structure</p>
 
-          <div className="mt-5 flex items-center">
-            {steps.map((step, index) => {
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {steps.map((step) => {
               const active = filled[step.id];
               return (
-                <div key={step.id} className="contents">
-                  {index > 0 ? (
-                    <div className="w-12 border-t border-line" />
-                  ) : null}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={
-                          active
-                            ? "flex h-8 w-8 items-center justify-center bg-brand-primary text-sm text-white"
-                            : "flex h-8 w-8 items-center justify-center border border-line bg-surface-muted text-sm"
-                        }
-                      >
-                        {step.number}
-                      </span>
-                      <Link href={step.href} className="font-medium">
-                        {step.label}
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+                <Link
+                  key={step.id}
+                  href={step.href}
+                  className="flex min-h-11 items-center gap-3 rounded-lg px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
+                >
+                  <span
+                    className={
+                      active
+                        ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-primary text-sm text-white"
+                        : "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line bg-surface-muted text-sm"
+                    }
+                  >
+                    {step.number}
+                  </span>
+                  <span className="font-medium">{step.label}</span>
+                </Link>
               );
             })}
           </div>

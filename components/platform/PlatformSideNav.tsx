@@ -17,6 +17,7 @@ const navItems: {
   href: string;
   icon: LucideIcon;
   match: (path: string) => boolean;
+  title?: string;
 }[] = [
   {
     label: "Dashboard",
@@ -35,12 +36,14 @@ const navItems: {
     href: "#",
     icon: CreditCard,
     match: () => false,
+    title: "Subscriptions are not available yet",
   },
   {
     label: "Usage",
     href: "#",
     icon: BarChart3,
     match: () => false,
+    title: "Usage is not available yet",
   },
   {
     label: "Audit",
@@ -54,14 +57,13 @@ export function PlatformSideNav() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 shrink-0 border-r border-line bg-surface px-4 py-6">
-      <div className="mb-8 px-2">
-        <div className="text-xs font-medium uppercase tracking-wide text-ink-muted">
-          Platform Console
+    <aside className={sideNavAside}>
+      <div className="mb-6 flex flex-col items-center lg:mb-8 lg:items-start lg:px-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-subtle text-brand-primary">
+          <Building2 size={18} strokeWidth={1.75} aria-hidden />
         </div>
-        <div className="text-lg font-semibold tracking-tight text-ink">
-          LMS Administration
-        </div>
+        <p className={`mt-3 text-xs font-medium text-ink-muted ${navLabel}`}>Platform</p>
+        <p className={`font-semibold tracking-tight text-ink ${navLabel}`}>Administration</p>
       </div>
 
       <nav className="space-y-1">
@@ -72,20 +74,26 @@ export function PlatformSideNav() {
           const content = (
             <>
               <Icon size={18} strokeWidth={1.75} aria-hidden />
-              {item.label}
+              <span className={navLabel}>{item.label}</span>
             </>
           );
 
           if (item.href === "#") {
             return (
-              <span key={item.label} className={className}>
+              <span key={item.label} className={className} title={item.title ?? item.label}>
                 {content}
               </span>
             );
           }
 
           return (
-            <Link key={item.label} href={item.href} className={className}>
+            <Link
+              key={item.label}
+              href={item.href}
+              className={className}
+              title={item.title ?? item.label}
+              aria-current={active ? "page" : undefined}
+            >
               {content}
             </Link>
           );

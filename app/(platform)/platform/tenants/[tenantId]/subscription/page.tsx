@@ -4,6 +4,7 @@ import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { ElevatedAccessBanner } from "@/components/shared/ElevatedAccessBanner";
 import { TabBar } from "@/components/shared/TabBar";
 import { getTenantSubscription } from "@/lib/stubs/get-tenant-subscription";
+import { buttonPrimary, buttonSecondary, surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Platform Admin — Tenant Subscription",
@@ -21,15 +22,15 @@ export default async function TenantSubscriptionPage({
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1440px] p-4 md:p-8">
+      <div className="mx-auto max-w-[1440px] p-4 lg:p-8">
         <ElevatedAccessBanner tenantName={data.tenantName} />
 
         <header className="mb-6">
-          <div className="text-sm text-ink-secondary">
-            Tenants / {data.tenantName}
-          </div>
-          <div className="mt-2 flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">{data.tenantName}</h1>
+          <p className="text-xs font-medium text-ink-muted">Tenants / {data.tenantName}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <h1 className="break-words text-xl font-semibold tracking-tight md:text-2xl">
+              {data.tenantName}
+            </h1>
             <TenantStatusPill status={data.status} />
           </div>
           <p className="mt-2 text-sm text-ink-secondary">{data.subdomainHost}</p>
@@ -37,7 +38,7 @@ export default async function TenantSubscriptionPage({
 
         <TabBar tabs={data.tabs} />
 
-        <section className="border border-line-subtle">
+        <section className={surfaceCard}>
           <div className="border-b border-line-subtle px-6 py-5">
             <h2 className="font-semibold">Subscription Status</h2>
             <p className="mt-1 text-sm text-ink-secondary">
@@ -69,17 +70,11 @@ export default async function TenantSubscriptionPage({
                 affect tenant access and create an audit event.
               </p>
 
-              <div className="mt-4 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  className="border border-line px-4 py-2.5 text-sm"
-                >
+              <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
+                <button type="button" className={buttonSecondary}>
                   {data.confirmCancelLabel}
                 </button>
-                <button
-                  type="button"
-                  className="bg-brand-primary px-4 py-2.5 text-sm font-medium text-white"
-                >
+                <button type="button" className={buttonPrimary}>
                   {data.confirmActionLabel}
                 </button>
               </div>
@@ -87,7 +82,7 @@ export default async function TenantSubscriptionPage({
           </div>
         </section>
 
-        <section className="mt-6 overflow-x-auto border border-line-subtle">
+        <section className={`mt-6 overflow-x-auto ${surfaceCard}`}>
           <div className="border-b border-line-subtle px-6 py-5">
             <h2 className="font-semibold">{data.historyTitle}</h2>
           </div>

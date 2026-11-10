@@ -13,8 +13,10 @@ export default function AdminParentsPage() {
   return (
     <main className="min-w-0 flex-1">
       <header className="border-b border-line bg-surface px-4 py-5 md:px-8 md:py-6">
-        <p className="text-sm text-ink-secondary">{data.eyebrow}</p>
-        <h1 className="mt-1 text-2xl font-semibold">{data.title}</h1>
+        <p className="text-xs font-medium text-ink-muted">{data.eyebrow}</p>
+        <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
+          {data.title}
+        </h1>
         <p className="mt-1 text-sm text-ink-secondary">{data.subtitle}</p>
       </header>
 
@@ -37,7 +39,7 @@ export default function AdminParentsPage() {
                   type="button"
                   className={
                     parent.selected
-                      ? "w-full border-l-4 border-line-strong bg-surface-muted p-5 text-left"
+                      ? "w-full border-l-4 border-brand-primary bg-brand-subtle p-5 text-left"
                       : "w-full p-5 text-left"
                   }
                 >

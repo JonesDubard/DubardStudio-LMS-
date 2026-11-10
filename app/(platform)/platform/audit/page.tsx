@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AuditLogRow } from "@/components/platform/AuditLogRow";
 import { FilterRow } from "@/components/shared/FilterRow";
 import { getAuditLog } from "@/lib/stubs/get-audit-log";
+import { fieldControl, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Platform Admin — Audit Log",
@@ -12,18 +13,20 @@ export default function AuditLogPage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1440px] p-4 md:p-8">
+      <div className="mx-auto max-w-[1440px] p-4 lg:p-8">
         <header className="mb-8">
-          <div className="text-sm text-ink-secondary">{data.eyebrow}</div>
-          <h1 className="mt-1 text-2xl font-semibold">{data.title}</h1>
+          <p className="text-xs font-medium text-ink-muted">{data.eyebrow}</p>
+          <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
+            {data.title}
+          </h1>
           <p className="mt-2 text-sm text-ink-secondary">{data.subtitle}</p>
         </header>
 
         <FilterRow
-          className="mb-5 border border-line-subtle p-4"
+          className={`mb-5 p-4 ${surfaceCard}`}
           gridClassName="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
-          labelClassName="mb-2 block text-xs font-medium uppercase tracking-wide text-ink-secondary"
-          controlClassName="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-sm text-ink shadow-card transition-colors duration-150 placeholder:text-ink-disabled hover:border-line-strong focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-ring disabled:cursor-not-allowed disabled:bg-surface-disabled disabled:text-ink-disabled.5 text-sm"
+          labelClassName={fieldLabel}
+          controlClassName={fieldControl}
           textFields={[
             {
               id: "date-range",
@@ -59,7 +62,7 @@ export default function AuditLogPage() {
           ]}
         />
 
-        <section className="overflow-x-auto border border-line-subtle">
+        <section className={`overflow-x-auto ${surfaceCard}`}>
           <table className="w-full min-w-[1150px] border-collapse text-sm">
             <thead className="border-b border-line bg-surface text-left text-sm font-medium text-ink-secondary">
               <tr>
