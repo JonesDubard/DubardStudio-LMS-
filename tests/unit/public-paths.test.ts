@@ -10,6 +10,15 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/reset/confirm")).toBe(true);
     expect(isPublicPath("/api/health")).toBe(true);
     expect(isPublicPath("/manifest.webmanifest")).toBe(true);
+    expect(isPublicPath("/manifest.json")).toBe(true);
+    expect(isPublicPath("/sw.js")).toBe(true);
+    expect(isPublicPath("/sw.js.map")).toBe(true);
+    expect(isPublicPath("/swe-worker-development.js")).toBe(true);
+    expect(isPublicPath("/offline.html")).toBe(true);
+    expect(isPublicPath("/icon.png")).toBe(true);
+    expect(isPublicPath("/apple-icon.png")).toBe(true);
+    expect(isPublicPath("/logo.svg")).toBe(true);
+    expect(isPublicPath("/favicon.ico")).toBe(true);
     expect(isPublicPath("/_next/static/chunk.js")).toBe(true);
   });
 
