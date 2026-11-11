@@ -22,9 +22,8 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
   const [teacherName, brand] = await Promise.all([teacherFullName(), readShellBrand()]);
 
   return (
-    <div className="flex min-h-screen min-w-0 overflow-x-hidden bg-canvas text-ink">
-      <TeacherSideNav teacherName={teacherName} logoUrl={brand.logoUrl} />
-      <div className="min-w-0 flex-1">{children}</div>
-    </div>
+    <TeacherSideNav teacherName={teacherName} logoUrl={brand.logoUrl}>
+      {children}
+    </TeacherSideNav>
   );
 }

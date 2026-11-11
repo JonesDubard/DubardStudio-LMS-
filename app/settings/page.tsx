@@ -3,6 +3,7 @@ import Link from "next/link";
 import { homePathFromAccessToken } from "@/lib/auth/home-path";
 import { createClient } from "@/lib/supabase/server";
 import { buttonSecondary, surfaceCard } from "@/lib/ui/styles";
+import { SignOutButton } from "@/components/shared/SignOutButton";
 import { ProfileForm } from "./ProfileForm";
 
 export const metadata: Metadata = {
@@ -60,6 +61,9 @@ export default async function SettingsPage({
             This account has no school profile.
           </p>
         )}
+        <div className="mt-8 border-t border-line pt-6 pb-[env(safe-area-inset-bottom)]">
+          <SignOutButton variant="menu" label="Sign Out" />
+        </div>
       </main>
     </div>
   );
