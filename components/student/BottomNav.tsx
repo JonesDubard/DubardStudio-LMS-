@@ -3,6 +3,7 @@
 import { Award, Home, School, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SignOutButton } from "@/components/shared/SignOutButton";
 import { navLabel, navLink, navLinkActive, sideNavAside } from "@/lib/ui/styles";
 
 const items = [
@@ -50,7 +51,7 @@ export function BottomNav() {
           </div>
           <p className={`mt-3 text-xs font-medium text-ink-muted ${navLabel}`}>Student</p>
         </div>
-        <nav className="space-y-1">
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto">
           {items.map((item) => {
             const active = item.active(pathname);
             const Icon = item.icon;
@@ -68,6 +69,9 @@ export function BottomNav() {
             );
           })}
         </nav>
+        <div className="mt-4 shrink-0 border-t border-line pt-3">
+          <SignOutButton />
+        </div>
       </aside>
 
       <nav

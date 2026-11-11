@@ -46,4 +46,8 @@ export const navLinkActive =
 export const navLabel = "sr-only lg:not-sr-only";
 
 export const sideNavAside =
-  "flex w-20 shrink-0 flex-col border-r border-line bg-surface px-2 py-4 lg:w-64 lg:px-4 lg:py-5";
+  "sticky top-0 flex h-screen w-20 shrink-0 flex-col border-r border-line bg-surface px-2 py-4 lg:w-64 lg:px-4 lg:py-5";
+
+/** Desktop rail inside a fixed-height shell. Hidden below the md breakpoint. */
+export const desktopSideNav =
+  "hidden h-full w-20 shrink-0 flex-col border-r border-line bg-surface px-2 py-4 md:flex lg:w-64 lg:px-4 lg:py-5";

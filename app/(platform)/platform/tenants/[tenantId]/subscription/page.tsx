@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SubscriptionForm } from "@/components/platform/SubscriptionForm";
+import { BackLink } from "@/components/shared/BackLink";
 import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { ElevatedAccessBanner } from "@/components/shared/ElevatedAccessBanner";
 import { TabBar } from "@/components/shared/TabBar";
@@ -46,6 +47,7 @@ export default async function TenantSubscriptionPage({
   return (
     <main className="min-w-0 flex-1">
       <div className="mx-auto max-w-[1440px] p-4 lg:p-8">
+        <BackLink href="/platform/tenants">Back to Tenants</BackLink>
         <ElevatedAccessBanner tenantName={school.name} />
 
         <header className="mb-6">

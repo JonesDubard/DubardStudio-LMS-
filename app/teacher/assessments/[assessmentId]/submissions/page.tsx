@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BackLink } from "@/components/shared/BackLink";
 import { GradeRosterForm } from "@/components/teacher/GradeRosterForm";
 import { SubmissionGrader } from "@/components/teacher/SubmissionGrader";
 import {
@@ -37,6 +38,7 @@ export default async function AssessmentSubmissionsPage({
   return (
     <main className="min-w-0 flex-1">
       <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
+        <BackLink href="/teacher/grading">Back to Grading</BackLink>
         <p className="text-xs font-medium capitalize text-ink-muted">
           {assessment.type} · {assessment.status}
         </p>

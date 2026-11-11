@@ -1,4 +1,5 @@
 import { UserRound } from "lucide-react";
+import { BackLink } from "@/components/shared/BackLink";
 
 type GreetingHeader = {
   variant: "greeting";
@@ -10,6 +11,8 @@ type SectionHeader = {
   variant: "section";
   eyebrow: string;
   title: string;
+  backHref?: string;
+  backLabel?: string;
 };
 
 type PageHeaderProps = GreetingHeader | SectionHeader;
@@ -36,6 +39,9 @@ export function PageHeader(props: PageHeaderProps) {
 
   return (
     <header className="border-b border-line bg-surface px-4 py-5 md:px-8">
+      {props.backHref && props.backLabel ? (
+        <BackLink href={props.backHref}>{props.backLabel}</BackLink>
+      ) : null}
       <p className="text-xs font-medium text-ink-muted">{props.eyebrow}</p>
       <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
         {props.title}

@@ -59,6 +59,8 @@ export default async function LessonPage({
         variant="section"
         eyebrow={`${lesson.className} · ${lesson.subjectName}`}
         title={lesson.title}
+        backHref="/feed"
+        backLabel="Back to Home"
       />
 
       <main className="mx-auto w-full max-w-3xl space-y-8 px-4 py-6 md:px-8">
