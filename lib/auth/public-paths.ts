@@ -13,7 +13,21 @@ export function isPublicPath(pathname: string): boolean {
   if (path === "/reset" || path.startsWith("/reset/")) return true;
   if (pathname.startsWith("/_next/")) return true;
   if (path === "/api/health") return true;
-  if (path === "/manifest.webmanifest") return true;
+  if (isPublicAsset(path)) return true;
 
+  return false;
+}
+
+/**
+ * Files the browser must fetch before a session exists.
+ * A redirect on `/sw.js` makes the service worker fail to install.
+ */
+function isPublicAsset(path: string): boolean {
+  if (path === "/manifest.webmanifest" || path === "/manifest.json") return true;
+  if (path === "/offline.html") return true;
+  if (path === "/favicon.ico" || path === "/logo.svg") return true;
+  if (path === "/icon.png" || path === "/apple-icon.png") return true;
+  if (path === "/sw.js" || path === "/sw.js.map") return true;
+  if (path.startsWith("/workbox-") || path.startsWith("/swe-worker-")) return true;
   return false;
 }
