@@ -4,7 +4,7 @@ import { Award, Home, School, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/shared/SignOutButton";
-import { navLabel, navLink, navLinkActive, sideNavAside } from "@/lib/ui/styles";
+import { desktopSideNav, navLabel, navLink, navLinkActive } from "@/lib/ui/styles";
 
 const items = [
   {
@@ -44,7 +44,7 @@ export function BottomNav() {
 
   return (
     <>
-      <aside className={`${sideNavAside} max-md:hidden`} aria-label="Student">
+      <aside className={desktopSideNav} aria-label="Student">
         <div className="mb-6 flex flex-col items-center lg:mb-8 lg:items-start lg:px-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-subtle text-brand-primary">
             <School size={18} strokeWidth={1.75} aria-hidden />
