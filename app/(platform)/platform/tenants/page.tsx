@@ -99,6 +99,36 @@ export default async function PlatformTenantsPage({
           </button>
         </form>
 
+        <ul className="grid gap-3 md:hidden">
+          {schools.length === 0 ? (
+            <li className={`${surfaceCard} px-4 py-6 text-sm text-ink-secondary`}>No schools yet.</li>
+          ) : (
+            schools.map((tenant) => (
+              <li key={tenant.id} className={`${surfaceCard} space-y-3 p-4`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold tracking-tight text-ink">{tenant.name}</p>
+                    <p className="mt-1 break-all text-sm text-ink-secondary">
+                      {tenant.subdomain}.{root}
+                    </p>
+                  </div>
+                  <TenantStatusPill status={subscriptionLabel(tenant.subscription_status)} />
+                </div>
+                <p className="text-sm capitalize text-ink-secondary">
+                  {tenant.onboarding_status.replaceAll("_", " ")} · {formatCreated(tenant.created_at)}
+                </p>
+                <Link
+                  href={`/platform/tenants/${tenant.id}/subscription`}
+                  className={`${buttonSecondary} w-full`}
+                >
+                  Subscription
+                </Link>
+              </li>
+            ))
+          )}
+        </ul>
+
+        <div className="hidden md:block">
         <DataTable
           wrapperClassName="overflow-x-auto rounded-lg border border-line bg-surface shadow-card"
           tableClassName="w-full min-w-[1050px] border-collapse text-sm"
@@ -136,6 +166,7 @@ export default async function PlatformTenantsPage({
             ],
           }))}
         />
+        </div>
       </div>
     </main>
   );

@@ -23,7 +23,7 @@ export default async function StudentClassesPage() {
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {classes.map((item) => (
-              <article key={item.id} className={`${surfaceCard} p-5`}>
+              <article key={item.id} className={`${surfaceCard} p-5 hover:shadow-lift`}>
                 <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
                   Class
                 </p>

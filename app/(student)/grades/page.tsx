@@ -26,7 +26,7 @@ export default async function StudentGradesPage() {
               <h2 className="text-sm font-semibold tracking-tight text-ink">{group.heading}</h2>
               <div className="grid grid-cols-1 gap-3">
                 {group.grades.map((grade) => (
-                  <article key={grade.id} className={`${surfaceCard} p-4`}>
+                  <article key={grade.id} className={`${surfaceCard} p-4 hover:shadow-lift`}>
                     <h3 className="break-words text-base font-semibold tracking-tight text-ink">
                       {grade.title}
                     </h3>

@@ -16,7 +16,7 @@ import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/messages";
 import { createClient } from "@/lib/supabase/server";
 import type { AssessmentStatus } from "@/lib/types/assessments";
 import type { LessonStatus, TeacherCourse } from "@/lib/types/lessons";
-import { buttonSecondary } from "@/lib/ui/styles";
+import { buttonSecondary, surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Teacher Home",
@@ -153,12 +153,17 @@ export default async function TeacherHomePage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="bg-brand-primary px-4 py-6 text-white lg:px-8 lg:py-8">
-        <p className="text-sm font-medium text-white/80">Teacher Home</p>
-        <h1 className="mt-1 break-words text-2xl font-semibold tracking-tight md:text-3xl">
-          {greetingFor(teacherName, now)}
-        </h1>
-        <p className="mt-1 text-sm text-white/80">{formatToday(now)}</p>
+      <header className="border-b border-line bg-surface px-4 py-4 lg:px-8">
+        <div className="flex items-center gap-3">
+          <span className="h-8 w-1 shrink-0 rounded-full bg-brand-primary" aria-hidden />
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Teacher Home</p>
+            <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
+              {greetingFor(teacherName, now)}
+            </h1>
+            <p className="mt-1 text-sm text-ink-secondary">{formatToday(now)}</p>
+          </div>
+        </div>
       </header>
 
       <div className="space-y-8 p-4 lg:p-8">
@@ -206,31 +211,54 @@ export default async function TeacherHomePage() {
           ) : recentLessons.length === 0 ? (
             <EmptyState icon={Inbox} title="No lessons yet." />
           ) : (
-            <DataTable
-              columns={[
-                { key: "lesson", header: "Lesson" },
-                { key: "class", header: "Class" },
-                { key: "subject", header: "Subject" },
-                { key: "updated", header: "Updated" },
-                { key: "status", header: "Status" },
-              ]}
-              rows={recentLessons.map((lesson) => ({
-                id: lesson.id,
-                cells: [
-                  <Link
-                    key="title"
-                    href={`/teacher/lessons/${lesson.id}`}
-                    className="font-medium text-ink underline-offset-2 hover:underline"
-                  >
-                    {lesson.title}
-                  </Link>,
-                  lesson.class_name,
-                  lesson.subject_name,
-                  formatUpdated(lesson.updated_at),
-                  <StatusBadge key="status" label={statusLabel(lesson.status)} />,
-                ],
-              }))}
-            />
+            <>
+              <ul className="grid gap-3 md:hidden">
+                {recentLessons.map((lesson) => (
+                  <li key={lesson.id} className={`${surfaceCard} p-4`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <Link
+                        href={`/teacher/lessons/${lesson.id}`}
+                        className="font-semibold tracking-tight text-ink underline-offset-2 hover:underline"
+                      >
+                        {lesson.title}
+                      </Link>
+                      <StatusBadge label={statusLabel(lesson.status)} />
+                    </div>
+                    <p className="mt-2 text-sm text-ink-secondary">
+                      {lesson.class_name} · {lesson.subject_name}
+                    </p>
+                    <p className="mt-1 text-xs text-ink-muted">{formatUpdated(lesson.updated_at)}</p>
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden md:block">
+                <DataTable
+                  columns={[
+                    { key: "lesson", header: "Lesson" },
+                    { key: "class", header: "Class" },
+                    { key: "subject", header: "Subject" },
+                    { key: "updated", header: "Updated" },
+                    { key: "status", header: "Status" },
+                  ]}
+                  rows={recentLessons.map((lesson) => ({
+                    id: lesson.id,
+                    cells: [
+                      <Link
+                        key="title"
+                        href={`/teacher/lessons/${lesson.id}`}
+                        className="font-medium text-ink underline-offset-2 hover:underline"
+                      >
+                        {lesson.title}
+                      </Link>,
+                      lesson.class_name,
+                      lesson.subject_name,
+                      formatUpdated(lesson.updated_at),
+                      <StatusBadge key="status" label={statusLabel(lesson.status)} />,
+                    ],
+                  }))}
+                />
+              </div>
+            </>
           )}
         </section>
 
@@ -245,31 +273,54 @@ export default async function TeacherHomePage() {
           ) : assessments.length === 0 ? (
             <EmptyState icon={ClipboardList} title="No assessments yet." />
           ) : (
-            <DataTable
-              columns={[
-                { key: "title", header: "Assessment" },
-                { key: "class", header: "Class" },
-                { key: "subject", header: "Subject" },
-                { key: "due", header: "Due" },
-                { key: "status", header: "Status" },
-              ]}
-              rows={assessments.map((assessment) => ({
-                id: assessment.id,
-                cells: [
-                  <Link
-                    key="title"
-                    href={`/teacher/assessments/${assessment.id}/submissions`}
-                    className="font-medium text-ink underline-offset-2 hover:underline"
-                  >
-                    {assessment.title}
-                  </Link>,
-                  assessment.className,
-                  assessment.subjectName,
-                  formatDue(assessment.dueDate),
-                  <StatusBadge key="status" label={statusLabel(assessment.status)} />,
-                ],
-              }))}
-            />
+            <>
+              <ul className="grid gap-3 md:hidden">
+                {assessments.map((assessment) => (
+                  <li key={assessment.id} className={`${surfaceCard} p-4`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <Link
+                        href={`/teacher/assessments/${assessment.id}/submissions`}
+                        className="font-semibold tracking-tight text-ink underline-offset-2 hover:underline"
+                      >
+                        {assessment.title}
+                      </Link>
+                      <StatusBadge label={statusLabel(assessment.status)} />
+                    </div>
+                    <p className="mt-2 text-sm text-ink-secondary">
+                      {assessment.className} · {assessment.subjectName}
+                    </p>
+                    <p className="mt-1 text-xs text-ink-muted">{formatDue(assessment.dueDate)}</p>
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden md:block">
+                <DataTable
+                  columns={[
+                    { key: "title", header: "Assessment" },
+                    { key: "class", header: "Class" },
+                    { key: "subject", header: "Subject" },
+                    { key: "due", header: "Due" },
+                    { key: "status", header: "Status" },
+                  ]}
+                  rows={assessments.map((assessment) => ({
+                    id: assessment.id,
+                    cells: [
+                      <Link
+                        key="title"
+                        href={`/teacher/assessments/${assessment.id}/submissions`}
+                        className="font-medium text-ink underline-offset-2 hover:underline"
+                      >
+                        {assessment.title}
+                      </Link>,
+                      assessment.className,
+                      assessment.subjectName,
+                      formatDue(assessment.dueDate),
+                      <StatusBadge key="status" label={statusLabel(assessment.status)} />,
+                    ],
+                  }))}
+                />
+              </div>
+            </>
           )}
         </section>
       </div>

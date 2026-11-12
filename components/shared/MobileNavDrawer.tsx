@@ -22,7 +22,7 @@ type MobileNavBarProps = {
 };
 
 const itemClass =
-  "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink-secondary transition-colors duration-150 hover:bg-surface-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring";
+  "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink-secondary transition-colors duration-200 hover:bg-surface-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring";
 
 const itemActiveClass =
   "flex min-h-11 w-full items-center gap-3 rounded-lg bg-brand-subtle px-3 py-2.5 text-sm font-semibold text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring";

@@ -66,10 +66,16 @@ const config: Config = {
           subtle: "var(--info-subtle)",
           border: "var(--info-border)",
         },
+        product: {
+          navy: "var(--product-navy)",
+          blue: "var(--product-blue)",
+          soft: "var(--product-blue-soft)",
+        },
         overlay: "var(--overlay)",
       },
       boxShadow: {
-        card: "0 1px 2px 0 rgb(15 23 42 / 0.05)",
+        card: "0 1px 2px rgb(23 32 51 / 0.04), 0 10px 28px -18px rgb(23 43 77 / 0.28)",
+        lift: "0 8px 24px -12px rgb(23 43 77 / 0.22)",
       },
     },
   },

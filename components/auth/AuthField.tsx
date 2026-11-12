@@ -18,21 +18,36 @@ export function AuthField({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const [visible, setVisible] = useState(false);
+  const inputType = type === "password" && visible ? "text" : type;
+
   return (
     <div>
       <label htmlFor={id} className={fieldLabel}>
         {label}
       </label>
-      <input
-        id={id}
-        name={id}
-        type={type}
-        autoComplete={autoComplete}
-        required
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className={fieldControl}
-      />
+      <div className="relative">
+        <input
+          id={id}
+          name={id}
+          type={inputType}
+          autoComplete={autoComplete}
+          required
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className={type === "password" ? `${fieldControl} pr-16` : fieldControl}
+        />
+        {type === "password" ? (
+          <button
+            type="button"
+            className="absolute inset-y-1 right-1 rounded-md px-2 text-xs font-semibold text-ink-secondary transition-colors duration-200 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
+            aria-pressed={visible}
+            onClick={() => setVisible((current) => !current)}
+          >
+            {visible ? "Hide" : "Show"}
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

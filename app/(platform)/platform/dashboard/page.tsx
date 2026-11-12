@@ -50,47 +50,64 @@ export default async function PlatformDashboardPage() {
               Subscription and onboarding status for each school.
             </p>
           </div>
-          <div className={`overflow-x-auto ${surfaceCard}`}>
-            <table className="w-full min-w-[40rem] border-collapse text-sm">
-              <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Tenant</th>
-                  <th className="px-4 py-3 font-medium">Subscription</th>
-                  <th className="px-4 py-3 font-medium">Onboarding</th>
-                  <th className="px-4 py-3 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {schools.length === 0 ? (
-                  <tr>
-                    <td className="px-4 py-6 text-ink-secondary" colSpan={4}>
-                      No schools yet.
-                    </td>
-                  </tr>
-                ) : (
-                  schools.map((school) => (
-                    <tr key={school.id} className="border-t border-line-subtle">
-                      <td className="px-4 py-4 font-medium">{school.name}</td>
-                      <td className="px-4 py-4">
-                        <TenantStatusPill status={subscriptionLabel(school.subscription_status)} />
-                      </td>
-                      <td className="px-4 py-4 capitalize">
-                        {school.onboarding_status.replaceAll("_", " ")}
-                      </td>
-                      <td className="px-4 py-4">
-                        <Link
-                          href={`/platform/tenants/${school.id}/subscription`}
-                          className={buttonSecondary}
-                        >
-                          Subscription
-                        </Link>
-                      </td>
+          {schools.length === 0 ? (
+            <p className={`${surfaceCard} px-4 py-6 text-sm text-ink-secondary`}>No schools yet.</p>
+          ) : (
+            <>
+              <ul className="grid gap-3 md:hidden">
+                {schools.map((school) => (
+                  <li key={school.id} className={`${surfaceCard} space-y-3 p-4`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-semibold tracking-tight text-ink">{school.name}</p>
+                      <TenantStatusPill status={subscriptionLabel(school.subscription_status)} />
+                    </div>
+                    <p className="text-sm capitalize text-ink-secondary">
+                      {school.onboarding_status.replaceAll("_", " ")}
+                    </p>
+                    <Link
+                      href={`/platform/tenants/${school.id}/subscription`}
+                      className={`${buttonSecondary} w-full`}
+                    >
+                      Subscription
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <div className={`hidden overflow-x-auto md:block ${surfaceCard}`}>
+                <table className="w-full border-collapse text-sm">
+                  <thead className="border-b border-line bg-surface-muted text-left text-xs font-medium text-ink-secondary">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Tenant</th>
+                      <th className="px-4 py-3 font-medium">Subscription</th>
+                      <th className="px-4 py-3 font-medium">Onboarding</th>
+                      <th className="px-4 py-3 font-medium">Actions</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {schools.map((school) => (
+                      <tr key={school.id} className="border-t border-line-subtle">
+                        <td className="px-4 py-4 font-medium">{school.name}</td>
+                        <td className="px-4 py-4">
+                          <TenantStatusPill status={subscriptionLabel(school.subscription_status)} />
+                        </td>
+                        <td className="px-4 py-4 capitalize">
+                          {school.onboarding_status.replaceAll("_", " ")}
+                        </td>
+                        <td className="px-4 py-4">
+                          <Link
+                            href={`/platform/tenants/${school.id}/subscription`}
+                            className={buttonSecondary}
+                          >
+                            Subscription
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </section>
       </div>
     </main>

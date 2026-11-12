@@ -6,7 +6,7 @@ export function AssignmentCards({ items }: { items: ParentAssignment[] }) {
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {items.map((item) => (
-        <article key={item.id} className={`${surfaceCard} p-4`}>
+        <article key={item.id} className={`${surfaceCard} p-4 hover:shadow-lift`}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
@@ -32,7 +32,7 @@ export function GradeCards({ items }: { items: ParentGrade[] }) {
   return (
     <div className="grid grid-cols-1 gap-3">
       {items.map((item) => (
-        <article key={item.id} className={`${surfaceCard} p-4`}>
+        <article key={item.id} className={`${surfaceCard} p-4 hover:shadow-lift`}>
           <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
             {item.subjectName}
           </p>

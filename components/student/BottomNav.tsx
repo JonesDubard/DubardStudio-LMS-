@@ -40,7 +40,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   const dockClass =
-    "flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-xs font-medium transition-colors duration-150 motion-reduce:transition-none";
+    "flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-xs font-medium transition-colors duration-200 motion-reduce:transition-none";
 
   return (
     <>
