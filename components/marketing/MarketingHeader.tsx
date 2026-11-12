@@ -2,10 +2,10 @@ import Link from "next/link";
 import { marketingNav } from "@/components/marketing/nav";
 import { MarketingMenu } from "@/components/marketing/MarketingMenu";
 import { Logo } from "@/components/shared/Logo";
-import { buttonGhost, buttonPrimary } from "@/lib/ui/styles";
+import { buttonGhost, buttonProduct } from "@/lib/ui/styles";
 
 const navItem =
-  "rounded-md px-2.5 py-2 text-sm text-ink-secondary transition-colors duration-150 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring";
+  "rounded-md px-2.5 py-2 text-sm text-ink-secondary transition-colors duration-200 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-product-blue";
 
 export function MarketingHeader() {
   return (
@@ -34,7 +34,7 @@ export function MarketingHeader() {
           <Link href="/access" className={buttonGhost}>
             School Login
           </Link>
-          <Link href="/contact" className={buttonPrimary}>
+          <Link href="/contact" className={buttonProduct}>
             Book a Pilot
           </Link>
         </div>

@@ -36,7 +36,7 @@ export function DataTable({
   return (
     <div className={wrapperClassName}>
       <table className={tableClassName}>
-        <thead className="border-b border-line bg-surface text-left">
+        <thead className="border-b border-line bg-surface-muted text-left">
           <tr>
             {columns.map((column) => (
               <th

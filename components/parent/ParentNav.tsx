@@ -18,7 +18,7 @@ export function ParentNav() {
   const child = useSearchParams().get("child");
 
   const dockClass =
-    "flex min-h-16 flex-col items-center justify-center gap-1 px-2 text-xs font-medium transition-colors duration-150 motion-reduce:transition-none";
+    "flex min-h-16 flex-col items-center justify-center gap-1 px-2 text-xs font-medium transition-colors duration-200 motion-reduce:transition-none";
 
   function hrefFor(href: string) {
     return child ? `${href}?child=${encodeURIComponent(child)}` : href;

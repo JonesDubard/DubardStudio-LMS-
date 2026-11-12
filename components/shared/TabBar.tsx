@@ -16,8 +16,8 @@ export function TabBar({ tabs }: TabBarProps) {
       <nav className="flex gap-6 overflow-x-auto text-sm">
         {tabs.map((tab) => {
           const className = tab.active
-            ? "border-b-2 border-brand-primary px-1 py-3 font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
-            : "px-1 py-3 text-ink-secondary transition-colors duration-150 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring";
+            ? "border-b-2 border-brand-primary px-1 py-3 font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
+            : "px-1 py-3 text-ink-secondary transition-colors duration-200 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring";
 
           if (tab.href === "#") {
             return (

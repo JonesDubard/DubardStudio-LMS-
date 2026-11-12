@@ -66,17 +66,24 @@ export default async function AdminDashboardPage() {
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="bg-brand-primary px-4 py-6 text-white lg:px-8 lg:py-8">
-        <p className="text-sm font-medium text-white/80">School Administration</p>
-        <h1 className="mt-1 break-words text-2xl font-semibold tracking-tight md:text-3xl">
-          {schoolName}
-        </h1>
-        <p className="mt-1 text-sm text-white/80">
-          {countLabel(years.length, "academic year", "academic years")} ·{" "}
-          {countLabel(terms.length, "term", "terms")} in the current year ·{" "}
-          {countLabel(classes.length, "class", "classes")} ·{" "}
-          {countLabel(subjects.length, "subject", "subjects")}
-        </p>
+      <header className="border-b border-line bg-surface px-4 py-4 lg:px-8">
+        <div className="flex items-center gap-3">
+          <span className="h-8 w-1 shrink-0 rounded-full bg-brand-primary" aria-hidden />
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+              School Administration
+            </p>
+            <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
+              {schoolName}
+            </h1>
+            <p className="mt-1 text-sm text-ink-secondary">
+              {countLabel(years.length, "academic year", "academic years")} ·{" "}
+              {countLabel(terms.length, "term", "terms")} in the current year ·{" "}
+              {countLabel(classes.length, "class", "classes")} ·{" "}
+              {countLabel(subjects.length, "subject", "subjects")}
+            </p>
+          </div>
+        </div>
       </header>
 
       <div className="space-y-8 p-4 lg:p-8">
@@ -92,7 +99,7 @@ export default async function AdminDashboardPage() {
                 <Link
                   key={area.href}
                   href={area.href}
-                  className={`${surfaceCard} block p-5 transition-colors duration-150 hover:border-brand-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring motion-reduce:transition-none`}
+                  className={`${surfaceCard} block p-5 hover:border-brand-border hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring`}
                 >
                   <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-subtle text-brand-primary">
                     <Icon size={18} strokeWidth={1.75} aria-hidden />

@@ -4,11 +4,11 @@ import { Logo } from "@/components/shared/Logo";
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-line">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 md:flex-row md:items-start md:justify-between">
+    <footer className="border-t border-line bg-surface">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 md:flex-row md:items-start md:justify-between">
         <div className="max-w-sm">
           <Logo />
-          <p className="mt-2 text-sm leading-6 text-ink-secondary">
+          <p className="mt-3 text-sm leading-6 text-ink-secondary">
             TerraLearn is a white-label learning platform for Liberian schools. Each
             school gets its own subdomain and branding.
           </p>
@@ -19,7 +19,7 @@ export function MarketingFooter() {
               <a
                 key={item.href}
                 href={item.href}
-                className="min-h-11 rounded-md py-2 text-sm text-ink-secondary transition-colors duration-150 hover:text-ink md:min-h-0"
+                className="min-h-11 rounded-md py-2 text-sm text-ink-secondary transition-colors duration-200 hover:text-ink md:min-h-0"
               >
                 {item.label}
               </a>
@@ -27,7 +27,7 @@ export function MarketingFooter() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="min-h-11 rounded-md py-2 text-sm text-ink-secondary transition-colors duration-150 hover:text-ink md:min-h-0"
+                className="min-h-11 rounded-md py-2 text-sm text-ink-secondary transition-colors duration-200 hover:text-ink md:min-h-0"
               >
                 {item.label}
               </Link>
@@ -35,7 +35,7 @@ export function MarketingFooter() {
           )}
           <Link
             href="/access"
-            className="min-h-11 rounded-md py-2 text-sm text-ink-secondary transition-colors duration-150 hover:text-ink md:min-h-0"
+            className="min-h-11 rounded-md py-2 text-sm text-ink-secondary transition-colors duration-200 hover:text-ink md:min-h-0"
           >
             School Login
           </Link>

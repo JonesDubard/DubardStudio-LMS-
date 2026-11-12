@@ -12,7 +12,7 @@ export function ClassCard({ name, subject, studentCountLabel, href }: ClassCardP
   return (
     <Link
       href={href}
-      className={`${surfaceCard} block p-5 transition-colors duration-150 hover:border-brand-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring motion-reduce:transition-none`}
+      className={`${surfaceCard} block p-5 hover:border-brand-border hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring`}
     >
       <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Class</p>
       <h3 className="mt-1 text-base font-semibold tracking-tight text-ink">{name}</h3>

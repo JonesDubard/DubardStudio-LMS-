@@ -63,17 +63,17 @@ export default async function LessonPage({
         backLabel="Back to Home"
       />
 
-      <main className="mx-auto w-full max-w-3xl space-y-8 px-4 py-6 md:px-8">
+      <main className="mx-auto w-full max-w-2xl space-y-8 px-4 py-6 md:px-8 md:py-8">
         <p className="text-sm leading-6 text-ink-secondary">
           {formatPublished(lesson.publishedAt)}
         </p>
 
-        <article className="max-w-prose">
+        <article>
           {paragraphs.length === 0 ? (
-            <p className="text-base leading-7 text-ink-secondary">No description yet.</p>
+            <p className="text-base leading-8 text-ink-secondary">No description yet.</p>
           ) : (
             paragraphs.map((paragraph) => (
-              <p key={paragraph} className="mt-4 break-words text-base leading-7 text-ink first:mt-0">
+              <p key={paragraph} className="mt-5 break-words text-base leading-8 text-ink first:mt-0">
                 {paragraph}
               </p>
             ))
@@ -81,7 +81,7 @@ export default async function LessonPage({
         </article>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold tracking-tight text-ink">Materials</h2>
+          <h2 className="text-base font-semibold tracking-tight text-ink">Materials</h2>
           {lesson.materials.length === 0 ? (
             <p className="text-sm leading-6 text-ink-secondary">No materials on this lesson.</p>
           ) : (

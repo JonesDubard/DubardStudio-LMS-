@@ -14,19 +14,19 @@ export function LessonReadOnly({ lesson }: { lesson: AdminLessonView }) {
       <p className="text-sm leading-6 text-ink-secondary">
         {lesson.className} · {lesson.subjectName} · {lesson.status}
       </p>
-      <article className="max-w-prose">
+      <article className="max-w-2xl">
         {blocks.length === 0 ? (
-          <p className="text-base leading-7 text-ink-secondary">No description yet.</p>
+          <p className="text-base leading-8 text-ink-secondary">No description yet.</p>
         ) : (
           blocks.map((paragraph) => (
-            <p key={paragraph} className="mt-4 break-words text-base leading-7 text-ink first:mt-0">
+            <p key={paragraph} className="mt-5 break-words text-base leading-8 text-ink first:mt-0">
               {paragraph}
             </p>
           ))
         )}
       </article>
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold tracking-tight text-ink">Materials</h2>
+        <h2 className="text-base font-semibold tracking-tight text-ink">Materials</h2>
         {lesson.materials.length === 0 ? (
           <p className="text-sm leading-6 text-ink-secondary">No materials on this lesson.</p>
         ) : (

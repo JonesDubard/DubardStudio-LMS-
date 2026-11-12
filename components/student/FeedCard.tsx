@@ -26,7 +26,7 @@ export function FeedCard({
 }: FeedCardProps) {
   return (
     <article
-      className={`${surfaceCard} flex h-full flex-col p-4 transition-colors duration-150 hover:border-line-strong motion-reduce:transition-none ${className}`.trim()}
+      className={`${surfaceCard} flex h-full flex-col p-4 hover:border-line-strong hover:shadow-lift ${className}`.trim()}
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
