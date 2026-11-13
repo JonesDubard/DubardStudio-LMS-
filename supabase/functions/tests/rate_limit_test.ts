@@ -1,6 +1,5 @@
 // Unit tests for the shared rate-limit check (NF-07a.4, NF-07a.5).
-// Counting itself (N allowed, N+1 refused, allowed again after the window) is
-// proven in the database by tests/rls/0014_rate_limits_tests.sql.
+
 import { assert, assertEquals, assertRejects } from "jsr:@std/assert@1";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { adminHandler } from "../_shared/admin.ts";
