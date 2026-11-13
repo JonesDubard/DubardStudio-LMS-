@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { alertError, buttonPrimary, fieldControl, fieldLabel } from "@/lib/ui/styles";
 
 export function AuthField({
   id,
@@ -17,28 +18,43 @@ export function AuthField({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const [visible, setVisible] = useState(false);
+  const inputType = type === "password" && visible ? "text" : type;
+
   return (
     <div>
-      <label htmlFor={id} className="mb-2 block text-sm font-medium">
+      <label htmlFor={id} className={fieldLabel}>
         {label}
       </label>
-      <input
-        id={id}
-        name={id}
-        type={type}
-        autoComplete={autoComplete}
-        required
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full border border-[#999999] px-3 py-3"
-      />
+      <div className="relative">
+        <input
+          id={id}
+          name={id}
+          type={inputType}
+          autoComplete={autoComplete}
+          required
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className={type === "password" ? `${fieldControl} pr-16` : fieldControl}
+        />
+        {type === "password" ? (
+          <button
+            type="button"
+            className="absolute inset-y-1 right-1 rounded-md px-2 text-xs font-semibold text-ink-secondary transition-colors duration-200 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
+            aria-pressed={visible}
+            onClick={() => setVisible((current) => !current)}
+          >
+            {visible ? "Hide" : "Show"}
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
 
 export function AuthError({ children }: { children: ReactNode }) {
   return (
-    <p role="alert" className="border border-[#333333] bg-[#E5E5E5] px-3 py-2 text-sm">
+    <p role="alert" className={alertError}>
       {children}
     </p>
   );
@@ -62,7 +78,7 @@ export function AuthSubmit({
     <button
       type="submit"
       disabled={pending || !ready}
-      className="min-h-12 w-full border border-brand-primary bg-brand-primary px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
+      className={`${buttonPrimary} min-h-12 w-full`}
     >
       {pending ? pendingLabel : label}
     </button>

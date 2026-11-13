@@ -1,3 +1,6 @@
+import { UserRound } from "lucide-react";
+import { BackLink } from "@/components/shared/BackLink";
+
 type GreetingHeader = {
   variant: "greeting";
   eyebrow: string;
@@ -8,6 +11,8 @@ type SectionHeader = {
   variant: "section";
   eyebrow: string;
   title: string;
+  backHref?: string;
+  backLabel?: string;
 };
 
 type PageHeaderProps = GreetingHeader | SectionHeader;
@@ -15,17 +20,19 @@ type PageHeaderProps = GreetingHeader | SectionHeader;
 export function PageHeader(props: PageHeaderProps) {
   if (props.variant === "greeting") {
     return (
-      <header className="border-b-4 border-brand-secondary bg-brand-primary px-4 py-4 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs">{props.eyebrow}</p>
-            <h1 className="text-lg font-bold">{props.title}</h1>
+      <header className="border-b border-line bg-surface px-4 py-4 md:px-8">
+        <div className="flex items-center gap-3">
+          <span className="h-8 w-1 shrink-0 rounded-full bg-brand-primary" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+              {props.eyebrow}
+            </p>
+            <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
+              {props.title}
+            </h1>
           </div>
-
-          <div className="h-10 w-10 border border-white bg-brand-secondary">
-            <div className="flex h-full items-center justify-center text-xs text-white">
-              /
-            </div>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-brand-primary">
+            <UserRound size={18} strokeWidth={1.75} aria-hidden />
           </div>
         </div>
       </header>
@@ -33,19 +40,14 @@ export function PageHeader(props: PageHeaderProps) {
   }
 
   return (
-    <header className="border-b border-[#E5E5E5] bg-white px-4 py-4">
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 border border-[#999999] bg-[#E5E5E5]">
-          <div className="flex h-full items-center justify-center text-xs text-[#666666]">
-            /
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs text-[#999999]">{props.eyebrow}</p>
-          <h1 className="text-base font-bold">{props.title}</h1>
-        </div>
-      </div>
+    <header className="border-b border-line bg-surface px-4 py-5 md:px-8">
+      {props.backHref && props.backLabel ? (
+        <BackLink href={props.backHref}>{props.backLabel}</BackLink>
+      ) : null}
+      <p className="text-xs font-medium text-ink-muted">{props.eyebrow}</p>
+      <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
+        {props.title}
+      </h1>
     </header>
   );
 }

@@ -20,21 +20,21 @@ export function Modal({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#333333]/40 p-4">
+    <div className="motion-fade fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="academic-dialog-title"
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto border border-[#999999] bg-white p-6"
+        className="motion-rise max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-line bg-surface p-6 shadow-lift"
       >
         <div className="flex items-start justify-between gap-4">
-          <h2 id="academic-dialog-title" className="text-lg font-semibold">
+          <h2 id="academic-dialog-title" className="text-lg font-semibold tracking-tight text-ink">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="border border-[#999999] px-2 py-1 text-sm"
+            className="rounded-lg border border-line px-2.5 py-1.5 text-sm text-ink-secondary transition-colors duration-200 hover:bg-surface-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
           >
             Close
           </button>

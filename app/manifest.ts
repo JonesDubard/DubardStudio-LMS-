@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "LearnGrid",
-    short_name: "LearnGrid",
+    name: "TerraLearn",
+    short_name: "TerraLearn",
     description: "White-label learning platform for Liberian schools.",
     start_url: "/",
     display: "standalone",

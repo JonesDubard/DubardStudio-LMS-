@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { classDisplayName } from "@/lib/academic/labels";
 import type { Class as SchoolClass } from "@/lib/types/academic";
 import { deleteClass } from "../../actions";
 import { DeleteConfirm } from "../../_components/DeleteConfirm";
@@ -10,7 +11,13 @@ import { Modal } from "../../_components/Modal";
 import { AddClassButton } from "./AddClassButton";
 import { ClassForm } from "./ClassForm";
 
-export function ClassesPanel({ classes }: { classes: SchoolClass[] }) {
+export function ClassesPanel({
+  classes,
+  teachersByClass,
+}: {
+  classes: SchoolClass[];
+  teachersByClass: Record<string, string[]>;
+}) {
   const router = useRouter();
   const [editing, setEditing] = useState<SchoolClass | null>(null);
   const [removing, setRemoving] = useState<SchoolClass | null>(null);
@@ -36,27 +43,35 @@ export function ClassesPanel({ classes }: { classes: SchoolClass[] }) {
       <div className="flex items-center justify-end">
         <AddClassButton label="Add class" />
       </div>
-      <div className="overflow-x-auto border border-[#999999] bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-[#E5E5E5] text-left">
+      <div className="overflow-x-auto rounded-lg border border-line bg-surface shadow-card">
+        <table className="w-full min-w-[36rem] text-sm [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 [&_tbody_tr]:hover:bg-surface-muted">
+          <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
             <tr>
               <th className="px-4 py-3">Class</th>
-              <th className="px-4 py-3">Grade level</th>
+              <th className="px-4 py-3">Teachers</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E5E5E5]">
+          <tbody className="divide-y divide-line">
             {classes.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-sm text-[#666666]" colSpan={3}>
+                <td className="px-4 py-6 text-sm text-ink-secondary" colSpan={3}>
                   No classes yet.
                 </td>
               </tr>
             ) : (
               classes.map((row) => (
                 <tr key={row.id}>
-                  <td className="px-4 py-3">{row.name}</td>
-                  <td className="px-4 py-3">{row.grade_level ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    {classDisplayName(
+                      row.name,
+                      row.id,
+                      classes.map((item) => item.name),
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {(teachersByClass[row.id] ?? []).join(", ") || "No teachers"}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -92,7 +107,6 @@ export function ClassesPanel({ classes }: { classes: SchoolClass[] }) {
             classId={editing.id}
             defaultValues={{
               name: editing.name,
-              grade_level: editing.grade_level ?? "",
             }}
             onDone={() => {
               setEditing(null);

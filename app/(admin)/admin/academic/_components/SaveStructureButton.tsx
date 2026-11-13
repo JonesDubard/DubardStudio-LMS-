@@ -8,7 +8,7 @@ export function SaveStructureButton() {
   return (
     <div className="flex flex-col items-end gap-2">
       {message ? (
-        <p role="status" className="text-sm text-[#666666]">
+        <p role="status" className="text-sm text-ink-secondary">
           {message}
         </p>
       ) : null}

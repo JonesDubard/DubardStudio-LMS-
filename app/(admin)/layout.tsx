@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 import { AdminSideNav } from "@/components/admin/AdminSideNav";
+import { readShellBrand } from "@/lib/branding/shell";
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default async function AdminLayout({ children }: { children: ReactNode }) {
+  const brand = await readShellBrand();
+
   return (
-    <div className="flex min-h-screen bg-[#E5E5E5] text-[#333333]">
-      <AdminSideNav />
-      <div className="min-w-0 flex-1">{children}</div>
-    </div>
+    <AdminSideNav schoolName={brand.schoolName ?? "School"} logoUrl={brand.logoUrl}>
+      {children}
+    </AdminSideNav>
   );
 }

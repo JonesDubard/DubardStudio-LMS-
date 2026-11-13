@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { AuthError, AuthField, AuthSubmit } from "@/components/auth/AuthField";
+import { homePathFromAccessToken } from "@/lib/auth/home-path";
+import { createClient } from "@/lib/supabase/client";
 
 export function InviteForm({ token }: { token: string }) {
   const router = useRouter();
@@ -44,14 +45,15 @@ export function InviteForm({ token }: { token: string }) {
       return;
     }
 
-    router.push("/feed");
+    const { data: sessionData } = await supabase.auth.getSession();
+    router.push(homePathFromAccessToken(sessionData.session?.access_token));
     router.refresh();
   }
 
   return (
     <form className="space-y-4" method="post" onSubmit={onSubmit}>
       <h1 className="text-xl font-bold">Accept invitation</h1>
-      <p className="text-sm text-[#666666]">Set a password for this account.</p>
+      <p className="text-sm text-ink-secondary">Set a password for this account.</p>
       {error ? <AuthError>{error}</AuthError> : null}
       <AuthField
         id="password"

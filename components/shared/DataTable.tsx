@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { surfaceCard } from "@/lib/ui/styles";
 
 export type DataTableColumn = {
   key: string;
@@ -26,16 +27,16 @@ type DataTableProps = {
 export function DataTable({
   columns,
   rows,
-  headerCellClassName = "px-5 py-4",
-  bodyCellClassName = "px-5 py-4",
-  wrapperClassName = "overflow-x-auto border border-[#999999] bg-white",
-  tableClassName = "w-full text-sm",
+  headerCellClassName = "px-4 py-3 text-left text-xs font-medium text-ink-secondary",
+  bodyCellClassName = "px-4 py-3 align-middle text-ink",
+  wrapperClassName = `overflow-x-auto ${surfaceCard}`,
+  tableClassName = "w-full min-w-[40rem] text-sm",
   rowClassName,
 }: DataTableProps) {
   return (
     <div className={wrapperClassName}>
       <table className={tableClassName}>
-        <thead className="bg-[#E5E5E5] text-left">
+        <thead className="border-b border-line bg-surface-muted text-left">
           <tr>
             {columns.map((column) => (
               <th
@@ -47,9 +48,12 @@ export function DataTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#E5E5E5]">
+        <tbody className="divide-y divide-line">
           {rows.map((row) => (
-            <tr key={row.id} className={rowClassName}>
+            <tr
+              key={row.id}
+              className={`transition-colors duration-150 hover:bg-surface-muted ${rowClassName ?? ""}`.trim()}
+            >
               {row.cells.map((cell, index) => (
                 <td
                   key={`${row.id}-${columns[index]?.key ?? index}`}

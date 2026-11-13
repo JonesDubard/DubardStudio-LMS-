@@ -1,104 +1,113 @@
 import type { Metadata } from "next";
-import { OnboardingProgressCell } from "@/components/platform/OnboardingProgressCell";
+import Link from "next/link";
 import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { TenantSummaryTile } from "@/components/platform/TenantSummaryTile";
-import { getPlatformDashboard } from "@/lib/stubs/get-platform-dashboard";
+import { assertPlatformAdmin, listSchools, subscriptionLabel } from "@/lib/platform/schools";
+import { buttonSecondary, surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Platform Admin — Dashboard",
 };
 
-export default function PlatformDashboardPage() {
-  const data = getPlatformDashboard();
+const STATUSES = ["trial", "active", "suspended", "cancelled"] as const;
+
+export default async function PlatformDashboardPage() {
+  await assertPlatformAdmin();
+  const schools = await listSchools();
+  const counts = Object.fromEntries(STATUSES.map((status) => [status, 0])) as Record<
+    (typeof STATUSES)[number],
+    number
+  >;
+  for (const school of schools) {
+    if (school.subscription_status in counts) {
+      counts[school.subscription_status as (typeof STATUSES)[number]] += 1;
+    }
+  }
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1440px] p-8">
+      <div className="mx-auto max-w-[1440px] p-4 lg:p-8">
         <header className="mb-8">
-          <div className="text-sm text-[#666666]">{data.eyebrow}</div>
-          <h1 className="mt-1 text-2xl font-semibold">{data.title}</h1>
-          <p className="mt-2 text-sm text-[#666666]">{data.subtitle}</p>
+          <p className="text-xs font-medium text-ink-muted">Platform Admin</p>
+          <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
+            Dashboard
+          </h1>
+          <p className="mt-2 text-sm text-ink-secondary">Schools on this platform.</p>
         </header>
 
         <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {data.summaryTiles.map((tile) => (
-            <TenantSummaryTile
-              key={tile.id}
-              label={tile.label}
-              value={tile.value}
-            />
-          ))}
+          <TenantSummaryTile label="Total tenants" value={String(schools.length)} />
+          <TenantSummaryTile label="Trial" value={String(counts.trial)} />
+          <TenantSummaryTile label="Active" value={String(counts.active)} />
+          <TenantSummaryTile label="Suspended" value={String(counts.suspended)} />
+          <TenantSummaryTile label="Cancelled" value={String(counts.cancelled)} />
         </section>
 
-        <section className="mb-8">
-          <div className="mb-4 flex items-end justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">{data.onboardingTitle}</h2>
-              <p className="mt-1 text-sm text-[#666666]">
-                {data.onboardingDescription}
-              </p>
-            </div>
+        <section>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold">Schools</h2>
+            <p className="mt-1 text-sm text-ink-secondary">
+              Subscription and onboarding status for each school.
+            </p>
           </div>
-
-          <div className="overflow-x-auto border border-[#E5E5E5]">
-            <table className="w-full min-w-[900px] border-collapse text-sm">
-              <thead className="bg-[#E5E5E5] text-left">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Tenant</th>
-                  <th className="px-4 py-3 font-medium">Subscription</th>
-                  <th className="px-4 py-3 font-medium">Branding</th>
-                  <th className="px-4 py-3 font-medium">Academic</th>
-                  <th className="px-4 py-3 font-medium">Teachers Invited</th>
-                  <th className="px-4 py-3 font-medium">First Lesson</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.onboardingRows.map((row) => (
-                  <tr key={row.id} className="border-t border-[#E5E5E5]">
-                    <td className="px-4 py-4 font-medium">{row.name}</td>
-                    <td className="px-4 py-4">
-                      <TenantStatusPill status={row.status} />
-                    </td>
-                    <td className="px-4 py-4">
-                      <OnboardingProgressCell complete={row.branding} />
-                    </td>
-                    <td className="px-4 py-4">
-                      <OnboardingProgressCell complete={row.academic} />
-                    </td>
-                    <td className="px-4 py-4">
-                      <OnboardingProgressCell complete={row.teachersInvited} />
-                    </td>
-                    <td className="px-4 py-4">
-                      <OnboardingProgressCell complete={row.firstLesson} />
-                    </td>
-                  </tr>
+          {schools.length === 0 ? (
+            <p className={`${surfaceCard} px-4 py-6 text-sm text-ink-secondary`}>No schools yet.</p>
+          ) : (
+            <>
+              <ul className="grid gap-3 md:hidden">
+                {schools.map((school) => (
+                  <li key={school.id} className={`${surfaceCard} space-y-3 p-4`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-semibold tracking-tight text-ink">{school.name}</p>
+                      <TenantStatusPill status={subscriptionLabel(school.subscription_status)} />
+                    </div>
+                    <p className="text-sm capitalize text-ink-secondary">
+                      {school.onboarding_status.replaceAll("_", " ")}
+                    </p>
+                    <Link
+                      href={`/platform/tenants/${school.id}/subscription`}
+                      className={`${buttonSecondary} w-full`}
+                    >
+                      Subscription
+                    </Link>
+                  </li>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section className="border border-[#E5E5E5]">
-          <div className="border-b border-[#E5E5E5] px-5 py-4">
-            <h2 className="font-semibold">{data.recentAuditTitle}</h2>
-          </div>
-
-          <div className="divide-y divide-[#E5E5E5]">
-            {data.recentAuditItems.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between px-5 py-4"
-              >
-                <div>
-                  <div className="text-sm font-medium">{item.title}</div>
-                  <div className="mt-1 text-xs text-[#666666]">
-                    {item.detail}
-                  </div>
-                </div>
-                <div className="text-xs text-[#666666]">{item.timestamp}</div>
+              </ul>
+              <div className={`hidden overflow-x-auto md:block ${surfaceCard}`}>
+                <table className="w-full border-collapse text-sm">
+                  <thead className="border-b border-line bg-surface-muted text-left text-xs font-medium text-ink-secondary">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Tenant</th>
+                      <th className="px-4 py-3 font-medium">Subscription</th>
+                      <th className="px-4 py-3 font-medium">Onboarding</th>
+                      <th className="px-4 py-3 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {schools.map((school) => (
+                      <tr key={school.id} className="border-t border-line-subtle">
+                        <td className="px-4 py-4 font-medium">{school.name}</td>
+                        <td className="px-4 py-4">
+                          <TenantStatusPill status={subscriptionLabel(school.subscription_status)} />
+                        </td>
+                        <td className="px-4 py-4 capitalize">
+                          {school.onboarding_status.replaceAll("_", " ")}
+                        </td>
+                        <td className="px-4 py-4">
+                          <Link
+                            href={`/platform/tenants/${school.id}/subscription`}
+                            className={buttonSecondary}
+                          >
+                            Subscription
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </section>
       </div>
     </main>

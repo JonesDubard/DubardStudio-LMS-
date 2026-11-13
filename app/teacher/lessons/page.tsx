@@ -1,5 +1,9 @@
+import { buttonPrimary, buttonSecondary, fieldControl, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Inbox } from "lucide-react";
+import { DataTable } from "@/components/shared/DataTable";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
   getSignedInTeacherId,
@@ -7,7 +11,7 @@ import {
   getTeacherLessons,
   parseLessonStatus,
 } from "@/lib/queries/lessons";
-import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/assignment-stub";
+import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/messages";
 import { createClient } from "@/lib/supabase/server";
 import type { LessonStatus, TeacherCourse } from "@/lib/types/lessons";
 
@@ -71,7 +75,7 @@ export default async function TeacherLessonsPage({
 
   const supabase = await createClient();
   const teacherId = await getSignedInTeacherId(supabase);
-  const courses = await getTeacherCourses(supabase, teacherId);
+  const courses = await getTeacherCourses(supabase);
   const lessons = await getTeacherLessons(supabase, {
     teacherId,
     classId: classId || undefined,
@@ -87,41 +91,38 @@ export default async function TeacherLessonsPage({
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b border-[#999999] bg-white px-8 py-6">
-        <p className="text-sm text-[#666666]">Lessons</p>
-        <div className="mt-1 flex items-center justify-between gap-6">
-          <div>
-            <h1 className="text-2xl font-semibold">My Lessons</h1>
-            <p className="text-sm text-[#666666]">
+      <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
+        <p className="text-xs font-medium text-ink-muted">Lessons</p>
+        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-semibold tracking-tight md:text-2xl">
+              My Lessons
+            </h1>
+            <p className="text-sm text-ink-secondary">
               Lessons on the courses assigned to you.
             </p>
           </div>
-          <Link
-            href="/teacher/lessons/new"
-            className="border border-brand-primary bg-brand-primary px-5 py-3 text-sm text-white"
-          >
+          <Link href="/teacher/lessons/new" className={buttonPrimary}>
             Create Lesson
           </Link>
         </div>
       </header>
 
-      <div className="space-y-6 p-8">
+      <div className="space-y-6 p-4 lg:p-8">
         {courses.length === 0 ? (
-          <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
-            {NO_CLASSES_ASSIGNED_MESSAGE}
-          </p>
+          <EmptyState icon={Inbox} title={NO_CLASSES_ASSIGNED_MESSAGE} />
         ) : (
           <>
             <form
               action="/teacher/lessons"
               method="get"
-              className="border border-[#999999] bg-white p-5"
+              className={`${surfaceCard} p-5`}
             >
               <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                 <div>
                   <label
                     htmlFor="filter-class"
-                    className="mb-2 block text-sm font-medium"
+                    className={fieldLabel}
                   >
                     Class
                   </label>
@@ -129,7 +130,7 @@ export default async function TeacherLessonsPage({
                     id="filter-class"
                     name="class"
                     defaultValue={classId}
-                    className="w-full border border-[#999999] bg-white px-3 py-3"
+                    className={fieldControl}
                   >
                     <option value="">All classes</option>
                     {classOptions.map((option) => (
@@ -142,7 +143,7 @@ export default async function TeacherLessonsPage({
                 <div>
                   <label
                     htmlFor="filter-subject"
-                    className="mb-2 block text-sm font-medium"
+                    className={fieldLabel}
                   >
                     Subject
                   </label>
@@ -150,7 +151,7 @@ export default async function TeacherLessonsPage({
                     id="filter-subject"
                     name="subject"
                     defaultValue={subjectId}
-                    className="w-full border border-[#999999] bg-white px-3 py-3"
+                    className={fieldControl}
                   >
                     <option value="">All subjects</option>
                     {subjectOptions.map((option) => (
@@ -163,7 +164,7 @@ export default async function TeacherLessonsPage({
                 <div>
                   <label
                     htmlFor="filter-term"
-                    className="mb-2 block text-sm font-medium"
+                    className={fieldLabel}
                   >
                     Term
                   </label>
@@ -171,7 +172,7 @@ export default async function TeacherLessonsPage({
                     id="filter-term"
                     name="term"
                     defaultValue={termId}
-                    className="w-full border border-[#999999] bg-white px-3 py-3"
+                    className={fieldControl}
                   >
                     <option value="">All terms</option>
                     {termOptions.map((option) => (
@@ -184,7 +185,7 @@ export default async function TeacherLessonsPage({
                 <div>
                   <label
                     htmlFor="filter-status"
-                    className="mb-2 block text-sm font-medium"
+                    className={fieldLabel}
                   >
                     Status
                   </label>
@@ -192,7 +193,7 @@ export default async function TeacherLessonsPage({
                     id="filter-status"
                     name="status"
                     defaultValue={status ?? ""}
-                    className="w-full border border-[#999999] bg-white px-3 py-3"
+                    className={fieldControl}
                   >
                     <option value="">All statuses</option>
                     <option value="draft">Draft</option>
@@ -201,17 +202,17 @@ export default async function TeacherLessonsPage({
                   </select>
                 </div>
               </div>
-              <div className="mt-4 flex gap-3">
+              <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   type="submit"
-                  className="border border-brand-primary bg-brand-primary px-4 py-2 text-sm text-white"
+                  className={buttonPrimary}
                 >
                   Apply
                 </button>
                 {filtersActive ? (
                   <Link
                     href="/teacher/lessons"
-                    className="border border-[#999999] bg-white px-4 py-2 text-sm"
+                    className={buttonSecondary}
                   >
                     Clear
                   </Link>
@@ -219,58 +220,44 @@ export default async function TeacherLessonsPage({
               </div>
             </form>
 
-            <div className="overflow-x-auto border border-[#999999] bg-white">
-              <table className="w-full text-sm">
-                <thead className="bg-[#E5E5E5] text-left">
-                  <tr>
-                    <th className="px-4 py-3">Title</th>
-                    <th className="px-4 py-3">Class</th>
-                    <th className="px-4 py-3">Subject</th>
-                    <th className="px-4 py-3">Course</th>
-                    <th className="px-4 py-3">Updated</th>
-                    <th className="px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E5E5E5]">
-                  {lessons.length === 0 ? (
-                    <tr>
-                      <td
-                        className="px-4 py-6 text-sm text-[#666666]"
-                        colSpan={6}
-                      >
-                        {filtersActive
-                          ? "No lessons match these filters."
-                          : "No lessons yet."}
-                      </td>
-                    </tr>
-                  ) : (
-                    lessons.map((lesson) => (
-                      <tr key={lesson.id}>
-                        <td className="px-4 py-4">
-                          <Link
-                            href={`/teacher/lessons/${lesson.id}`}
-                            className="font-medium underline"
-                          >
-                            {lesson.title}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-4">{lesson.class_name}</td>
-                        <td className="px-4 py-4">{lesson.subject_name}</td>
-                        <td className="px-4 py-4">
-                          {courseName(lesson.course_name)}
-                        </td>
-                        <td className="px-4 py-4">
-                          {formatUpdated(lesson.updated_at)}
-                        </td>
-                        <td className="px-4 py-4">
-                          <StatusBadge label={statusLabel(lesson.status)} />
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            {lessons.length === 0 ? (
+              <EmptyState
+                icon={Inbox}
+                title={
+                  filtersActive
+                    ? "No lessons match these filters."
+                    : "No lessons yet."
+                }
+              />
+            ) : (
+              <DataTable
+                columns={[
+                  { key: "title", header: "Title" },
+                  { key: "class", header: "Class" },
+                  { key: "subject", header: "Subject" },
+                  { key: "course", header: "Course" },
+                  { key: "updated", header: "Updated" },
+                  { key: "status", header: "Status" },
+                ]}
+                rows={lessons.map((lesson) => ({
+                  id: lesson.id,
+                  cells: [
+                    <Link
+                      key="title"
+                      href={`/teacher/lessons/${lesson.id}`}
+                      className="font-medium text-ink underline-offset-2 hover:underline"
+                    >
+                      {lesson.title}
+                    </Link>,
+                    lesson.class_name,
+                    lesson.subject_name,
+                    courseName(lesson.course_name),
+                    formatUpdated(lesson.updated_at),
+                    <StatusBadge key="status" label={statusLabel(lesson.status)} />,
+                  ],
+                }))}
+              />
+            )}
           </>
         )}
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SubscriptionStatus } from "@/lib/stubs/get-tenants";
+import type { SubscriptionStatus } from "@/lib/platform/schools";
 
 export type SubscriptionRadioOption = {
   value: SubscriptionStatus;
@@ -12,15 +12,20 @@ export type SubscriptionRadioOption = {
 type SubscriptionRadioGroupProps = {
   options: SubscriptionRadioOption[];
   defaultValue: SubscriptionStatus;
+  value?: SubscriptionStatus;
+  onChange?: (value: SubscriptionStatus) => void;
   name?: string;
 };
 
 export function SubscriptionRadioGroup({
   options,
   defaultValue,
+  value,
+  onChange,
   name = "status",
 }: SubscriptionRadioGroupProps) {
-  const [selected, setSelected] = useState<SubscriptionStatus>(defaultValue);
+  const [uncontrolled, setUncontrolled] = useState<SubscriptionStatus>(defaultValue);
+  const selected = value ?? uncontrolled;
 
   return (
     <div className="space-y-4">
@@ -32,8 +37,8 @@ export function SubscriptionRadioGroup({
             key={option.value}
             className={
               isSelected
-                ? "flex items-center gap-4 border border-[#999999] p-4"
-                : "flex items-center gap-4 border border-[#E5E5E5] p-4"
+                ? "flex items-center gap-4 border border-line p-4"
+                : "flex items-center gap-4 border border-line-subtle p-4"
             }
           >
             <input
@@ -41,11 +46,14 @@ export function SubscriptionRadioGroup({
               name={name}
               value={option.value}
               checked={isSelected}
-              onChange={() => setSelected(option.value)}
+              onChange={() => {
+                if (onChange) onChange(option.value);
+                else setUncontrolled(option.value);
+              }}
             />
             <div>
               <div className="text-sm font-medium">{option.label}</div>
-              <div className="mt-1 text-xs text-[#666666]">
+              <div className="mt-1 text-xs text-ink-secondary">
                 {option.description}
               </div>
             </div>

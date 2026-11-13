@@ -113,8 +113,6 @@ async function insertLessonMaterials(
         kind: "pdf",
         file_id: fileInsert.data.id,
         external_url: null,
-        file_size: 100000,
-        mime_type: "application/pdf",
       })
       .select("id, tenant_id, lesson_id, kind")
       .single();
@@ -215,19 +213,23 @@ test("lessons and lesson_materials RLS return only the signed-in tenant", async 
       {
         id: userIdA,
         tenant_id: TENANT_A,
-        role: "teacher",
         full_name: "RLS Content Teacher A",
         email: emailA,
       },
       {
         id: userIdB,
         tenant_id: TENANT_B,
-        role: "teacher",
         full_name: "RLS Content Teacher B",
         email: emailB,
       },
     ]);
     if (profileError) throw profileError;
+
+    const { error: membershipError } = await admin.from("memberships").insert([
+      { tenant_id: TENANT_A, profile_id: userIdA, role: "teacher" },
+      { tenant_id: TENANT_B, profile_id: userIdB, role: "teacher" },
+    ]);
+    if (membershipError) throw membershipError;
 
     const { data: years, error: yearError } = await admin
       .from("academic_years")
@@ -453,7 +455,7 @@ test("lessons and lesson_materials RLS return only the signed-in tenant", async 
     const debug = JSON.stringify(
       {
         jwt: {
-          app_role: claims.app_role ?? null,
+          app_roles: claims.app_roles ?? null,
           tenant_id: claims.tenant_id ?? null,
           role: claims.role ?? null,
         },
@@ -472,7 +474,7 @@ test("lessons and lesson_materials RLS return only the signed-in tenant", async 
       2,
     );
 
-    expect(claims.app_role, debug).toBe("teacher");
+    expect(claims.app_roles, debug).toEqual(expect.arrayContaining(["teacher"]));
     expect(claims.tenant_id, debug).toBe(TENANT_A);
     expect(listedLessons.error, debug).toBeNull();
     expect(listedLessons.data, debug).toEqual([

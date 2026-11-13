@@ -2,10 +2,135 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Neutral gray fallback when a school has not configured branding (FR-2.3.5). */
+/*
+  Neutral fallback when a school has not configured branding (FR-2.3.5).
+  School colors override --brand-primary and --brand-secondary at runtime.
+  Hover, subtle, and focus tokens are derived from the primary so they follow it.
+*/
 :root {
   --brand-primary: #333333;
   --brand-secondary: #666666;
-  --brand-bg: #e5e5e5;
-  --brand-text: #333333;
+  --brand-bg: #f8fafc;
+  --brand-text: #0f172a;
+  --brand-hover: color-mix(in srgb, var(--brand-primary) 86%, black);
+  --brand-active: color-mix(in srgb, var(--brand-primary) 74%, black);
+  --brand-subtle: color-mix(in srgb, var(--brand-primary) 8%, white);
+  --brand-border: color-mix(in srgb, var(--brand-primary) 24%, white);
+  --brand-ring: color-mix(in srgb, var(--brand-primary) 32%, transparent);
+
+  --surface-page: #f6f8fc;
+  --surface-primary: #ffffff;
+  --surface-secondary: #f6f8fc;
+  --surface-disabled: #eef2f7;
+
+  --text-primary: #172033;
+  --text-secondary: #64748b;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
+
+  --border-primary: #e5eaf1;
+  --border-subtle: #f1f5f9;
+  --border-strong: #cbd5e1;
+
+  /* Dark enough for small text on white and on the subtle fills. */
+  --success: #0f7a5a;
+  --success-subtle: #e8f7f1;
+  --success-border: #b7e4d2;
+  --warning: #9a6410;
+  --warning-subtle: #fbf6ea;
+  --warning-border: #f0ddb0;
+  --danger: #b33a3a;
+  --danger-subtle: #fdf2f2;
+  --danger-border: #f3c7c7;
+  --danger-ring: rgb(179 58 58 / 0.28);
+  --info: #1d4ed8;
+  --info-subtle: #eaf0ff;
+  --info-border: #c9d7fb;
+  --overlay: rgb(23 32 51 / 0.4);
+
+  --product-navy: #172b4d;
+  --product-blue: #2453db;
+  --product-blue-soft: #eaf0ff;
+}
+
+@layer base {
+  html {
+    @apply bg-canvas text-ink antialiased;
+  }
+
+  body {
+    @apply min-h-screen bg-canvas font-sans text-sm text-ink;
+    letter-spacing: -0.011em;
+    line-height: 1.5;
+  }
+
+  ::placeholder {
+    color: var(--text-disabled);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes motion-rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes motion-fade {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes motion-float {
+    from {
+      transform: translateY(0);
+    }
+
+    to {
+      transform: translateY(-8px);
+    }
+  }
+
+  .marketing-rise,
+  .motion-rise {
+    animation: motion-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .motion-rise-delayed {
+    animation: motion-rise 0.36s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+  }
+
+  .motion-fade {
+    animation: motion-fade 0.22s ease both;
+  }
+
+  .motion-float {
+    animation: motion-float 4.5s ease-in-out infinite alternate;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

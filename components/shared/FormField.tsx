@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { fieldHelper, fieldLabel } from "@/lib/ui/styles";
 
 type FormFieldProps = {
   id: string;
@@ -10,13 +11,11 @@ type FormFieldProps = {
 export function FormField({ id, label, helperText, children }: FormFieldProps) {
   return (
     <div>
-      <label htmlFor={id} className="mb-2 block font-medium">
+      <label htmlFor={id} className={fieldLabel}>
         {label}
       </label>
       {children}
-      {helperText ? (
-        <p className="mt-1 text-sm text-[#666666]">{helperText}</p>
-      ) : null}
+      {helperText ? <p className={fieldHelper}>{helperText}</p> : null}
     </div>
   );
 }

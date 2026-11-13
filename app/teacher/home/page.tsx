@@ -1,23 +1,30 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
+import { ClipboardList, Inbox } from "lucide-react";
 import { ClassCard } from "@/components/teacher/ClassCard";
-import { GradingQueueRow } from "@/components/teacher/GradingQueueRow";
+import { DataTable } from "@/components/shared/DataTable";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { getTeacherAssessments } from "@/lib/queries/assessments";
 import {
   getSignedInTeacherId,
   getTeacherCourses,
   getTeacherLessons,
 } from "@/lib/queries/lessons";
-import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/assignment-stub";
-import { getTeacherHome } from "@/lib/stubs/get-teacher-home";
+import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/messages";
 import { createClient } from "@/lib/supabase/server";
-import type { LessonStatus } from "@/lib/types/lessons";
+import type { AssessmentStatus } from "@/lib/types/assessments";
+import type { LessonStatus, TeacherCourse } from "@/lib/types/lessons";
+import { buttonSecondary, surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Teacher Home",
 };
 
-function statusLabel(status: LessonStatus): string {
+const ASSESSMENT_CAP = 8;
+
+function statusLabel(status: LessonStatus | AssessmentStatus): string {
   if (status === "published") return "PUBLISHED";
   if (status === "archived") return "ARCHIVED";
   return "DRAFT";
@@ -33,45 +40,146 @@ function formatUpdated(value: string): string {
   }).format(date);
 }
 
+function formatDue(value: string | null): string {
+  if (!value) return "No due date";
+  return formatUpdated(value);
+}
+
+function greetingFor(name: string, now: Date): string {
+  const hour = now.getHours();
+  const hello =
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const first = name.trim().split(/\s+/)[0];
+  return first ? `${hello}, ${first}` : hello;
+}
+
+function formatToday(now: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(now);
+}
+
+async function teacherFullName(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<string> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw new Error(`auth: ${error.message}`);
+  if (!data.user) return "";
+
+  const result = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", data.user.id)
+    .maybeSingle<{ full_name: string | null }>();
+  if (result.error) throw new Error(`profiles: ${result.error.message}`);
+  return result.data?.full_name?.trim() ?? "";
+}
+
+type HomeAssessment = {
+  id: string;
+  title: string;
+  className: string;
+  subjectName: string;
+  status: AssessmentStatus;
+  dueDate: string | null;
+};
+
+async function recentAssessments(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  courses: TeacherCourse[],
+): Promise<HomeAssessment[]> {
+  const grouped = await Promise.all(
+    courses.map(async (course) => {
+      const rows = await getTeacherAssessments(supabase, course.id);
+      return rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        className: course.class_name,
+        subjectName: course.subject_name,
+        status: row.status,
+        dueDate: row.dueDate,
+      }));
+    }),
+  );
+
+  const assessments: HomeAssessment[] = [];
+  const longest = grouped.reduce((max, list) => Math.max(max, list.length), 0);
+  for (let index = 0; index < longest && assessments.length < ASSESSMENT_CAP; index += 1) {
+    for (const list of grouped) {
+      const row = list[index];
+      if (!row) continue;
+      assessments.push(row);
+      if (assessments.length === ASSESSMENT_CAP) break;
+    }
+  }
+  return assessments;
+}
+
+function SectionHeading({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight text-ink">{title}</h2>
+        <p className="text-sm text-ink-secondary">{description}</p>
+      </div>
+      {action}
+    </div>
+  );
+}
+
 export default async function TeacherHomePage() {
-  const home = getTeacherHome();
+  const now = new Date();
   const supabase = await createClient();
   const teacherId = await getSignedInTeacherId(supabase);
-  const courses = await getTeacherCourses(supabase, teacherId);
-  const recentLessons = await getTeacherLessons(supabase, {
-    teacherId,
-    limit: 5,
-  });
+  const [teacherName, courses] = await Promise.all([
+    teacherFullName(supabase),
+    getTeacherCourses(supabase),
+  ]);
+  const [recentLessons, assessments] = await Promise.all([
+    getTeacherLessons(supabase, { teacherId, limit: 5 }),
+    recentAssessments(supabase, courses),
+  ]);
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b-4 border-brand-secondary bg-brand-primary px-8 py-6 text-white">
-        <p className="text-sm">{home.eyebrow}</p>
-        <h1 className="text-2xl font-semibold">{home.greeting}</h1>
-        <p className="mt-1 text-sm">{home.dateLabel}</p>
+      <header className="border-b border-line bg-surface px-4 py-4 lg:px-8">
+        <div className="flex items-center gap-3">
+          <span className="h-8 w-1 shrink-0 rounded-full bg-brand-primary" aria-hidden />
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Teacher Home</p>
+            <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
+              {greetingFor(teacherName, now)}
+            </h1>
+            <p className="mt-1 text-sm text-ink-secondary">{formatToday(now)}</p>
+          </div>
+        </div>
       </header>
 
-      <div className="space-y-8 p-8">
+      <div className="space-y-8 p-4 lg:p-8">
         <section>
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">My Classes</h2>
-              <p className="text-sm text-[#666666]">
-                Classes and subjects assigned to you.
-              </p>
-            </div>
-            <Link
-              href="/teacher/lessons"
-              className="border border-[#999999] bg-white px-4 py-2 text-sm"
-            >
-              View Classes
-            </Link>
-          </div>
+          <SectionHeading
+            title="My Classes"
+            description="Classes and subjects assigned to you."
+            action={
+              <Link href="/teacher/lessons" className={buttonSecondary}>
+                View lessons
+              </Link>
+            }
+          />
 
           {courses.length === 0 ? (
-            <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
-              {NO_CLASSES_ASSIGNED_MESSAGE}
-            </p>
+            <EmptyState icon={Inbox} title={NO_CLASSES_ASSIGNED_MESSAGE} />
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {courses.map((course) => (
@@ -80,6 +188,7 @@ export default async function TeacherHomePage() {
                   name={course.class_name}
                   subject={course.subject_name}
                   studentCountLabel={course.term_name}
+                  href={`/teacher/lessons?class=${course.class_id}`}
                 />
               ))}
             </div>
@@ -87,146 +196,132 @@ export default async function TeacherHomePage() {
         </section>
 
         <section>
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">Recent Lessons</h2>
-              <p className="text-sm text-[#666666]">
-                The latest lessons on your courses.
-              </p>
-            </div>
-            <Link
-              href="/teacher/lessons/new"
-              className="border border-[#999999] bg-white px-4 py-2 text-sm"
-            >
-              Create Lesson
-            </Link>
-          </div>
+          <SectionHeading
+            title="Recent Lessons"
+            description="The latest lessons on your courses."
+            action={
+              <Link href="/teacher/lessons/new" className={buttonSecondary}>
+                Create Lesson
+              </Link>
+            }
+          />
 
           {courses.length === 0 ? (
-            <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
-              {NO_CLASSES_ASSIGNED_MESSAGE}
-            </p>
+            <EmptyState icon={Inbox} title={NO_CLASSES_ASSIGNED_MESSAGE} />
           ) : recentLessons.length === 0 ? (
-            <p className="border border-[#999999] bg-white px-4 py-6 text-sm text-[#666666]">
-              No lessons yet.
-            </p>
+            <EmptyState icon={Inbox} title="No lessons yet." />
           ) : (
-            <div className="overflow-x-auto border border-[#999999] bg-white">
-              <table className="w-full text-sm">
-                <thead className="bg-[#E5E5E5] text-left">
-                  <tr>
-                    <th className="px-4 py-3">Lesson</th>
-                    <th className="px-4 py-3">Class</th>
-                    <th className="px-4 py-3">Subject</th>
-                    <th className="px-4 py-3">Updated</th>
-                    <th className="px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E5E5E5]">
-                  {recentLessons.map((lesson) => (
-                    <tr key={lesson.id}>
-                      <td className="px-4 py-4">
-                        <Link
-                          href={`/teacher/lessons/${lesson.id}`}
-                          className="font-medium underline"
-                        >
-                          {lesson.title}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-4">{lesson.class_name}</td>
-                      <td className="px-4 py-4">{lesson.subject_name}</td>
-                      <td className="px-4 py-4">
-                        {formatUpdated(lesson.updated_at)}
-                      </td>
-                      <td className="px-4 py-4">
-                        <StatusBadge label={statusLabel(lesson.status)} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <ul className="grid gap-3 md:hidden">
+                {recentLessons.map((lesson) => (
+                  <li key={lesson.id} className={`${surfaceCard} p-4`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <Link
+                        href={`/teacher/lessons/${lesson.id}`}
+                        className="font-semibold tracking-tight text-ink underline-offset-2 hover:underline"
+                      >
+                        {lesson.title}
+                      </Link>
+                      <StatusBadge label={statusLabel(lesson.status)} />
+                    </div>
+                    <p className="mt-2 text-sm text-ink-secondary">
+                      {lesson.class_name} · {lesson.subject_name}
+                    </p>
+                    <p className="mt-1 text-xs text-ink-muted">{formatUpdated(lesson.updated_at)}</p>
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden md:block">
+                <DataTable
+                  columns={[
+                    { key: "lesson", header: "Lesson" },
+                    { key: "class", header: "Class" },
+                    { key: "subject", header: "Subject" },
+                    { key: "updated", header: "Updated" },
+                    { key: "status", header: "Status" },
+                  ]}
+                  rows={recentLessons.map((lesson) => ({
+                    id: lesson.id,
+                    cells: [
+                      <Link
+                        key="title"
+                        href={`/teacher/lessons/${lesson.id}`}
+                        className="font-medium text-ink underline-offset-2 hover:underline"
+                      >
+                        {lesson.title}
+                      </Link>,
+                      lesson.class_name,
+                      lesson.subject_name,
+                      formatUpdated(lesson.updated_at),
+                      <StatusBadge key="status" label={statusLabel(lesson.status)} />,
+                    ],
+                  }))}
+                />
+              </div>
+            </>
           )}
         </section>
 
         <section>
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">Pending Grading</h2>
-              <p className="text-sm text-[#666666]">
-                Work and assessments requiring your attention.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="border border-[#999999] bg-white px-4 py-2 text-sm"
-            >
-              Open Grading
-            </button>
-          </div>
+          <SectionHeading
+            title="Assessments"
+            description="Assessments on your courses. Open one to grade it."
+          />
 
-          <div className="overflow-x-auto border border-[#999999] bg-white">
-            <table className="w-full text-sm">
-              <thead className="bg-[#E5E5E5] text-left">
-                <tr>
-                  <th className="px-4 py-3">Assessment</th>
-                  <th className="px-4 py-3">Class</th>
-                  <th className="px-4 py-3">Type</th>
-                  <th className="px-4 py-3">Pending</th>
-                  <th className="px-4 py-3">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E5E5E5]">
-                {home.pendingGrading.map((item) => (
-                  <GradingQueueRow
-                    key={item.id}
-                    title={item.title}
-                    className={item.className}
-                    typeLabel={item.typeLabel}
-                    pendingLabel={item.pendingLabel}
-                    actionLabel={item.actionLabel}
-                    href={item.href}
-                  />
+          {courses.length === 0 ? (
+            <EmptyState icon={Inbox} title={NO_CLASSES_ASSIGNED_MESSAGE} />
+          ) : assessments.length === 0 ? (
+            <EmptyState icon={ClipboardList} title="No assessments yet." />
+          ) : (
+            <>
+              <ul className="grid gap-3 md:hidden">
+                {assessments.map((assessment) => (
+                  <li key={assessment.id} className={`${surfaceCard} p-4`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <Link
+                        href={`/teacher/assessments/${assessment.id}/submissions`}
+                        className="font-semibold tracking-tight text-ink underline-offset-2 hover:underline"
+                      >
+                        {assessment.title}
+                      </Link>
+                      <StatusBadge label={statusLabel(assessment.status)} />
+                    </div>
+                    <p className="mt-2 text-sm text-ink-secondary">
+                      {assessment.className} · {assessment.subjectName}
+                    </p>
+                    <p className="mt-1 text-xs text-ink-muted">{formatDue(assessment.dueDate)}</p>
+                  </li>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold">Upcoming Assignments</h2>
-            <p className="text-sm text-[#666666]">
-              Assignments scheduled for your classes.
-            </p>
-          </div>
-
-          <div className="overflow-x-auto border border-[#999999] bg-white">
-            <table className="w-full text-sm">
-              <thead className="bg-[#E5E5E5] text-left">
-                <tr>
-                  <th className="px-4 py-3">Assignment</th>
-                  <th className="px-4 py-3">Class</th>
-                  <th className="px-4 py-3">Lesson</th>
-                  <th className="px-4 py-3">Due</th>
-                  <th className="px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E5E5E5]">
-                {home.upcomingAssignments.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-4 py-4">{item.title}</td>
-                    <td className="px-4 py-4">{item.className}</td>
-                    <td className="px-4 py-4">{item.lessonTitle}</td>
-                    <td className="px-4 py-4">{item.dueLabel}</td>
-                    <td className="px-4 py-4">
-                      <StatusBadge label={item.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              </ul>
+              <div className="hidden md:block">
+                <DataTable
+                  columns={[
+                    { key: "title", header: "Assessment" },
+                    { key: "class", header: "Class" },
+                    { key: "subject", header: "Subject" },
+                    { key: "due", header: "Due" },
+                    { key: "status", header: "Status" },
+                  ]}
+                  rows={assessments.map((assessment) => ({
+                    id: assessment.id,
+                    cells: [
+                      <Link
+                        key="title"
+                        href={`/teacher/assessments/${assessment.id}/submissions`}
+                        className="font-medium text-ink underline-offset-2 hover:underline"
+                      >
+                        {assessment.title}
+                      </Link>,
+                      assessment.className,
+                      assessment.subjectName,
+                      formatDue(assessment.dueDate),
+                      <StatusBadge key="status" label={statusLabel(assessment.status)} />,
+                    ],
+                  }))}
+                />
+              </div>
+            </>
+          )}
         </section>
       </div>
     </main>

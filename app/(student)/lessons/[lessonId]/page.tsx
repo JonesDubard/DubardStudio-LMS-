@@ -1,19 +1,42 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { LessonDownloadButton } from "@/components/student/LessonDownloadButton";
 import { MaterialRow } from "@/components/student/MaterialRow";
-import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { PrimaryButton } from "@/components/shared/PrimaryButton";
-import { getLesson } from "@/lib/stubs/get-lesson";
+import { getLessonDetails } from "@/lib/queries/student";
+import { createClient } from "@/lib/supabase/server";
+import { buttonSecondary } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Lesson Viewer",
 };
 
-const outlineButtonClass =
-  "min-h-10 border border-[#333333] bg-white px-3 text-xs font-semibold text-[#333333]";
+const outlineButtonClass = `${buttonSecondary} min-h-11 px-3 text-xs`;
 
-const solidButtonClass =
-  "min-h-10 border border-brand-primary bg-brand-primary px-3 text-xs font-semibold text-white";
+function formatPublished(value: string | null): string {
+  if (!value) return "Published";
+  const formatted = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
+  return `Published ${formatted}`;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  const megabytes = bytes / (1024 * 1024);
+  return `${megabytes >= 10 ? Math.round(megabytes) : megabytes.toFixed(1)} MB`;
+}
+
+function kindLabel(kind: string): string {
+  if (kind === "pdf") return "PDF";
+  if (kind === "doc") return "Document";
+  if (kind === "image") return "Image";
+  if (kind === "external_video") return "External video";
+  return "File";
+}
 
 export default async function LessonPage({
   params,
@@ -21,128 +44,80 @@ export default async function LessonPage({
   params: Promise<{ lessonId: string }>;
 }) {
   const { lessonId } = await params;
-  const lesson = getLesson(lessonId);
+  const supabase = await createClient();
+  const lesson = await getLessonDetails(supabase, lessonId);
+  if (!lesson) notFound();
+
+  const paragraphs = (lesson.description ?? "")
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 
   return (
     <>
       <PageHeader
         variant="section"
-        eyebrow={lesson.subject}
-        title={lesson.headerTitle}
+        eyebrow={`${lesson.className} · ${lesson.subjectName}`}
+        title={lesson.title}
+        backHref="/feed"
+        backLabel="Back to Home"
       />
 
-      <main className="space-y-5 px-4 py-5">
-        <section>
-          <p className="text-xs font-semibold uppercase text-[#666666]">
-            {lesson.weekLabel}
-          </p>
+      <main className="mx-auto w-full max-w-2xl space-y-8 px-4 py-6 md:px-8 md:py-8">
+        <p className="text-sm leading-6 text-ink-secondary">
+          {formatPublished(lesson.publishedAt)}
+        </p>
 
-          <h2 className="mt-1 text-xl font-bold leading-7">{lesson.title}</h2>
+        <article>
+          {paragraphs.length === 0 ? (
+            <p className="text-base leading-8 text-ink-secondary">No description yet.</p>
+          ) : (
+            paragraphs.map((paragraph) => (
+              <p key={paragraph} className="mt-5 break-words text-base leading-8 text-ink first:mt-0">
+                {paragraph}
+              </p>
+            ))
+          )}
+        </article>
 
-          <p className="mt-2 text-sm text-[#666666]">{lesson.meta}</p>
-        </section>
-
-        <section className="space-y-4">
-          <div>
-            <p className="mb-2 text-xs font-bold uppercase text-[#666666]">
-              {lesson.contentLabel}
-            </p>
-
-            <div className="border border-[#999999] p-4">
-              {lesson.paragraphs.map((paragraph, index) => (
-                <p
-                  key={paragraph}
-                  className={
-                    index === 0
-                      ? "text-sm leading-6 text-[#333333]"
-                      : "mt-4 text-sm leading-6 text-[#333333]"
-                  }
-                >
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </div>
-
-          <div className="border border-[#E5E5E5] bg-[#E5E5E5] p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-[#333333]">
-                  {lesson.structureTitle}
-                </p>
-                <p className="mt-1 text-xs text-[#666666]">
-                  {lesson.structureDetail}
-                </p>
-              </div>
-
-              <StatusBadge label={lesson.structureStatus} tone="ready" />
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-bold uppercase text-[#666666]">
-              {lesson.imageLabel}
-            </p>
-
-            <div className="border border-[#999999]">
-              <div className="flex h-36 items-center justify-center bg-[#E5E5E5] text-xs text-[#666666]">
-                {lesson.imagePreview}
-              </div>
-
-              <div className="flex items-center justify-between gap-3 p-3">
-                <span className="min-w-0 flex-1 truncate text-xs text-[#666666]">
-                  {lesson.imageCaption}
-                </span>
-
-                <button
-                  className={`shrink-0 ${outlineButtonClass}`}
-                  type="button"
-                >
-                  {lesson.imageAction}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-bold uppercase text-[#666666]">
-              {lesson.materialsLabel}
-            </p>
-
+        <section className="space-y-3">
+          <h2 className="text-base font-semibold tracking-tight text-ink">Materials</h2>
+          {lesson.materials.length === 0 ? (
+            <p className="text-sm leading-6 text-ink-secondary">No materials on this lesson.</p>
+          ) : (
             <div className="space-y-2">
-              {lesson.materials.map((material) => (
-                <MaterialRow
-                  key={material.name}
-                  title={material.name}
-                  meta={material.meta}
-                  action={
-                    <button
-                      className={
-                        material.tone === "solid"
-                          ? solidButtonClass
-                          : outlineButtonClass
-                      }
-                      type="button"
-                    >
-                      {material.actionLabel}
-                    </button>
-                  }
-                />
-              ))}
+              {lesson.materials.map((material) => {
+                const size = material.sizeBytes === null ? null : formatBytes(material.sizeBytes);
+                const meta = [kindLabel(material.kind), size].filter(Boolean).join(" · ");
+                return (
+                  <MaterialRow
+                    key={material.id}
+                    title={material.name}
+                    meta={meta}
+                    action={
+                      material.externalUrl ? (
+                        <a
+                          className={`inline-flex ${outlineButtonClass}`}
+                          href={material.externalUrl}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          Watch
+                        </a>
+                      ) : material.downloadable ? (
+                        <LessonDownloadButton materialId={material.id} />
+                      ) : null
+                    }
+                  />
+                );
+              })}
             </div>
-          </div>
+          )}
         </section>
 
-        <section className="border border-[#999999] bg-[#E5E5E5] p-3">
-          <p className="text-xs font-bold text-[#333333]">
-            {lesson.offlineTitle}
-          </p>
-          <p className="mt-1 text-xs leading-5 text-[#666666]">
-            {lesson.offlineDetail}
-          </p>
-        </section>
-
-        <PrimaryButton href="/feed">{lesson.backLabel}</PrimaryButton>
+        <Link href="/feed" className={`${buttonSecondary} w-full sm:w-auto`}>
+          Back to Learning Feed
+        </Link>
       </main>
     </>
   );

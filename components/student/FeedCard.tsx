@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { BookOpen } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { surfaceCard } from "@/lib/ui/styles";
 
 type FeedCardProps = {
   eyebrow: string;
@@ -24,22 +26,22 @@ export function FeedCard({
 }: FeedCardProps) {
   return (
     <article
-      className={`border border-[#999999] bg-white p-4 ${className}`.trim()}
+      className={`${surfaceCard} flex h-full flex-col p-4 hover:border-line-strong hover:shadow-lift ${className}`.trim()}
     >
-      <div className="mb-2 flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase text-[#666666]">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
             {eyebrow}
           </p>
-          <h3 className="mt-1 text-sm font-bold">{title}</h3>
-          <p className="mt-1 text-xs text-[#666666]">{meta}</p>
+          <h3 className="mt-1 break-words text-base font-semibold tracking-tight text-ink">
+            {title}
+          </h3>
+          <p className="mt-1 text-sm text-ink-secondary">{meta}</p>
         </div>
 
         {showMark ? (
-          <div className="h-8 w-8 shrink-0 border border-[#999999] bg-[#E5E5E5]">
-            <div className="flex h-full items-center justify-center text-xs text-[#666666]">
-              /
-            </div>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-ink-muted">
+            <BookOpen size={16} strokeWidth={1.75} aria-hidden />
           </div>
         ) : null}
 
@@ -47,10 +49,10 @@ export function FeedCard({
       </div>
 
       {description ? (
-        <p className="mb-3 text-xs leading-5 text-[#666666]">{description}</p>
+        <p className="mb-3 line-clamp-3 text-sm leading-6 text-ink-secondary">{description}</p>
       ) : null}
 
-      {children}
+      <div className="mt-auto">{children}</div>
     </article>
   );
 }

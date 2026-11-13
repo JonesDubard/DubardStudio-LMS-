@@ -1,16 +1,23 @@
+import Link from "next/link";
+import { surfaceCard } from "@/lib/ui/styles";
+
 type ClassCardProps = {
   name: string;
   subject: string;
   studentCountLabel: string;
+  href: string;
 };
 
-export function ClassCard({ name, subject, studentCountLabel }: ClassCardProps) {
+export function ClassCard({ name, subject, studentCountLabel, href }: ClassCardProps) {
   return (
-    <div className="border border-[#999999] bg-white p-5">
-      <p className="text-sm text-[#666666]">Class</p>
-      <h3 className="mt-1 font-semibold">{name}</h3>
-      <p className="mt-3 text-sm">{subject}</p>
-      <p className="text-sm text-[#666666]">{studentCountLabel}</p>
-    </div>
+    <Link
+      href={href}
+      className={`${surfaceCard} block p-5 hover:border-brand-border hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring`}
+    >
+      <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Class</p>
+      <h3 className="mt-1 text-base font-semibold tracking-tight text-ink">{name}</h3>
+      <p className="mt-3 text-sm text-ink">{subject}</p>
+      <p className="text-sm text-ink-secondary">{studentCountLabel}</p>
+    </Link>
   );
 }
