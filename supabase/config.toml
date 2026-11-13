@@ -207,9 +207,9 @@ anonymous_users = 30
 token_refresh = 600
 # Number of sign up and sign-in requests that can be made in a 5 minute interval per IP address (excludes anonymous users).
 # Raised from 30: a class signing in at once shares one IP.
-sign_in_sign_ups = 300
+sign_in_sign_ups = 100
 # Number of OTP / Magic link verifications that can be made in a 5 minute interval per IP address.
-token_verifications = 30
+token_verifications = 100
 # Number of Web3 logins that can be made in a 5 minute interval per IP address.
 web3 = 30
 
