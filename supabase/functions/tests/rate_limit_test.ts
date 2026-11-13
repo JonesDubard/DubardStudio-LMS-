@@ -111,11 +111,9 @@ Deno.test("inside adminHandler: 429 with Retry-After, and the work never runs", 
 });
 
 Deno.test("without a db it uses the service-role client from client.ts", async () => {
-  const old = Deno.env.get("SUPABASE_URL");
-  Deno.env.delete("SUPABASE_URL");
-  try {
-    await assertRejects(() => enforceRateLimit("upload", USER), Error, "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set");
-  } finally {
-    if (old !== undefined) Deno.env.set("SUPABASE_URL", old);
-  }
+  // No db passed, so enforceRateLimit calls serviceClient(). With no SUPABASE_URL
+  // (or, in CI, no permission to read it) that refuses before any request is sent.
+  // The test doesn't set or delete env vars, so it works with CI's --allow-env=ADMIN_APP_ORIGIN.
+  const err = await assertRejects(() => enforceRateLimit("upload", USER));
+  assert(String(err).includes("SUPABASE_URL"), String(err));
 });
