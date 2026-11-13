@@ -81,11 +81,17 @@ test("academic_years RLS returns only the signed-in tenant", async ({ page }) =>
     const { error: profileError } = await admin.from("profiles").insert({
       id: userId,
       tenant_id: TENANT_A,
-      role: "student",
       full_name: "RLS Academic Student",
       email,
     });
     if (profileError) throw profileError;
+
+    const { error: membershipError } = await admin.from("memberships").insert({
+      tenant_id: TENANT_A,
+      profile_id: userId,
+      role: "student",
+    });
+    if (membershipError) throw membershipError;
 
     const { data: years, error: yearError } = await admin
       .from("academic_years")
@@ -159,7 +165,7 @@ test("academic_years RLS returns only the signed-in tenant", async ({ page }) =>
     const debug = JSON.stringify(
       {
         jwt: {
-          app_role: claims.app_role ?? null,
+          app_roles: claims.app_roles ?? null,
           tenant_id: claims.tenant_id ?? null,
           role: claims.role ?? null,
         },

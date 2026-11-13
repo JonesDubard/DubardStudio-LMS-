@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LessonEditorForm } from "@/components/teacher/LessonEditorForm";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { buttonPrimary, buttonSecondary } from "@/lib/ui/styles";
 import {
   getLessonById,
-  getSignedInTeacherId,
+  getLessonMaterials,
   getTeacherCourses,
 } from "@/lib/queries/lessons";
-import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/assignment-stub";
+import { NO_CLASSES_ASSIGNED_MESSAGE } from "@/lib/teacher/messages";
 import { createClient } from "@/lib/supabase/server";
 import type { LessonStatus } from "@/lib/types/lessons";
 
@@ -28,10 +29,10 @@ function statusLabel(status: LessonStatus): string {
 export default async function LessonPage({ params }: LessonPageProps) {
   const { lessonId } = await params;
   const supabase = await createClient();
-  const teacherId = await getSignedInTeacherId(supabase);
-  const [courses, lesson] = await Promise.all([
-    getTeacherCourses(supabase, teacherId),
+  const [courses, lesson, materials] = await Promise.all([
+    getTeacherCourses(supabase),
     getLessonById(supabase, lessonId),
+    getLessonMaterials(supabase, lessonId),
   ]);
   const course = lesson
     ? courses.find((row) => row.id === lesson.course_id)
@@ -39,51 +40,62 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b border-[#999999] bg-white px-8 py-6">
-        <p className="text-sm text-[#666666]">Lessons / Lesson</p>
-        <div className="mt-1 flex items-center justify-between gap-6">
-          <div>
-            <h1 className="text-2xl font-semibold">
+      <header className="border-b border-line bg-surface px-4 py-5 lg:px-8 lg:py-6">
+        <p className="text-xs font-medium text-ink-muted">Lessons / Lesson</p>
+        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-semibold tracking-tight md:text-2xl">
               {course && lesson ? lesson.title : "Lesson"}
             </h1>
-            <p className="text-sm text-[#666666]">
+            <p className="text-sm text-ink-secondary">
               {course
                 ? `${course.class_name} · ${course.subject_name}`
                 : "This lesson is not on a course assigned to you."}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/teacher/lessons"
-              className="border border-[#999999] bg-white px-4 py-2 text-sm"
-            >
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/teacher/lessons" className={buttonSecondary}>
               All Lessons
             </Link>
             {course && lesson ? (
-              <StatusBadge
-                label={statusLabel(lesson.status)}
-                className="border border-[#999999] px-3 py-2 text-sm"
-              />
+              <Link
+                href={`/teacher/lessons/${lesson.id}/reuse`}
+                className={buttonSecondary}
+              >
+                Duplicate
+              </Link>
+            ) : null}
+            {course && lesson ? (
+              <Link
+                href={`/teacher/lessons/${lesson.id}/assessments/new`}
+                className={buttonPrimary}
+              >
+                Create Assessment
+              </Link>
+            ) : null}
+            {course && lesson ? (
+              <StatusBadge label={statusLabel(lesson.status)} />
             ) : null}
           </div>
         </div>
       </header>
 
-      <div className="max-w-5xl p-8">
+      <div className="max-w-5xl p-4 lg:p-8">
         {courses.length === 0 ? (
-          <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
+          <p className="border border-line bg-surface px-4 py-6 text-sm">
             {NO_CLASSES_ASSIGNED_MESSAGE}
           </p>
         ) : !lesson || !course ? (
-          <p className="border border-[#999999] bg-white px-4 py-6 text-sm">
+          <p className="border border-line bg-surface px-4 py-6 text-sm">
             This lesson is not available.
           </p>
         ) : (
           <LessonEditorForm
-            key={lesson.updated_at}
+            key={`${lesson.updated_at}-${materials.map((item) => item.id).join()}`}
             mode="edit"
             lesson={lesson}
             course={course}
+            materials={materials}
           />
         )}
       </div>

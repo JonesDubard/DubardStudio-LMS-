@@ -1,6 +1,6 @@
-# LearnGrid
+# TerraLearn
 
-LearnGrid is a white-label learning platform for Liberian schools. Each school gets its own subdomain and branding. Teachers publish lessons and assignments, students open them on a phone, and parents check upcoming work and grades. The app is meant to sit beside a school's existing administrative system, not replace it.
+TerraLearn is a white-label learning platform for Liberian schools. Each school gets its own subdomain and branding. Teachers publish lessons and assignments, students open them on a phone, and parents check upcoming work and grades. The app is meant to sit beside a school's existing administrative system, not replace it.
 
 This repository is the foundation scaffold only: the Next.js app, tenant hostname resolution, Supabase client factories, and an empty folder map. Login, database tables, and persona screens are not built yet.
 
@@ -56,7 +56,7 @@ For the scripts, create `.env.local` with:
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_SERVICE_ROLE_KEY=<"Secret" key printed by supabase start>
 ```
-Seed test data: `npm run seed:dev`, then `npx tsx scripts/spike-second-tenant.ts`.
+Seed test data: `npx supabase db reset` applies `supabase/seed.sql` (pilot1 and pilot2).
 
 Rules:
 - New migrations go in `supabase/migrations/` named `NNNN_name.sql` (digits, then `_`).

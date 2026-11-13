@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { AuthError, AuthField, AuthSubmit } from "@/components/auth/AuthField";
+import { homePathFromAccessToken } from "@/lib/auth/home-path";
+import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export function LoginForm() {
     setPending(true);
 
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -30,13 +31,13 @@ export function LoginForm() {
       return;
     }
 
-    router.push("/feed");
+    router.push(homePathFromAccessToken(data.session?.access_token));
     router.refresh();
   }
 
   return (
     <form className="space-y-4" method="post" onSubmit={onSubmit}>
-      <h1 className="text-xl font-bold">Sign in</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-ink">Sign in</h1>
       {error ? <AuthError>{error}</AuthError> : null}
       <AuthField
         id="email"
@@ -55,7 +56,7 @@ export function LoginForm() {
         onChange={setPassword}
       />
       <AuthSubmit pending={pending} label="Sign in" pendingLabel="Signing in..." />
-      <p className="text-sm">
+      <p className="text-sm text-ink-secondary">
         <Link href="/reset" className="underline">
           Forgot password
         </Link>

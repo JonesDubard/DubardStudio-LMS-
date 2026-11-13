@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { notFound } from "next/navigation";
 import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
+import { BackLink } from "@/components/shared/BackLink";
 import { ElevatedAccessBanner } from "@/components/shared/ElevatedAccessBanner";
 import { TabBar } from "@/components/shared/TabBar";
-import { getTenant } from "@/lib/stubs/get-tenant";
+import { assertPlatformAdmin, getSchool, subscriptionLabel } from "@/lib/platform/schools";
+import { surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Platform Admin — Tenant Detail",
@@ -13,111 +15,87 @@ type TenantDetailPageProps = {
   params: Promise<{ tenantId: string }>;
 };
 
-export default async function TenantDetailPage({
-  params,
-}: TenantDetailPageProps) {
+function formatCreated(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+export default async function TenantDetailPage({ params }: TenantDetailPageProps) {
   const { tenantId } = await params;
-  const tenant = getTenant(tenantId);
+  await assertPlatformAdmin();
+  const school = await getSchool(tenantId);
+  if (!school) notFound();
+  const status = subscriptionLabel(school.subscription_status);
+  const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN?.trim() || "localhost";
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1440px] p-8">
-        <ElevatedAccessBanner tenantName={tenant.name} />
+      <div className="mx-auto max-w-[1440px] p-4 lg:p-8">
+        <BackLink href="/platform/tenants">Back to Tenants</BackLink>
+        <ElevatedAccessBanner tenantName={school.name} />
 
-        <header className="mb-6 flex items-end justify-between gap-6">
-          <div>
-            <div className="text-sm text-[#666666]">
-              Tenants / {tenant.name}
-            </div>
-            <div className="mt-2 flex items-center gap-3">
-              <h1 className="text-2xl font-semibold">{tenant.name}</h1>
-              <TenantStatusPill status={tenant.status} />
-            </div>
-            <p className="mt-2 text-sm text-[#666666]">
-              {tenant.subdomainHost}
-            </p>
+        <header className="mb-6">
+          <p className="text-xs font-medium text-ink-muted">Tenants / {school.name}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <h1 className="break-words text-xl font-semibold tracking-tight md:text-2xl">
+              {school.name}
+            </h1>
+            <TenantStatusPill status={status} />
           </div>
-
-          <Link
-            href="/platform/audit"
-            className="border border-[#999999] px-4 py-2.5 text-sm"
-          >
-            {tenant.auditButtonLabel}
-          </Link>
+          <p className="mt-2 text-sm text-ink-secondary">
+            {school.subdomain}.{root}
+          </p>
         </header>
 
-        <TabBar tabs={tenant.tabs} />
+        <TabBar
+          tabs={[
+            { label: "Profile", href: `/platform/tenants/${school.id}`, active: true },
+            {
+              label: "Subscription",
+              href: `/platform/tenants/${school.id}/subscription`,
+              active: false,
+            },
+          ]}
+        />
 
-        <section className="border border-[#E5E5E5]">
-          <div className="flex items-center justify-between border-b border-[#E5E5E5] px-6 py-5">
-            <div>
-              <h2 className="font-semibold">School Information</h2>
-              <p className="mt-1 text-sm text-[#666666]">
-                Core information for this tenant.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="border border-[#999999] px-4 py-2.5 text-sm"
-            >
-              {tenant.editButtonLabel}
-            </button>
+        <section className={surfaceCard}>
+          <div className="border-b border-line-subtle px-4 py-5 sm:px-6">
+            <h2 className="font-semibold">School Information</h2>
+            <p className="mt-1 text-sm text-ink-secondary">Core information for this tenant.</p>
           </div>
-
           <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-wide text-[#999999]">
-                School Name
-              </div>
-              <div className="mt-2 text-sm font-medium">{tenant.name}</div>
+              <div className="text-xs uppercase tracking-wide text-ink-muted">School Name</div>
+              <div className="mt-2 text-sm font-medium">{school.name}</div>
             </div>
-
             <div>
-              <div className="text-xs uppercase tracking-wide text-[#999999]">
-                Contact Person
+              <div className="text-xs uppercase tracking-wide text-ink-muted">Subdomain</div>
+              <div className="mt-2 text-sm">
+                {school.subdomain}.{root}
               </div>
-              <div className="mt-2 text-sm">{tenant.contactPerson}</div>
             </div>
-
             <div>
-              <div className="text-xs uppercase tracking-wide text-[#999999]">
-                Contact Email
-              </div>
-              <div className="mt-2 text-sm">{tenant.contactEmail}</div>
+              <div className="text-xs uppercase tracking-wide text-ink-muted">Created</div>
+              <div className="mt-2 text-sm">{formatCreated(school.created_at)}</div>
             </div>
-
             <div>
-              <div className="text-xs uppercase tracking-wide text-[#999999]">
-                Subdomain
+              <div className="text-xs uppercase tracking-wide text-ink-muted">Onboarding</div>
+              <div className="mt-2 text-sm capitalize">
+                {school.onboarding_status.replaceAll("_", " ")}
               </div>
-              <div className="mt-2 text-sm">{tenant.subdomainHost}</div>
             </div>
-
             <div>
-              <div className="text-xs uppercase tracking-wide text-[#999999]">
-                Created
-              </div>
-              <div className="mt-2 text-sm">{tenant.createdAt}</div>
-            </div>
-
-            <div>
-              <div className="text-xs uppercase tracking-wide text-[#999999]">
-                Subscription
-              </div>
+              <div className="text-xs uppercase tracking-wide text-ink-muted">Subscription</div>
               <div className="mt-2">
-                <TenantStatusPill status={tenant.status} />
+                <TenantStatusPill status={status} />
               </div>
             </div>
           </div>
-        </section>
-
-        <section className="mt-6 border border-[#E5E5E5] p-5">
-          <div className="text-sm font-medium">
-            {tenant.elevatedReminderTitle}
-          </div>
-          <p className="mt-2 text-sm text-[#666666]">
-            {tenant.elevatedReminderBody}
-          </p>
         </section>
       </div>
     </main>

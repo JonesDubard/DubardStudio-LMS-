@@ -1,30 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { createTenant } from "@/app/(platform)/platform/actions";
 import { FormField } from "@/components/shared/FormField";
+import { alertError, buttonPrimary, buttonSecondary, fieldControl, fieldLabel } from "@/lib/ui/styles";
 
 export default function CreateTenantPage() {
-  const [subdomain, setSubdomain] = useState("pilotschool");
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [subdomain, setSubdomain] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setPending(true);
+    const result = await createTenant({ name, subdomain, contactName, contactEmail });
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    router.push("/platform/tenants");
+    router.refresh();
+  }
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1100px] p-8">
+      <div className="mx-auto max-w-[1100px] p-4 lg:p-8">
         <header className="mb-8">
-          <div className="text-sm text-[#666666]">Tenants</div>
-          <h1 className="mt-1 text-2xl font-semibold">Create Tenant</h1>
-          <p className="mt-2 text-sm text-[#666666]">
+          <p className="text-xs font-medium text-ink-muted">Tenants</p>
+          <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
+            Create Tenant
+          </h1>
+          <p className="mt-2 text-sm text-ink-secondary">
             Provision a new school on the LMS platform.
           </p>
         </header>
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-          }}
-        >
-          <section className="border border-[#E5E5E5]">
-            <div className="border-b border-[#E5E5E5] px-6 py-5">
+        <form onSubmit={(event) => void onSubmit(event)}>
+          <section className="rounded-lg border border-line bg-surface shadow-card">
+            <div className="border-b border-line-subtle px-6 py-5">
               <h2 className="font-semibold">Tenant Information</h2>
             </div>
 
@@ -33,8 +54,10 @@ export default function CreateTenantPage() {
                 <input
                   id="school-name"
                   type="text"
-                  defaultValue="Pilot School #1"
-                  className="w-full border border-[#999999] px-3 py-3 text-sm"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  className={fieldControl}
+                  required
                 />
               </FormField>
 
@@ -42,8 +65,10 @@ export default function CreateTenantPage() {
                 <input
                   id="contact-person"
                   type="text"
-                  defaultValue="Mrs. Abena Kollie"
-                  className="w-full border border-[#999999] px-3 py-3 text-sm"
+                  value={contactName}
+                  onChange={(event) => setContactName(event.target.value)}
+                  className={fieldControl}
+                  required
                 />
               </FormField>
 
@@ -51,15 +76,17 @@ export default function CreateTenantPage() {
                 <input
                   id="contact-email"
                   type="email"
-                  defaultValue="admin@pilotschool.edu.lr"
-                  className="w-full border border-[#999999] px-3 py-3 text-sm"
+                  value={contactEmail}
+                  onChange={(event) => setContactEmail(event.target.value)}
+                  className={fieldControl}
+                  required
                 />
               </FormField>
 
               <div>
                 <label
                   htmlFor="subdomain"
-                  className="mb-2 block text-sm font-medium"
+                  className={fieldLabel}
                 >
                   Subdomain
                 </label>
@@ -68,12 +95,12 @@ export default function CreateTenantPage() {
                   type="text"
                   value={subdomain}
                   onChange={(event) => setSubdomain(event.target.value)}
-                  className="w-full border border-[#999999] px-3 py-3 text-sm"
+                  className={fieldControl}
                 />
-                <div className="mt-2 text-xs text-[#666666]">
+                <div className="mt-2 text-xs text-ink-secondary">
                   Preview:{" "}
-                  <span className="font-medium text-[#333333]">
-                    {subdomain || "pilotschool"}.ourlms.com
+                  <span className="font-medium text-ink">
+                    {subdomain || "school"}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN?.trim() || "localhost"}
                   </span>
                 </div>
               </div>
@@ -82,75 +109,44 @@ export default function CreateTenantPage() {
                 <select
                   id="subscription-status"
                   defaultValue="Trial"
-                  className="w-full border border-[#999999] bg-white px-3 py-3 text-sm"
+                  disabled
+                  className={fieldControl}
                 >
                   <option>Trial</option>
-                  <option>Active</option>
-                  <option>Suspended</option>
-                  <option>Cancelled</option>
                 </select>
-              </FormField>
-
-              <FormField id="grade-range" label="Grade Range">
-                <select
-                  id="grade-range"
-                  defaultValue="Both"
-                  className="w-full border border-[#999999] bg-white px-3 py-3 text-sm"
-                >
-                  <option>Primary</option>
-                  <option>Secondary</option>
-                  <option>Both</option>
-                </select>
+                <p className="mt-2 text-xs text-ink-secondary">
+                  New schools start on a trial. Change the status after the school is created.
+                </p>
               </FormField>
             </div>
           </section>
 
-          <section className="mt-6 border border-[#E5E5E5] bg-[#E5E5E5] p-6">
+          <section className="mt-6 rounded-lg border border-line bg-surface-muted p-6">
             <h2 className="font-semibold">What happens on creation?</h2>
-            <p className="mt-2 text-sm text-[#666666]">
+            <p className="mt-2 text-sm text-ink-secondary">
               On creation, the system will automatically:
             </p>
 
             <ul className="mt-4 space-y-3 text-sm">
-              <li className="flex gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">
-                  /
-                </span>
-                Create the tenant record
-              </li>
-              <li className="flex gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">
-                  /
-                </span>
-                Provision default branding
-              </li>
-              <li className="flex gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">
-                  /
-                </span>
-                Generate a School Admin invite email
-              </li>
-              <li className="flex gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-[#999999] bg-white text-xs">
-                  /
-                </span>
-                Set up default academic term structure
-              </li>
+              <li>Create the tenant record</li>
+              <li>Set the default colours, a trial subscription, and provisioning status</li>
             </ul>
+            {error ? (
+              <p role="alert" className={`${alertError} mt-4`}>
+                {error}
+              </p>
+            ) : null}
           </section>
 
           <div className="mt-6 flex items-center justify-end gap-3">
             <Link
               href="/platform/tenants"
-              className="border border-[#999999] px-5 py-3 text-sm"
+              className={buttonSecondary}
             >
               Cancel
             </Link>
-            <button
-              type="submit"
-              className="bg-[#333333] px-5 py-3 text-sm font-medium text-white"
-            >
-              Create Tenant
+            <button type="submit" disabled={pending} className={buttonPrimary}>
+              {pending ? "Creating..." : "Create Tenant"}
             </button>
           </div>
         </form>

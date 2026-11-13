@@ -1,71 +1,116 @@
 import type { Metadata } from "next";
-import { SetupProgressCard } from "@/components/admin/SetupProgressCard";
-import { getAdminDashboard } from "@/lib/stubs/get-admin-dashboard";
+import Link from "next/link";
+import { Files, GraduationCap, Palette, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { readShellBrand } from "@/lib/branding/shell";
+import {
+  getAcademicYears,
+  getClasses,
+  getSubjects,
+  getTerms,
+} from "@/lib/queries/academic";
+import { createClient } from "@/lib/supabase/server";
+import { surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "School Admin Dashboard",
 };
 
-export default function AdminDashboardPage() {
-  const data = getAdminDashboard();
+function countLabel(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+const areas: {
+  href: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+}[] = [
+  {
+    href: "/admin/branding",
+    title: "Branding",
+    description: "School name and colours.",
+    icon: Palette,
+  },
+  {
+    href: "/admin/people/teachers",
+    title: "People",
+    description: "Teachers, students, admins, and parents.",
+    icon: Users,
+  },
+  {
+    href: "/admin/academic",
+    title: "Academic",
+    description: "Years, terms, classes, and subjects.",
+    icon: GraduationCap,
+  },
+  {
+    href: "/admin/assignments",
+    title: "Content",
+    description: "Assignments across the school.",
+    icon: Files,
+  },
+];
+
+export default async function AdminDashboardPage() {
+  const brand = await readShellBrand();
+  const supabase = await createClient();
+  const [years, classes, subjects] = await Promise.all([
+    getAcademicYears(supabase),
+    getClasses(supabase),
+    getSubjects(supabase),
+  ]);
+  const currentYear = years.find((year) => year.is_current) ?? null;
+  const terms = currentYear ? await getTerms(supabase, currentYear.id) : [];
+  const schoolName = brand.schoolName ?? "School";
 
   return (
     <main className="min-w-0 flex-1">
-      <header className="border-b-4 border-brand-secondary bg-brand-primary px-8 py-6 text-white">
-        <p className="text-sm">{data.eyebrow}</p>
-        <h1 className="mt-1 text-2xl font-semibold">{data.title}</h1>
-        <p className="mt-1 text-sm">{data.subtitle}</p>
+      <header className="border-b border-line bg-surface px-4 py-4 lg:px-8">
+        <div className="flex items-center gap-3">
+          <span className="h-8 w-1 shrink-0 rounded-full bg-brand-primary" aria-hidden />
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+              School Administration
+            </p>
+            <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
+              {schoolName}
+            </h1>
+            <p className="mt-1 text-sm text-ink-secondary">
+              {countLabel(years.length, "academic year", "academic years")} ·{" "}
+              {countLabel(terms.length, "term", "terms")} in the current year ·{" "}
+              {countLabel(classes.length, "class", "classes")} ·{" "}
+              {countLabel(subjects.length, "subject", "subjects")}
+            </p>
+          </div>
+        </div>
       </header>
 
-      <div className="space-y-8 p-8">
-        <SetupProgressCard
-          title={data.setupTitle}
-          description={data.setupDescription}
-          progressLabel={data.setupProgressLabel}
-          items={data.setupItems}
-        />
-
+      <div className="space-y-8 p-4 lg:p-8">
         <section>
-          <h2 className="text-lg font-semibold">{data.overviewTitle}</h2>
-
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {data.summaryTiles.map((tile) => (
-              <div
-                key={tile.id}
-                className="border border-[#999999] bg-white p-5"
-              >
-                <p className="text-sm text-[#666666]">{tile.label}</p>
-                <p className="mt-2 text-3xl font-semibold">{tile.value}</p>
-                <p className="mt-2 text-sm text-[#666666]">{tile.detail}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="border border-[#999999] bg-white p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">{data.usageTitle}</h2>
-              <p className="mt-1 text-sm text-[#666666]">
-                {data.usageDescription}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              className="border border-[#999999] px-4 py-2 text-sm"
-            >
-              {data.usageActionLabel}
-            </button>
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-            {data.usageMetrics.map((metric) => (
-              <div key={metric.id} className="border border-[#999999] p-4">
-                <p className="text-sm text-[#666666]">{metric.label}</p>
-                <p className="mt-2 text-xl font-semibold">{metric.value}</p>
-              </div>
-            ))}
+          <h2 className="text-lg font-semibold tracking-tight text-ink">School setup</h2>
+          <p className="mt-1 text-sm text-ink-secondary">
+            Open the area you need to manage.
+          </p>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {areas.map((area) => {
+              const Icon = area.icon;
+              return (
+                <Link
+                  key={area.href}
+                  href={area.href}
+                  className={`${surfaceCard} block p-5 hover:border-brand-border hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring`}
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-subtle text-brand-primary">
+                    <Icon size={18} strokeWidth={1.75} aria-hidden />
+                  </span>
+                  <h3 className="mt-4 text-base font-semibold tracking-tight text-ink">
+                    {area.title}
+                  </h3>
+                  <p className="mt-1 text-sm text-ink-secondary">{area.description}</p>
+                </Link>
+              );
+            })}
           </div>
         </section>
       </div>

@@ -2,74 +2,138 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { DataTable } from "@/components/shared/DataTable";
-import { FilterRow } from "@/components/shared/FilterRow";
-import { getTenants } from "@/lib/stubs/get-tenants";
+import { assertPlatformAdmin, listSchools, subscriptionLabel } from "@/lib/platform/schools";
+import { buttonPrimary, buttonSecondary, fieldControl, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Platform Admin — Tenants",
 };
 
-export default function PlatformTenantsPage() {
-  const data = getTenants();
+function formatCreated(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "trial", label: "Trial" },
+  { value: "active", label: "Active" },
+  { value: "suspended", label: "Suspended" },
+  { value: "cancelled", label: "Cancelled" },
+] as const;
+
+export default async function PlatformTenantsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; search?: string }>;
+}) {
+  await assertPlatformAdmin();
+  const { status, search } = await searchParams;
+  const selected = STATUS_OPTIONS.some((option) => option.value === status) ? status : "all";
+  const query = (search ?? "").trim().toLowerCase();
+  const schools = (await listSchools()).filter((school) => {
+    const matchesStatus = !selected || selected === "all" || school.subscription_status === selected;
+    const matchesQuery =
+      query.length === 0 ||
+      school.name.toLowerCase().includes(query) ||
+      school.subdomain.toLowerCase().includes(query);
+    return matchesStatus && matchesQuery;
+  });
+  const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN?.trim() || "localhost";
 
   return (
     <main className="min-w-0 flex-1">
-      <div className="mx-auto max-w-[1440px] p-8">
-        <header className="mb-8 flex items-end justify-between gap-6">
-          <div>
-            <div className="text-sm text-[#666666]">{data.eyebrow}</div>
-            <h1 className="mt-1 text-2xl font-semibold">{data.title}</h1>
-            <p className="mt-2 text-sm text-[#666666]">{data.subtitle}</p>
+      <div className="mx-auto max-w-[1440px] p-4 lg:p-8">
+        <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-ink-muted">Platform Admin</p>
+            <h1 className="mt-1 break-words text-xl font-semibold tracking-tight md:text-2xl">
+              Tenants
+            </h1>
+            <p className="mt-2 text-sm text-ink-secondary">
+              Manage tenant records and access status.
+            </p>
           </div>
 
-          <Link
-            href="/platform/tenants/new"
-            className="shrink-0 bg-[#333333] px-5 py-3 text-sm font-medium text-white"
-          >
-            {data.createLabel}
+          <Link href="/platform/tenants/new" className={buttonPrimary}>
+            + Create Tenant
           </Link>
         </header>
 
-        <FilterRow
-          className="mb-5 border border-[#E5E5E5] p-4"
-          gridClassName="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr_auto_auto]"
-          labelClassName="mb-2 block text-xs font-medium uppercase tracking-wide text-[#666666]"
-          controlClassName="w-full border border-[#999999] bg-white px-3 py-2.5 text-sm"
-          fields={[
-            {
-              id: "status",
-              label: "Status",
-              options: data.statusFilterOptions.map((option) => ({
-                value: option,
-                label: option,
-              })),
-            },
-          ]}
-          search={{
-            id: "search",
-            label: "Search by name or subdomain",
-            placeholder: data.searchPlaceholder,
-          }}
+        <form
+          className={`mb-5 grid grid-cols-1 items-end gap-4 p-4 lg:grid-cols-[220px_minmax(0,1fr)_auto] ${surfaceCard}`}
+          action="/platform/tenants"
         >
-          <button
-            type="button"
-            className="self-end border border-[#999999] px-4 py-2.5 text-sm"
-          >
-            {data.suspendLabel}
+          <div>
+            <label htmlFor="status" className={fieldLabel}>
+              Status
+            </label>
+            <select id="status" name="status" defaultValue={selected} className={fieldControl}>
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="search" className={fieldLabel}>
+              Search by name or subdomain
+            </label>
+            <input
+              id="search"
+              name="search"
+              type="search"
+              defaultValue={search ?? ""}
+              placeholder="Search tenants..."
+              className={fieldControl}
+            />
+          </div>
+          <button type="submit" className={buttonSecondary}>
+            Apply
           </button>
-          <button
-            type="button"
-            className="self-end border border-[#999999] px-4 py-2.5 text-sm"
-          >
-            {data.exportLabel}
-          </button>
-        </FilterRow>
+        </form>
 
+        <ul className="grid gap-3 md:hidden">
+          {schools.length === 0 ? (
+            <li className={`${surfaceCard} px-4 py-6 text-sm text-ink-secondary`}>No schools yet.</li>
+          ) : (
+            schools.map((tenant) => (
+              <li key={tenant.id} className={`${surfaceCard} space-y-3 p-4`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold tracking-tight text-ink">{tenant.name}</p>
+                    <p className="mt-1 break-all text-sm text-ink-secondary">
+                      {tenant.subdomain}.{root}
+                    </p>
+                  </div>
+                  <TenantStatusPill status={subscriptionLabel(tenant.subscription_status)} />
+                </div>
+                <p className="text-sm capitalize text-ink-secondary">
+                  {tenant.onboarding_status.replaceAll("_", " ")} · {formatCreated(tenant.created_at)}
+                </p>
+                <Link
+                  href={`/platform/tenants/${tenant.id}/subscription`}
+                  className={`${buttonSecondary} w-full`}
+                >
+                  Subscription
+                </Link>
+              </li>
+            ))
+          )}
+        </ul>
+
+        <div className="hidden md:block">
         <DataTable
-          wrapperClassName="overflow-x-auto border border-[#E5E5E5]"
+          wrapperClassName="overflow-x-auto rounded-lg border border-line bg-surface shadow-card"
           tableClassName="w-full min-w-[1050px] border-collapse text-sm"
           headerCellClassName="px-4 py-3 font-medium"
-          bodyCellClassName="px-4 py-4"
+          bodyCellClassName="px-4 py-3"
           columns={[
             { key: "name", header: "Tenant Name" },
             { key: "subdomain", header: "Subdomain" },
@@ -78,30 +142,31 @@ export default function PlatformTenantsPage() {
             { key: "created", header: "Created" },
             { key: "actions", header: "Actions" },
           ]}
-          rows={data.tenants.map((tenant) => ({
+          rows={schools.map((tenant) => ({
             id: tenant.id,
             cells: [
               <span key="name" className="font-medium">
                 {tenant.name}
               </span>,
-              <span key="subdomain" className="text-[#666666]">
-                {tenant.subdomainHost}
+              <span key="subdomain" className="text-ink-secondary">
+                {tenant.subdomain}.{root}
               </span>,
-              <TenantStatusPill key="status" status={tenant.status} />,
-              tenant.onboardingLabel,
-              <span key="created" className="text-[#666666]">
-                {tenant.createdDate}
+              <TenantStatusPill key="status" status={subscriptionLabel(tenant.subscription_status)} />,
+              tenant.onboarding_status.replaceAll("_", " "),
+              <span key="created" className="text-ink-secondary">
+                {formatCreated(tenant.created_at)}
               </span>,
               <Link
                 key="action"
-                href={`/platform/tenants/${tenant.id}`}
-                className="inline-block border border-[#999999] px-3 py-2 text-xs"
+                href={`/platform/tenants/${tenant.id}/subscription`}
+                className={buttonSecondary}
               >
-                View Tenant
+                Subscription
               </Link>,
             ],
           }))}
         />
+        </div>
       </div>
     </main>
   );

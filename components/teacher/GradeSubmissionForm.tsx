@@ -1,0 +1,122 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { gradeSubmission, openSubmissionFile } from "@/lib/queries/assessments";
+import type { SubmissionGradeView } from "@/lib/types/assessments";
+import { alertError, buttonPrimary, buttonSecondary, fieldControl, fieldControlBase, fieldLabel, surfaceCard } from "@/lib/ui/styles";
+
+export function GradeSubmissionForm({
+  submission,
+  maxScore,
+}: {
+  submission: SubmissionGradeView;
+  maxScore: number | null;
+}) {
+  const router = useRouter();
+  const [score, setScore] = useState(
+    submission.score === null ? "" : String(submission.score),
+  );
+  const [feedback, setFeedback] = useState(submission.feedback ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function viewFile() {
+    setError(null);
+    setPending(true);
+    const result = await openSubmissionFile(submission.id);
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    window.open(result.url, "_blank", "noopener,noreferrer");
+  }
+
+  async function save(release: boolean) {
+    setError(null);
+    setPending(true);
+    const result = await gradeSubmission(submission.id, score, feedback, release);
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  return (
+    <section className={surfaceCard}>
+      <div className="border-b border-line p-6">
+        <p className="text-sm text-ink-secondary">Selected student</p>
+        <h2 className="mt-1 text-xl font-semibold">{submission.studentName}</h2>
+        <p className="text-sm text-ink-secondary">
+          {new Date(submission.submittedAt).toLocaleString()}
+          {submission.releasedAt ? " · Released" : ""}
+        </p>
+      </div>
+      <div className="space-y-6 p-6">
+        <div>
+          <h3 className="font-semibold">Submitted work</h3>
+          <div className="mt-3 border border-line p-5">
+            <p className="whitespace-pre-wrap text-sm leading-6">
+              {submission.text ?? "No written answer."}
+            </p>
+          </div>
+          {submission.fileName ? (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line p-4">
+              <p className="font-medium">{submission.fileName}</p>
+              <button
+                type="button"
+                className={buttonSecondary}
+                disabled={pending}
+                onClick={() => void viewFile()}
+              >
+                View File
+              </button>
+            </div>
+          ) : null}
+        </div>
+        {error ? (
+          <p className={alertError}>{error}</p>
+        ) : null}
+        <div>
+          <label className={fieldLabel} htmlFor="grade-score">
+            Grade
+          </label>
+          <div className="flex items-center gap-3">
+            <input
+              id="grade-score"
+              value={score}
+              onChange={(event) => setScore(event.target.value)}
+              className={`${fieldControlBase} w-24`}
+            />
+            <span className="text-ink-secondary">/ {maxScore ?? "—"}</span>
+          </div>
+        </div>
+        <div>
+          <label className={fieldLabel} htmlFor="teacher-feedback">
+            Feedback
+          </label>
+          <textarea
+            id="teacher-feedback"
+            rows={6}
+            value={feedback}
+            onChange={(event) => setFeedback(event.target.value)}
+            className={fieldControl}
+          />
+        </div>
+        <div className="flex justify-end border-t border-line pt-5">
+          <button
+            type="button"
+            disabled={pending}
+            className={buttonPrimary}
+            onClick={() => void save(true)}
+          >
+            Release Grade
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}

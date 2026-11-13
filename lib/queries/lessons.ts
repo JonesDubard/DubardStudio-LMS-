@@ -1,9 +1,8 @@
 /**
  * Teacher lesson reads. RLS applies the JWT tenant_id. Do not filter tenant_id here.
- * Course assignment is stubbed until migration 0005b. See lib/teacher/assignment-stub.ts.
+ * Assigned courses come from teacher_assignments.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { isStubAssignedTeacher } from "@/lib/teacher/assignment-stub";
 import type {
   Course,
   Lesson,
@@ -63,22 +62,6 @@ export function parseLessonStatus(
   return undefined;
 }
 
-/**
- * The signed-in profile id is the auth user id. Until teacher_assignments
- * exists, only emails in the assignment stub are assigned, and they are
- * assigned to every course this session can read.
- */
-async function sessionIsAssignedTeacher(
-  supabase: SupabaseClient,
-  teacherId: string,
-): Promise<boolean> {
-  const { data, error } = await supabase.auth.getUser();
-  if (error) throw new Error(`auth: ${error.message}`);
-  const user = data.user;
-  if (!user || user.id !== teacherId) return false;
-  return isStubAssignedTeacher(user.email);
-}
-
 export async function getSignedInTeacherId(
   supabase: SupabaseClient,
 ): Promise<string> {
@@ -103,28 +86,54 @@ async function rowsById(
   return new Map(rows.map((row) => [row.id, row.name]));
 }
 
+/** class_subject ids from teacher_assignments. RLS returns this teacher's rows. */
+async function assignedClassSubjectIds(
+  supabase: SupabaseClient,
+): Promise<string[] | null> {
+  const result = await supabase
+    .from("teacher_assignments")
+    .select("class_subject_id");
+  if (result.error) {
+    const message = result.error.message.toLowerCase();
+    if (
+      message.includes("does not exist") ||
+      message.includes("schema cache") ||
+      result.error.code === "PGRST205"
+    ) {
+      return null;
+    }
+    throw new Error(`teacher_assignments: ${result.error.message}`);
+  }
+  return [
+    ...new Set(
+      (result.data ?? []).map(
+        (row) => (row as { class_subject_id: string }).class_subject_id,
+      ),
+    ),
+  ];
+}
+
 export async function getTeacherCourses(
   supabase: SupabaseClient,
-  teacherId: string,
 ): Promise<TeacherCourse[]> {
-  const assigned = await sessionIsAssignedTeacher(supabase, teacherId);
-  if (!assigned) return [];
-
-  const courseResult = await supabase
+  const classSubjectIds = await assignedClassSubjectIds(supabase);
+  if (!classSubjectIds || classSubjectIds.length === 0) return [];
+  const courseQuery = supabase
     .from("courses")
     .select(COURSE_COLUMNS)
-    .order("created_at", { ascending: true })
-    .returns<Course[]>();
-  const courses = unwrap("courses", courseResult);
+    .in("class_subject_id", classSubjectIds)
+    .order("created_at", { ascending: true });
+
+  const courses = unwrap("courses", await courseQuery.returns<Course[]>());
   if (courses.length === 0) return [];
 
-  const classSubjectIds = [
+  const linkIds = [
     ...new Set(courses.map((course) => course.class_subject_id)),
   ];
   const linkResult = await supabase
     .from("class_subjects")
     .select(CLASS_SUBJECT_COLUMNS)
-    .in("id", classSubjectIds)
+    .in("id", linkIds)
     .returns<Pick<ClassSubject, "id" | "class_id" | "subject_id">[]>();
   const links = unwrap("class_subjects", linkResult);
   const linkById = new Map(links.map((link) => [link.id, link]));
@@ -187,7 +196,7 @@ export async function getTeacherLessons(
   filters: LessonListFilters,
 ): Promise<LessonListItem[]> {
   const courses = matchingCourses(
-    await getTeacherCourses(supabase, filters.teacherId),
+    await getTeacherCourses(supabase),
     filters,
   );
   if (courses.length === 0) return [];
@@ -247,7 +256,7 @@ export async function getLessonById(
 
 /**
  * Lessons for one course. RLS scopes the tenant. Teacher lists should use
- * getTeacherLessons so the assignment stub applies.
+ * getTeacherLessons so course assignment applies.
  */
 export async function getLessonsForCourse(
   supabase: SupabaseClient,
@@ -262,5 +271,37 @@ export async function getLessonsForCourse(
   return unwrap("lessons", result).map((lesson) => ({
     ...lesson,
     status: lessonStatus(lesson.status),
+  }));
+}
+
+export type LessonMaterialItem = {
+  id: string;
+  name: string;
+};
+
+export async function getLessonMaterials(
+  supabase: SupabaseClient,
+  lessonId: string,
+): Promise<LessonMaterialItem[]> {
+  const result = await supabase
+    .from("lesson_materials")
+    .select("id, file_id, external_url, sort_order")
+    .eq("lesson_id", lessonId)
+    .order("sort_order", { ascending: true })
+    .returns<{ id: string; file_id: string | null; external_url: string | null }[]>();
+  const rows = unwrap("lesson_materials", result);
+  const fileIds = rows.flatMap((row) => (row.file_id ? [row.file_id] : []));
+  const names = new Map<string, string>();
+  if (fileIds.length > 0) {
+    const files = await supabase
+      .from("files")
+      .select("id, original_name")
+      .in("id", fileIds)
+      .returns<{ id: string; original_name: string }[]>();
+    for (const file of unwrap("files", files)) names.set(file.id, file.original_name);
+  }
+  return rows.map((row) => ({
+    id: row.id,
+    name: (row.file_id && names.get(row.file_id)) || row.external_url || "Material",
   }));
 }

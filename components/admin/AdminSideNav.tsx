@@ -1,84 +1,139 @@
 "use client";
 
+import {
+  Files,
+  GraduationCap,
+  LayoutDashboard,
+  Palette,
+  Settings,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
+import { MobileNavBar } from "@/components/shared/MobileNavDrawer";
+import { PersonaShell } from "@/components/shared/PersonaShell";
+import { SchoolMark } from "@/components/shared/SchoolMark";
+import { SignOutButton } from "@/components/shared/SignOutButton";
+import { desktopSideNav, navLabel, navLink, navLinkActive } from "@/lib/ui/styles";
 
-const navItems = [
+const navItems: {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  match: (path: string) => boolean;
+}[] = [
   {
     label: "Dashboard",
     href: "/admin/dashboard",
+    icon: LayoutDashboard,
     match: (path: string) => path === "/admin/dashboard",
   },
   {
     label: "Setup",
     href: "/admin/branding",
+    icon: Palette,
     match: (path: string) => path.startsWith("/admin/branding"),
   },
   {
     label: "People",
     href: "/admin/people/teachers",
+    icon: Users,
     match: (path: string) => path.startsWith("/admin/people"),
   },
   {
     label: "Academic",
     href: "/admin/academic",
+    icon: GraduationCap,
     match: (path: string) => path.startsWith("/admin/academic"),
   },
   {
     label: "Content",
     href: "/admin/assignments",
+    icon: Files,
     match: (path: string) => path.startsWith("/admin/assignments"),
   },
   {
-    label: "Usage",
-    href: "#",
-    match: () => false,
+    label: "Settings",
+    href: "/settings",
+    icon: Settings,
+    match: (path: string) => path.startsWith("/settings"),
   },
-] as const;
+];
 
 type AdminSideNavProps = {
   schoolName?: string;
   portalLabel?: string;
+  logoUrl?: string | null;
+  children: ReactNode;
 };
 
 export function AdminSideNav({
-  schoolName = "Pilot School #1",
+  schoolName = "School",
   portalLabel = "School Admin",
+  logoUrl = null,
+  children,
 }: AdminSideNavProps) {
   const pathname = usePathname();
+  const items = navItems.map((item) => ({
+    label: item.label,
+    href: item.href,
+    icon: item.icon,
+    active: item.match(pathname),
+  }));
 
   return (
-    <aside className="w-64 shrink-0 border-r border-[#999999] bg-white p-5">
-      <div className="mb-8">
-        <div className="flex h-10 w-10 items-center justify-center border border-[#999999] bg-[#E5E5E5] text-[#666666]">
-          /
-        </div>
-        <p className="mt-3 text-sm text-brand-secondary">{portalLabel}</p>
-        <p className="font-semibold text-brand-primary">{schoolName}</p>
-      </div>
+    <PersonaShell
+      sidebar={
+        <aside className={desktopSideNav} aria-label="School Admin">
+          <div className="mb-6 flex flex-col items-center lg:mb-8 lg:items-start lg:px-2">
+            <SchoolMark src={logoUrl} />
+            <p className={`mt-3 text-xs font-medium text-ink-muted ${navLabel}`}>{portalLabel}</p>
+            <p className={`font-semibold tracking-tight text-ink ${navLabel}`}>{schoolName}</p>
+          </div>
+          <DesktopLinks items={items} />
+          <div className="mt-4 shrink-0 border-t border-line pt-3">
+            <SignOutButton />
+          </div>
+        </aside>
+      }
+      mobile={
+        <MobileNavBar
+          title={schoolName}
+          subtitle={portalLabel}
+          renderLogo={() => <SchoolMark src={logoUrl} />}
+          items={items}
+        />
+      }
+    >
+      {children}
+    </PersonaShell>
+  );
+}
 
-      <nav className="space-y-1 text-sm">
-        {navItems.map((item) => {
-          const active = item.match(pathname);
-          const className = active
-            ? "block rounded border border-brand-primary bg-brand-primary px-4 py-3 font-semibold text-white"
-            : "block px-4 py-3";
-
-          if (item.href === "#") {
-            return (
-              <span key={item.label} className={className}>
-                {item.label}
-              </span>
-            );
-          }
-
-          return (
-            <Link key={item.label} href={item.href} className={className}>
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-    </aside>
+function DesktopLinks({
+  items,
+}: {
+  items: { label: string; href: string; icon: LucideIcon; active: boolean }[];
+}) {
+  return (
+    <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={item.active ? navLinkActive : navLink}
+            title={item.label}
+            aria-current={item.active ? "page" : undefined}
+          >
+            <Icon size={18} strokeWidth={1.75} aria-hidden />
+            <span className={navLabel}>{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

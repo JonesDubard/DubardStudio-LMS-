@@ -32,14 +32,14 @@ Other commands:
 | `npm run lint`      | ESLint through `next lint`                                          |
 | `npm run typecheck` | `tsc --noEmit`                                                      |
 | `npm run test`      | Vitest unit tests                                                   |
-| `npm run test:e2e`  | Playwright. `tests/e2e/auth-jwt.spec.ts` is the JWT → RLS spike     |
-| `npm run seed:dev`  | Creates the pilot tenant and one user per persona. Prints passwords |
+| `npm run test:e2e`  | Playwright on `tests/e2e/`. Journeys plus the JWT and RLS specs. Use one worker against the dev server on port 3000 |
+| `npx supabase db reset` | Rebuilds the local database and applies `supabase/seed.sql` (pilot1 and pilot2) |
 | `npm run format`    | Prettier                                                            |
 | `npm run db:types`  | Stub. Prints a message until migrations exist                       |
 
 ## The big picture
 
-LearnGrid is a white-label LMS for Liberian schools. Each school is a tenant, reached by a subdomain such as `pilotschool.ourlms.com`. The product docs in `docs/ia.md`, `docs/flows.md`, `docs/data-model.md`, and `docs/living-doc.md` describe five personas (platform admin, school admin, teacher, student, parent) sharing one academic data model. Isolation will be Postgres row-level security on `tenant_id`, not application filters.
+TerraLearn is a white-label LMS for Liberian schools. Each school is a tenant, reached by a subdomain such as `pilotschool.ourlms.com`. The product docs in `docs/ia.md`, `docs/flows.md`, `docs/data-model.md`, and `docs/living-doc.md` describe five personas (platform admin, school admin, teacher, student, parent) sharing one academic data model. Isolation will be Postgres row-level security on `tenant_id`, not application filters.
 
 This session only built the shell: the Next.js app, empty route groups, Supabase client factories, hostname-to-subdomain resolution, a neutral branding token set, a service worker that caches nothing, and CI. There is no login, no database, and no persona screens.
 
@@ -63,7 +63,7 @@ A later session on the same day added the four student P0 screens as server comp
 | `.prettierrc`                          | Prettier defaults for this repo                                                                         |
 | `.prettierignore`                      | Keeps format from rewriting generated files, `designs/`, and `Livedoc/`                                 |
 | `.gitignore`                           | Ignores `node_modules`, `.next`, `.env*`, `.vercel`, and the compiled service worker                    |
-| `.env.example`                         | Placeholders for the Supabase URL, anon key, service role key, and `NEXT_PUBLIC_ROOT_DOMAIN=ourlms.com` |
+| `.env.example`                         | Placeholders for the Supabase URL, anon key, service role key, and `NEXT_PUBLIC_ROOT_DOMAIN=terralearn.space` |
 | `next-env.d.ts`                        | Next.js TypeScript references                                                                           |
 | `vitest.config.ts`                     | Runs `tests/unit/**/*.test.ts`                                                                          |
 | `playwright.config.ts`                 | Points e2e tests at `tests/e2e` and `http://localhost:3000`                                             |
@@ -116,18 +116,19 @@ A later session on the same day added the four student P0 screens as server comp
 
 | File                                                       | Purpose                                                                                                                                                                                       |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/(student)/layout.tsx`                                 | Phone frame (`max-w-[390px]`) and `BottomNav` for the student routes                                                                                                                          |
-| `app/(student)/feed/page.tsx`                              | Student home. Reads `getStudentFeed()`                                                                                                                                                        |
-| `app/(student)/lessons/[lessonId]/page.tsx`                | Lesson viewer. Reads `getLesson(lessonId)`                                                                                                                                                    |
+| `app/(student)/layout.tsx`                                 | Student shell (`max-w-7xl`). Bottom nav below `md`; the same items sit in a top bar from `md` up.                                                                                              |
+| `app/(student)/feed/page.tsx`                              | Student home. Server component. Reads `getStudentFeed()` from `lib/queries/student.ts`                                                                                                        |
+| `app/(student)/lessons/[lessonId]/page.tsx`                | Lesson viewer. Server component. Reads `getLessonDetails(lessonId)`. Missing or unpublished lessons call `notFound()`                                                                        |
 | `app/(student)/assignments/[assignmentId]/page.tsx`        | Assignment detail. Reads `getAssignment(assignmentId)`                                                                                                                                        |
 | `app/(student)/assignments/[assignmentId]/status/page.tsx` | Submission status. Reads `getSubmissionStatus(assignmentId)`                                                                                                                                  |
-| `lib/stubs/get-student-feed.ts`                            | `getStudentFeed()` returns a `StudentFeed`. `items` is the today list: Mathematics — Fractions, then English — Reading Response. Also returns the greeting and the two recently viewed rows   |
-| `lib/stubs/get-lesson.ts`                                  | `getLesson(lessonId)` returns the Week 3 fractions lesson, including the two paragraphs, image caption, PDF, and external video                                                               |
+| `lib/queries/student.ts`                                   | `getStudentFeed`, `getStudentLessons`, `getLessonDetails`. No `student_id` or `tenant_id` filter. RLS scopes enrollments, published lessons, and files                                       |
+| `lib/stubs/get-student-feed.ts`                            | Old mock feed. The student home page no longer calls it                                                                                                                                      |
+| `lib/stubs/get-lesson.ts`                                  | Old mock lesson. The lesson viewer no longer calls it                                                                                                                                         |
 | `lib/stubs/get-assignment.ts`                              | `getAssignment(assignmentId)` returns English — Reading Response: due date, instructions, Reading Passage.pdf, and the empty answer/file area                                                 |
 | `lib/stubs/get-submission-status.ts`                       | `getSubmissionStatus(assignmentId)` returns the received submission: Sep 23, 1:42 PM, status SUBMITTED, written answer, and Reading Response.pdf                                              |
 | `components/student/BottomNav.tsx`                         | Home / Classes / Grades bar. Used by `app/(student)/layout.tsx` on all four screens. Home is marked Current, matching the mockups                                                             |
-| `components/student/FeedCard.tsx`                          | Today card on the feed. Used twice: the new lesson and the due assignment                                                                                                                     |
-| `components/student/RecentlyViewedRow.tsx`                 | Compact lesson row. Used twice in the feed's recently viewed list                                                                                                                             |
+| `components/student/FeedCard.tsx`                          | Assignment or lesson card on the feed. The page groups `items` into "To hand in" and "Lessons".                                                                                                |
+| `components/student/RecentlyViewedRow.tsx`                 | Compact lesson row. Not rendered: the feed has no view history, so recently viewed stays a one-line empty state                                                                                |
 | `components/student/MaterialRow.tsx`                       | Title, meta, and action. Used for the lesson PDF and video, the assignment PDF, and the submitted attachment                                                                                  |
 | `components/shared/PageHeader.tsx`                         | Greeting header on the feed. Section header (mark, subject, title) on the lesson, assignment, and status pages                                                                                |
 | `components/shared/PrimaryButton.tsx`                      | Dark full-width action. Open Lesson, Back to Learning Feed, and Submit Work                                                                                                                   |
@@ -142,7 +143,7 @@ Left in the page, not extracted, because each appears on only one screen: feed s
 | File                                                          | Purpose                                                                                                                          |
 | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `app/teacher/layout.tsx`                                      | Side nav shell. Renders `TeacherSideNav` on the left and `{children}` on the right                                               |
-| `app/teacher/home/page.tsx`                                   | Teacher home. My Classes and Recent Lessons read `lib/queries/lessons.ts`. Pending Grading and Upcoming Assignments still read `getTeacherHome()` |
+| `app/teacher/home/page.tsx`                                   | Teacher home. Greeting uses the signed-in profile. My Classes and Recent Lessons read `lib/queries/lessons.ts`. Assessments read `getTeacherAssessments`. The page does not read `getTeacherHome()` |
 | `app/teacher/lessons/page.tsx`                                | My Lessons. Lists the signed-in teacher's lessons and filters by class, subject, term, and status                                |
 | `app/teacher/lessons/new/page.tsx`                            | Create Lesson. Cascades class, subject, and course, then saves a draft or publishes through the lesson Server Actions           |
 | `app/teacher/lessons/[lessonId]/page.tsx`                     | Lesson editor for one lesson. Title and description save. Publish sets `status` and `published_at`                               |
@@ -152,24 +153,27 @@ Left in the page, not extracted, because each appears on only one screen: feed s
 | `app/teacher/assessments/[assessmentId]/grade-entry/page.tsx` | Score-only grade entry. Reads `getGradeEntryRoster(assessmentId)`                                                                |
 | `app/teacher/lessons/[lessonId]/reuse/page.tsx`               | Lesson reuse panel. Reads `getLessonForReuse(lessonId)`                                                                          |
 | `lib/types/lessons.ts`                                        | `Lesson`, `LessonStatus`, `Course`, `TeacherCourse`, and `LessonListItem`. Column names match migration 0003                    |
-| `lib/queries/lessons.ts`                                      | `getTeacherCourses`, `getTeacherLessons`, `getLessonById`, `getLessonsForCourse`. No `tenant_id` filter. Empty lists return `[]` |
+| `lib/queries/lessons.ts`                                      | `getTeacherCourses` uses `teacher_assignments` when rows exist, otherwise the email stub. No `tenant_id` filter |
+| `lib/queries/assessments.ts`                                  | Teacher assessment reads and actions: create, list submissions, roster, grade, release, and student hand-in. No `tenant_id` filter on reads |
+| `app/teacher/lessons/[lessonId]/assessments/new/page.tsx`     | Create Assessment form. Draft or publish. Linked to the lesson's course |
+| `app/teacher/assessments/[assessmentId]/submissions/page.tsx` | Assignment submission list, or score-only grade entry, chosen by `assessments.type` |
 | `lib/lessons/schema.ts`                                       | Zod schemas shared by the lesson form and Server Actions. Title required, max 200. Description optional, max 5000               |
 | `lib/teacher/assignment-stub.ts`                              | Until migration 0005b, the pilot teacher is assigned to every course the session can read. Other teachers are assigned to none |
-| `lib/stubs/get-teacher-home.ts`                               | `getTeacherHome()` still supplies Pending Grading and Upcoming Assignments. My Classes on the home page no longer read it       |
+| `lib/stubs/get-teacher-home.ts`                               | `getTeacherHome()` remains in the repo. Teacher Home no longer imports it                                                      |
 | `lib/stubs/get-lesson-for-edit.ts`                            | `getLessonForEdit(lessonId)` returns one lesson draft with class/subject/term options, materials, and video URL                  |
 | `lib/stubs/get-assignment-for-edit.ts`                        | `getAssignmentForEdit(assignmentId)` returns an `Assessment` (type assignment) plus linked lesson fields and one material        |
 | `lib/stubs/get-submissions-for-assessment.ts`                 | `getSubmissionsForAssessment(assessmentId)` returns the assignment `Assessment`, submission list, and selected submission detail |
 | `lib/stubs/get-grade-entry-roster.ts`                         | `getGradeEntryRoster(assessmentId)` returns a quiz `Assessment` and roster rows for score entry                                  |
 | `lib/stubs/get-lesson-for-reuse.ts`                           | `getLessonForReuse(lessonId)` returns the published lesson plus available terms and draft preview                                |
 | `components/teacher/TeacherSideNav.tsx`                       | Left nav. Used by `app/teacher/layout.tsx` on every Teacher page                                                                 |
-| `components/teacher/ClassCard.tsx`                            | Class tile. Used three times on Teacher Home                                                                                     |
-| `components/teacher/GradingQueueRow.tsx`                      | Pending grading table row. Used twice on Teacher Home                                                                            |
+| `components/teacher/ClassCard.tsx`                            | Class tile on Teacher Home. Links to `/teacher/lessons?class=` for that class                                                   |
+| `components/teacher/GradingQueueRow.tsx`                      | Pending grading table row. Teacher Home no longer renders it                                                                    |
 | `components/teacher/SubmissionList.tsx`                       | Left column student list on submission grading                                                                                   |
 | `components/teacher/SubmissionDetail.tsx`                     | Right column grade + feedback form (client). Used on submission grading                                                          |
 | `components/teacher/GradeEntryTable.tsx`                      | Bulk score entry table (client). Used on grade entry                                                                             |
 | `components/teacher/AssessmentForm.tsx`                       | Assignment create form (client). Used on `/teacher/assignments/new`                                                              |
 | `components/teacher/LessonEditorForm.tsx`                     | Create and edit lesson form (client). React Hook Form and the Zod schemas in `lib/lessons/schema.ts`. Materials stay a placeholder |
-| `components/shared/StatusBadge.tsx`                           | Status chip. Used on Teacher Home upcoming rows, lesson draft badge, submission pending badge, and submission list statuses      |
+| `components/shared/StatusBadge.tsx`                           | Status chip. Used on Teacher Home lesson and assessment rows, the lesson draft badge, and submission list statuses             |
 
 #### Final Teacher route map
 
@@ -195,7 +199,7 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | File                                               | Purpose                                                                                                                                                                     |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app/(admin)/layout.tsx`                           | Side nav shell. Renders `AdminSideNav` on the left and `{children}` on the right                                                                                            |
-| `app/(admin)/admin/dashboard/page.tsx`             | School Admin dashboard. Reads `getAdminDashboard()`                                                                                                                         |
+| `app/(admin)/admin/dashboard/page.tsx`             | School Admin dashboard. School name from the signed-in tenant. Links to branding, people, academic setup, and assignments. Academic counts come from `lib/queries/academic.ts`. It does not read `getAdminDashboard()` |
 | `app/(admin)/admin/branding/page.tsx`              | School branding. Reads the signed-in school's name and colors through `readShellBrand()`                                                                                   |
 | `app/(admin)/admin/branding/actions.ts`            | `updateBranding` and `resetBranding`. Validates hex, updates the session tenant row, then `revalidatePath`                                                                  |
 | `app/(admin)/admin/branding/_components/BrandingForm.tsx` | Color pickers, live preview, save, and reset. Logo and favicon sections stay disabled                                                                                 |
@@ -208,7 +212,7 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | `app/(admin)/admin/people/admins/page.tsx`         | School Admins list. Reads `getSchoolAdmins()`                                                                                                                               |
 | `app/(admin)/admin/people/parents/page.tsx`        | Parent-child linking. Reads `getParents()`                                                                                                                                  |
 | `app/(admin)/admin/assignments/page.tsx`           | Assignments overview. Reads `getAdminAssignments()`                                                                                                                         |
-| `lib/stubs/get-admin-dashboard.ts`                 | `getAdminDashboard()` returns setup progress, summary tiles, and usage metrics                                                                                              |
+| `lib/stubs/get-admin-dashboard.ts`                 | `getAdminDashboard()` remains in the repo. The dashboard page no longer imports it                                                                                         |
 | `lib/stubs/get-school-branding.ts`                 | Unused by the branding page. Colors are read from `tenants`. The stub remains from the shell session                                                                        |
 | `lib/types/academic.ts`                            | Row types for years, terms, classes, subjects, and class_subjects. Column names match migration 0002                                                                        |
 | `lib/queries/academic.ts`                          | Read functions `getAcademicYears`, `getTerms`, `getClasses`, `getSubjects`, `getClassSubjects`. The caller passes a Supabase client. RLS scopes rows. No `tenant_id` filter |
@@ -224,7 +228,7 @@ Teacher routes live under a real `/teacher` path segment (`app/teacher/`, not a 
 | `app/(admin)/admin/academic/subjects/_components/` | Subject form, link form, add button, and subjects panel                                                                                                                     |
 | `app/(admin)/admin/academic/_components/`          | Shared modal, delete confirmation, field styles, and the overview save note                                                                                                 |
 | `components/admin/AcademicSubNav.tsx`              | Overview / Years / Terms / Classes / Subjects links                                                                                                                         |
-| `scripts/spike-second-tenant.ts`                   | Manual cross-tenant fixture. Tenant "Other Tenant School" (`other-tenant`) and year "Other Tenant Year". Not production seed. See "Manual test fixtures"                    |
+| `supabase/seed.sql`                                | Also the cross-tenant fixture: Pilot School #2. See "Manual test fixtures"                                                                                                 |
 | `lib/stubs/get-teachers.ts`                        | `getTeachers()` returns teacher rows and CSV preview (`TeachersList`)                                                                                                       |
 | `lib/stubs/get-students.ts`                        | `getStudents()` returns student rows, CSV preview, and parent-linking note (`StudentsList`)                                                                                 |
 | `lib/stubs/get-school-admins.ts`                   | `getSchoolAdmins()` returns admin rows and access note (`SchoolAdminsList`)                                                                                                 |
@@ -333,18 +337,18 @@ Tenant names match the mockups (not the prompt's alternate set): Pilot School #1
 | `app/api/health/route.ts`                               | Public `{ ok: true }` health check                  |
 | `components/auth/*`                                     | The four forms plus shared field, error, and submit |
 | `lib/auth/public-paths.ts`                              | Login redirect allowlist                            |
-| `lib/auth/claims.ts`                                    | Reads `role` and `tenant_id` from an access token   |
+| `lib/auth/claims.ts`                                    | Reads `app_roles` and `tenant_id` from an access token |
 | `lib/supabase/middleware.ts`                            | Session refresh, login redirect, claim headers      |
 | `supabase/migrations/0001_custom_access_token_hook.sql` | Auth tables, the §10 hook, and the spike DDL helper |
 | `scripts/enable-auth-hook.ts`                           | Prints the manual dashboard registration steps      |
-| `scripts/seed-dev.ts`                                   | Pilot tenant and one user per persona               |
+| `supabase/seed.sql`                                     | Pilot School #1 and #2, one user per persona, applied by `npx supabase db reset` |
 | `scripts/load-env.ts`                                   | Loads `.env.local` for the scripts and the e2e test |
 | `tests/e2e/auth-jwt.spec.ts`                            | Proves the JWT claim reaches RLS. This is the spike |
-| `app/(student)/feed/page.tsx`                           | Dev-only banner for `x-app-role` and `x-tenant-id`  |
+| `app/(student)/feed/page.tsx`                           | Student home. The development role banner has been removed. |
 
 ### Academic structure reads (2026-10-09)
 
-School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts`. That stub was removed. The five `/admin/academic` routes are server components. They call `lib/queries/academic.ts` with the cookie Supabase client. Row types live in `lib/types/academic.ts` and use the migration 0002 column names. Terms are the rows for the academic year with `is_current`. Create, edit, delete, mark-current, and class-subject link/unlink go through Server Actions in `app/(admin)/admin/academic/actions.ts`. Forms live under each entity `_components` folder and share Zod schemas in `lib/academic/schema.ts`. `scripts/spike-second-tenant.ts` leaves tenant "Other Tenant School" and the year "Other Tenant Year" in place. See "Manual test fixtures".
+School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts`. That stub was removed. The five `/admin/academic` routes are server components. They call `lib/queries/academic.ts` with the cookie Supabase client. Row types live in `lib/types/academic.ts` and use the migration 0002 column names. Terms are the rows for the academic year with `is_current`. Create, edit, delete, mark-current, and class-subject link/unlink go through Server Actions in `app/(admin)/admin/academic/actions.ts`. Forms live under each entity `_components` folder and share Zod schemas in `lib/academic/schema.ts`. Cross-tenant checks use Pilot School #2 from `supabase/seed.sql`. See "Manual test fixtures".
 
 ### Academic structure (2026-10-01)
 
@@ -352,7 +356,7 @@ School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `supabase/migrations/0002_academic_structure.sql` | Years, terms, classes, subjects, class_subjects, each with tenant RLS                                                       |
 | `tests/e2e/rls-academic.spec.ts`                  | Proves academic_years returns only the signed-in tenant                                                                     |
-| `scripts/seed-dev.ts`                             | Also seeds the 2026–2027 year, three terms, four classes, five subjects, and Mathematics / English / Science on every class |
+| `supabase/seed.sql`                               | Seeds each school's year, three terms, one class, one subject, and the class-subject link                                 |
 
 ### Content tables (2026-10-05)
 
@@ -360,7 +364,7 @@ School Admin academic setup no longer calls `lib/stubs/get-academic-structure.ts
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `supabase/migrations/0003_content.sql` | Courses, lessons, lesson_materials, gradebook_categories, and the lesson_status enum, each table with tenant RLS                                       |
 | `tests/e2e/rls-content.spec.ts`        | Proves lessons and lesson_materials return only the signed-in tenant                                                                                   |
-| `scripts/seed-dev.ts`                  | Also seeds the JSS 2A Mathematics course on the existing JSS 2 Mathematics class_subject, three lessons, two materials, and three gradebook categories |
+| `supabase/seed.sql`                    | Seeds one published course, three lessons (two published, one draft), two materials, and three gradebook categories per school |
 
 ### Files (0005a)
 
@@ -439,13 +443,13 @@ Do not upload lesson files in this step. The lesson editor still shows "Attachme
 
 Student feed, after the same middleware step:
 
-1. The browser requests `http://pilotschool.localhost:3000/feed`.
-2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
-3. `app/(student)/feed/page.tsx` calls `getStudentFeed()` in `lib/stubs/get-student-feed.ts`.
-4. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
-5. The page renders `PageHeader`, two `FeedCard`s, the recently viewed rows, and `BottomNav` from the student layout.
+1. The browser requests `http://localhost:3000/feed` with the session cookie.
+2. `middleware.ts` refreshes the session and sets `x-tenant-id` and `x-app-roles` from the access token.
+3. `app/(student)/feed/page.tsx` calls `createClient()` and `getStudentFeed()` in `lib/queries/student.ts`.
+4. The query reads `enrollments`, then courses for those classes, then published lessons and upcoming assignments. It does not filter `student_id` or `tenant_id`. Postgres RLS does.
+5. No active enrollment renders "You are not enrolled in any classes yet." Otherwise the page renders `PageHeader` and one `FeedCard` per lesson or assignment. Download of lesson files is not wired yet. `BottomNav` comes from the student layout.
 
-Lesson, assignment, and status follow the same path. The page awaits `params`, then calls `getLesson`, `getAssignment`, or `getSubmissionStatus` with that id. The stub still returns the one mockup record.
+`/lessons/[lessonId]` calls `getLessonDetails()`. A missing, unpublished, or other-school lesson returns no row, and the page calls `notFound()`. Assignment and submission-status pages still call their stubs.
 
 Teacher page, after the same middleware step:
 
@@ -453,9 +457,9 @@ Teacher page, after the same middleware step:
 2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
 3. Role check is a stub for now. There is no auth gate; the `teacher` layout always renders.
 4. `app/teacher/layout.tsx` wraps the page with `TeacherSideNav`.
-5. The page calls its stub (`getTeacherHome`, `getLessonForEdit`, `getAssignmentForEdit`, `getSubmissionsForAssessment`, `getGradeEntryRoster`, or `getLessonForReuse`).
-6. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
-7. The page renders Teacher and shared components. Client forms hold input state only; buttons do not save.
+5. Teacher Home reads the signed-in profile, `getTeacherCourses`, `getTeacherLessons`, and `getTeacherAssessments`. It does not call `getTeacherHome()`.
+6. The assignment creator, stub submission list, stub grade entry, and lesson reuse pages still call their stubs. Those stubs return hardcoded copy and do not read Supabase.
+7. Live lesson and assessment pages read Supabase. Their forms save through the existing Server Actions. Stub screens keep their buttons unwired.
 
 School Admin page, after the same middleware step:
 
@@ -463,7 +467,7 @@ School Admin page, after the same middleware step:
 2. `middleware.ts` reads `Host`, resolves `pilotschool`, and sets `x-tenant-subdomain`.
 3. Role check is a stub for now. There is no auth gate; the `(admin)` layout always renders.
 4. `app/(admin)/layout.tsx` wraps the page with `AdminSideNav`.
-5. People, dashboard, and assignments pages still call their stubs (`getAdminDashboard`, `getTeachers`, `getStudents`, `getSchoolAdmins`, `getParents`, or `getAdminAssignments`). Branding reads `tenants`. Academic setup does not use a stub. See "Server data flow" and "Branding system".
+5. People and assignments pages still call their stubs (`getTeachers`, `getStudents`, `getSchoolAdmins`, `getParents`, or `getAdminAssignments`). The dashboard reads the signed-in tenant and academic counts. Branding reads `tenants`. Academic setup does not use a stub. See "Server data flow" and "Branding system".
 6. The stub returns hardcoded mockup copy. It does not read Supabase or filter by tenant.
 7. The page renders admin and shared components. Client panels hold input state only; buttons do not save.
 
@@ -479,16 +483,16 @@ Platform Admin page, after the same middleware step:
 
 ## Auth flow
 
-Browser → `middleware.ts` → session refresh → `x-app-role` and `x-tenant-id` → page.
+Browser → `middleware.ts` → session refresh → `x-app-roles` and `x-tenant-id` → page.
 
-1. The browser requests any page except the public allowlist: `/login`, `/invite/*`, `/reset/*`, `/_next/*`, `/api/health`.
+1. The browser requests any page except the public allowlist: `/login`, `/invite/*`, `/reset/*`, `/_next/*`, `/api/health`, `/manifest.webmanifest`.
 2. Root `middleware.ts` still resolves the hostname to `x-tenant-subdomain`. Next.js does not run `app/middleware.ts`.
 3. `lib/supabase/middleware.ts` calls `supabase.auth.getUser()`, which refreshes the session cookie when the access token is due.
 4. If there is no user, the response is a redirect to `/login`. `/login` is on the allowlist, so this is not a loop.
-5. If there is a user, the middleware reads `app_role` and `tenant_id` from the access-token payload (the hook writes those claims; they are not on the user object) and sets request headers `x-app-role` and `x-tenant-id`. Incoming copies of those headers are deleted first so a browser cannot spoof them. The reserved JWT `role` claim stays `authenticated` and is not copied onto a header.
+5. If there is a user, the middleware reads `app_roles` (an array) and `tenant_id` from the access-token payload and sets request headers `x-app-roles` (comma-joined) and `x-tenant-id`. A legacy token that still has a single `app_role` string is treated as a one-item list. Incoming copies of those headers are deleted first so a browser cannot spoof them. The reserved JWT `role` claim stays `authenticated` and is not copied onto a header.
 6. There is no role-based route gate yet. A signed-in student can still open `/admin` or `/platform`.
-7. In development, `app/(student)/feed/page.tsx` prints those headers in a banner. Production builds omit the banner. Remove the banner before the pilot.
-8. After a successful password sign-in, the login form navigates to `/feed`. That is a temporary landing, not role routing.
+7. The feed no longer prints `x-app-roles` or `x-tenant-id`. Middleware still sets those headers for server code.
+8. After a successful password sign-in, invite acceptance, or password reset, the form reads `app_roles` from the access token and opens that role's home: platform admin `/platform/dashboard`, school admin `/admin/dashboard`, teacher `/teacher/home`, student `/feed`, parent `/parent/home`. `lib/auth/home-path.ts` is the single map. There is still no route gate, so a signed-in user can open another role's URL directly.
 
 Sign-in, invite, and reset call Supabase Auth from the browser. They are not stubs.
 
@@ -504,11 +508,13 @@ Academic setup pages (`/admin/academic`, `/admin/academic/years`, `/admin/academ
 browser → middleware (sets `x-tenant-id` from the JWT) → server component → Supabase query (RLS applies via the user JWT on the cookie session) → render.
 
 1. The browser requests an academic setup URL with the session cookie.
-2. Root `middleware.ts` refreshes the session and sets `x-tenant-id` and `x-app-role` from the access token. It does not query academic tables.
+2. Root `middleware.ts` refreshes the session and sets `x-tenant-id` and `x-app-roles` from the access token. It does not query academic tables.
 3. The server component calls `createClient()` in `lib/supabase/server.ts`. That client sends the user JWT. It does not use the service role.
 4. The page calls a function in `lib/queries/academic.ts`. Those functions do not filter `tenant_id`. Postgres RLS compares `tenant_id` to `auth.jwt() ->> 'tenant_id'`.
 5. An empty list renders the empty-state sentence inside the table. A PostgREST error is thrown and is not turned into an empty list.
 6. Terms are loaded for the academic year whose `is_current` is true.
+
+Student feed (`/feed`) and the lesson viewer (`/lessons/[lessonId]`) use the same cookie client and `lib/queries/student.ts`. Those reads do not filter `student_id` or `tenant_id`. `getStudentFeed` starts at `enrollments`, then the class's courses, then published lessons and published assignments whose due date is still ahead. The query still returns one merged `items` list, sorted by date descending and limited to 20. The feed page groups that list into "To hand in" and "Lessons". Recently viewed stays an empty line because there is no view-history table. `getLessonDetails` loads one published lesson, its `lesson_materials`, and the linked `files` rows (name and size). The Download button does not call Storage yet.
 
 ## Server Actions pattern
 
@@ -528,7 +534,7 @@ A delete or update that changes zero rows returns `{ ok: false, error }` so a hi
 
 ### Teacher course assignment until migration 0005b
 
-`teacher_assignments` is not in the migrations. `courses` has no teacher column. `lib/teacher/assignment-stub.ts` assigns `teacher@pilotschool.test` to every course the session can read. RLS already limits that read to the teacher's tenant, so the pilot teacher sees the pilot courses and a teacher in another tenant does not. Other teachers in the same tenant are assigned to no courses unless their email is added to the stub. The stub does not store course UUIDs, because `scripts/seed-dev.ts` generates those ids. That script sets `lessons.created_by` to the pilot teacher's profile id, which is the auth user id. `getTeacherCourses` and `getTeacherLessons` apply the stub and do not add a `tenant_id` filter. Real `teacher_assignments` rows arrive with migration 0005b.
+`lib/teacher/assignment-stub.ts` still assigns `teacher@pilotschool.test` to every course the session can read. That email is not in `supabase/seed.sql`. `teacher_assignments` now exists, and the seeded teacher is `teacher@pilot1.test`. `getTeacherCourses` and `getTeacherLessons` still apply the stub and do not add a `tenant_id` filter.
 
 Marking a year or term current clears `is_current` on the rows this session can update, then sets the chosen row. The clear step has no `tenant_id` filter.
 
@@ -569,7 +575,7 @@ Migration `0004_tenant_branding.sql` adds SELECT and UPDATE policies: `id = (aut
 
 ## JWT claim hook
 
-`public.custom_access_token_hook` runs when Supabase Auth issues an access token. The function body is the one in `docs/data-model.md` §10, copied into `supabase/migrations/0001_custom_access_token_hook.sql`. It reads `platform_admins` first. A platform admin gets `app_role: platform_admin` and no `tenant_id`. Everyone else gets `tenant_id` and `app_role` from `profiles.role`. The JWT `role` claim is left as `authenticated`.
+`public.custom_access_token_hook` runs when Supabase Auth issues an access token. Migration `0005_memberships_hook_rls.sql` replaced the original hook. It reads `platform_admins` first. A platform admin gets `app_roles: ["platform_admin"]` and no `tenant_id`. Everyone else gets `tenant_id` and `app_roles` (an array) from active `memberships` rows. The JWT `role` claim is left as `authenticated`. `lib/auth/claims.ts` reads that array. A token that still carries the old `app_role` string is treated as a one-item list.
 
 The same migration creates `tenants`, `platform_admins`, and `profiles`, because the hook selects from those tables. It does not create the academic tables. RLS is enabled on the three auth tables. `supabase_auth_admin` has a SELECT policy on `profiles` and `platform_admins`, because the hook is `SECURITY INVOKER` and runs as that role. Without that policy the hook would see zero rows and the token would have no `tenant_id`.
 
@@ -584,18 +590,14 @@ How to test: `tests/e2e/auth-jwt.spec.ts` creates a student, signs in through `/
 
 ## How to seed the dev environment
 
-Apply `supabase/migrations/0001_custom_access_token_hook.sql`, then `0002_academic_structure.sql`, then `0003_content.sql`, then `0004_tenant_branding.sql`, then `0005a_files.sql`. Then:
+Run `npx supabase db reset` to rebuild the local database and apply the standard seed data (pilot1/pilot2).
 
-```bash
-npm run seed:dev
-```
-
-The script creates tenant "Pilot School #1" (`subdomain` `pilotschool`), one `platform_admins` user, and one `profiles` row each for school admin, teacher, student, and parent. The platform admin is not inserted into `profiles`. Passwords are printed in the terminal. Re-running the script resets those passwords and reuses the existing tenant.
+The seed lives in `supabase/seed.sql`. It creates Pilot School #1 and Pilot School #2, one user per persona in each school, and the academic, lesson, enrollment, and assessment rows those schools need. Logins are listed in the README.
 
 ## Manual test fixtures
 
-- `scripts/spike-second-tenant.ts` creates a second tenant "Other Tenant School" (subdomain `other-tenant`) with one academic year "Other Tenant Year". Kept in the DB as a permanent cross-tenant testing fixture. Do not seed from this script in production.
-- `teacher-unassigned@pilotschool.test` is a second teacher in the pilot tenant, created with the service role for the lesson assignment check. `scripts/seed-dev.ts` does not create this user. The assignment stub does not list them, so My Classes and My Lessons show "You don't have classes assigned yet. Ask your School Admin to assign you to a class."
+- Pilot School #2 in `supabase/seed.sql` is the cross-tenant fixture. A Pilot School #1 student must not see its lessons.
+- `lib/teacher/assignment-stub.ts` still treats `teacher@pilotschool.test` as assigned to every course the session can read. That email is not in `supabase/seed.sql`. The seeded teacher is `teacher@pilot1.test`, and real assignment rows are `teacher_assignments`.
 
 ## What the auth spike proved
 
@@ -607,7 +609,7 @@ What the JWT actually contains: nothing. The login form shows `Failed to fetch`.
 
 What the RLS policy actually reads: the policy was never created. The test would have installed `tenant_id = (auth.jwt() ->> 'tenant_id')::uuid` on `public.auth_spike_rows`. That SQL did not run.
 
-The exact SQL query that failed: none. The call that failed is the Auth Admin HTTP request, before any SQL. `npm run seed:dev` fails on the same unreachable host.
+The exact SQL query that failed: none. The call that failed is the Auth Admin HTTP request, before any SQL. Sign-in fails on the same unreachable host.
 
 Hypothesis: `NEXT_PUBLIC_SUPABASE_URL` does not name a project DNS is publishing. Auth never mints a JWT, so the hook never runs and RLS never evaluates `auth.jwt()`. This is not evidence that the hook SQL is wrong, and it is not a reason to bypass RLS. Copy the project URL from the dashboard Connect dialog, apply the migration, register the hook, then run the same test again. The application role claim is `app_role`.
 
@@ -621,20 +623,20 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | JWT has no `tenant_id` claim                                                     | The hook is not registered. Dashboard → Authentication → Hooks → Custom Access Token → `public.custom_access_token_hook`. Sign in again after saving                                                                            |
 | Queries fail with 'role X does not exist'                                        | JWT claim collision with Supabase's reserved `role` claim. The app role must be `app_role`. The `profiles.role` column stays `role`                                                                                             |
 | RLS blocks everything including own-tenant rows                                  | The hook is reading the wrong column. `0001_custom_access_token_hook.sql` must select `profiles.tenant_id` and `profiles.role`                                                                                                  |
-| Redirect loop on `/login`                                                        | `lib/auth/public-paths.ts`. `/login`, `/invite/*`, `/reset/*`, `/_next/*`, and `/api/health` must stay public                                                                                                                   |
-| Academic Setup shows no rows                                                     | `scripts/seed-dev.ts` must have run after `0002_academic_structure.sql`. The seed `tenant_id` must match the JWT `tenant_id` claim                                                                                              |
+| Redirect loop on `/login`                                                        | `lib/auth/public-paths.ts`. `/login`, `/invite/*`, `/reset/*`, `/_next/*`, `/api/health`, and `/manifest.webmanifest` must stay public                                                                                          |
+| Academic Setup shows no rows                                                     | `npx supabase db reset` applies `supabase/seed.sql`. The seed `tenant_id` must match the JWT `tenant_id` claim                                                                                                                  |
 | Academic pages show empty list                                                   | Check the RLS policy, the JWT `tenant_id` claim in dev tools, and seed data. Do not add a `tenant_id` filter in the page query                                                                                                  |
 | Create action returns 0 rows but no error                                        | RLS blocks INSERT. Check the policy allows authenticated INSERT for the session tenant. The insert must include `tenant_id` from the JWT, because the 0002 policies use `USING` as the insert check                             |
 | Duplicate name error shows raw Postgres code                                     | Wrap error handling in the Server Action. `class_subjects` unique violations should become "This subject is already linked to that class." Year, term, class, and subject names are not unique in Postgres                      |
 | Query returns data from wrong tenant                                             | This is a security bug. Stop and report                                                                                                                                                                                         |
-| Lesson editor shows no courses                                                   | `scripts/seed-dev.ts` ran after `0003_content.sql`. Check `class_subject_id` linkage on the course                                                                                                                              |
+| Lesson editor shows no courses                                                   | `supabase/seed.sql` created the course and its `class_subject_id`. The teacher assignment stub still keys off `teacher@pilotschool.test`, not `teacher@pilot1.test`                                                            |
 | Teacher sees no courses                                                          | `teacher_assignments` is not migrated; teacher-to-course link is stubbed; pilot teacher is assigned to all courses in the tenant                                                                                               |
 | Lesson list empty after create                                                   | `revalidatePath` in `app/teacher/lessons/actions.ts` for `/teacher/home`, `/teacher/lessons`, and the lesson editor                                                                                                             |
 | Save draft fails silently                                                        | Server Action error handling. The form shows `{ ok: false, error }`. A write that changes 0 rows returns an error                                                                                                              |
 | Lesson materials show missing file | `lesson_materials.file_id` is set, `files` has that row, and the object path's first folder is the tenant id in the `tenant-files` bucket |
 | Cross-tenant file access succeeds | This is a security bug. Stop and report |
 | Lesson materials don't load | For an uploaded row, `file_id` is set. For a video, `external_url` is set. Exactly one of those is allowed |
-| `Failed to fetch` on sign-in, or `npm run seed:dev` says the URL did not resolve | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`. The project host must resolve. `https://supabase.com` loading does not mean the project host exists                                                                                 |
+| `Failed to fetch` on sign-in                                                     | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`. The project host must resolve. `https://supabase.com` loading does not mean the project host exists                                                                                 |
 | `Tenant: root` on `pilotschool.localhost`                                        | `middleware.ts` must read the `Host` header. `nextUrl.hostname` is rewritten to `localhost` in dev. Then check `lib/tenant/resolve.ts`                                                                                          |
 | Page fails before any school exists                                              | Supabase URL or anon key is empty. Middleware skips refresh on purpose. Calling `createClient()` throws until `.env.local` is filled                                                                                            |
 | `npm run build` says it cannot find `self.__SW_MANIFEST`                         | `app/sw.ts` must contain that identifier so Serwist can compile. Do not pass it to `precacheEntries` until lesson caching is real                                                                                               |
@@ -643,10 +645,16 @@ The dashboard sign-in page was shown for this project. The hook was not register
 | `npm run lint` warns that `next lint` is deprecated                              | Expected on Next.js 15. The command still exits 0. Next.js 16 removes it                                                                                                                                                        |
 | `npm run db:types` does not generate types                                       | It is a stub until `supabase/migrations` has SQL                                                                                                                                                                                |
 | CI fails on `npm run test:rls`                                                   | That step is commented out until migrations and RLS policies exist                                                                                                                                                              |
-| Feed shows wrong data                                                            | `lib/stubs/get-student-feed.ts`, `app/(student)/feed/page.tsx`                                                                                                                                                                  |
+| Student feed empty                                                               | Check the `enrollments` table for an active row for this student, and the student JWT `tenant_id` claim. Do not add a `student_id` or `tenant_id` filter in `lib/queries/student.ts`                                           |
+| Teacher cannot open a lesson                                                     | `teacher_assignments` for that teacher, then `getTeacherCourses`. The email stub applies only when that teacher has no assignment rows                                                                                        |
+| Create assessment returns no row                                                 | The lesson's course must be in `teacher_course_ids()`. The insert includes `tenant_id` and `created_by`. Do not send `published_at`; the trigger sets it                                                                     |
+| Student cannot hand in                                                           | The assessment is published, type is `assignment`, and the student is enrolled in that course. `submissions` insert includes `tenant_id` and `student_id`                                                                      |
+| Released grade is hidden from the student                                        | `grades.released_at` is set. Students only read released grades                                                                                                                                                                 |
+| Teacher can grade another school's assessment                                    | This is a security bug. Stop and report                                                                                                                                                                                         |
+| Feed shows wrong data                                                            | `lib/queries/student.ts`, `app/(student)/feed/page.tsx`. RLS on `lessons` only returns published lessons in `student_course_ids()`                                                                                             |
 | Styling looks off                                                                | `components/student/*`, `components/shared/PageHeader.tsx`, `components/shared/PrimaryButton.tsx`, `tailwind.config.ts`. Mockup grays are arbitrary values (`#E5E5E5`, `#999999`, `#666666`, `#333333`), not `gray-*` utilities |
 | Tenant name wrong in header                                                      | `middleware.ts`. The prompt named `app/middleware.ts`; that file does not exist and Next.js would not run it. Student headers currently show the mockup labels (Student Home, Mathematics, English), not the subdomain          |
-| Pending Grading list empty                                                       | `lib/stubs/get-teacher-home.ts`                                                                                                                                                                                                 |
+| Teacher Home shows no assessments                                                | `getTeacherAssessments` for each course from `getTeacherCourses`. Home does not read `lib/stubs/get-teacher-home.ts`                                                                             |
 | Grade Entry table missing students                                               | `lib/stubs/get-grade-entry-roster.ts`                                                                                                                                                                                           |
 | Submission view shows wrong student                                              | `components/teacher/SubmissionDetail.tsx`                                                                                                                                                                                       |
 | Form inputs don't hold state                                                     | confirm component has `"use client"`                                                                                                                                                                                            |
@@ -705,7 +713,7 @@ Counts after the 2026-09-24 final verification audit (page routes only; layouts 
 
 **Known issues / tech debt (flagged, not changed unless noted):**
 
-- Parent persona screens are absent (only `app/(tenant)/(parent)/.gitkeep`).
+- Parent home, assignments, and grades live at `/parent/home`, `/parent/assignments`, and `/parent/grades`. They read linked children through RLS. The empty state tells a parent with no links to contact the school administrator.
 - Auth pages and session middleware are wired. Persona screens still read stubs. The JWT `tenant_id` claim is not proven. See "What the auth spike proved".
 - Student BottomNav Classes / Grades are non-links (no built routes). Teacher Classes, Admin Usage, Platform Subscriptions / Usage are `#` placeholders.
 - Stub structural duplication: `AssignmentMaterial` defined in two stubs; teachers/students list+CSV shapes are near-clones; tenant profile/subscription `tabs` arrays are copied; lesson content repeated across three lesson stubs; audit snippets overlap dashboard and audit-log.
@@ -716,11 +724,11 @@ Counts after the 2026-09-24 final verification audit (page routes only; layouts 
 
 The Teacher IA has two grading workflows. Both write to the same `grades` table (`docs/data-model.md`). `grades.submission_id` is nullable: assignment grades link a submission; quiz/test/exam grades stand alone.
 
-**Submission-based (assignments).** The student submitted digital work. The teacher opens the assessment, picks a student from the list, reads the work, and enters a score plus feedback. Components: `SubmissionList` (left column) and `SubmissionDetail` (right column). Route: `/teacher/assignments/[assignmentId]/submissions`. Stub: `getSubmissionsForAssessment`.
+**Submission-based (assignments).** The student hands in text on `/assignments/[assignmentId]`. The teacher opens `/teacher/assessments/[assessmentId]/submissions`, picks a student, and releases a score plus feedback. Queries: `getSubmissionsForAssessment`. Action: `gradeSubmission`.
 
-**Score-only (quizzes / tests / exams).** There is no digital submission. The teacher opens a roster table and enters scores inline for the whole class. Component: `GradeEntryTable`. Route: `/teacher/assessments/[assessmentId]/grade-entry`. Stub: `getGradeEntryRoster`.
+**Score-only (quizzes / tests / exams).** There is no digital submission. The same route renders one row per enrolled student. Actions: `saveGrades` and Release All. Query: `getRosterForGradeEntry`.
 
-Both paths use the same `Assessment` type from `lib/stubs/get-assignment-for-edit.ts` (`type: "assignment" | "quiz" | "test" | "exam"`). Do not merge the two UIs into one component. Pending Grading on Teacher Home links to both: "Grade" for assignments, "Enter Scores" for quizzes.
+Create starts at `/teacher/lessons/[lessonId]/assessments/new` (`createAssessment`). Inserts include `tenant_id` from the JWT. Reads do not filter `tenant_id`. A missing or other-school assessment calls `notFound()`. The older stub pages at `/teacher/assignments/[assignmentId]/submissions` and `/teacher/assessments/[assessmentId]/grade-entry` are unchanged.
 
 ## Key concepts
 
@@ -836,7 +844,7 @@ Items marked **Not in the prompt** need a human review. The others follow the se
 - **Empty Supabase env skips session refresh.** `createClient()` still throws if called without the URL and anon key. Middleware does not, so the placeholder page loads before credentials exist.
 - **Serwist caches nothing, but the build must see `self.__SW_MANIFEST`.** The worker discards the injected list. `precacheEntries` and `runtimeCaching` are empty. Serwist is disabled when `NODE_ENV` is `development` so the dev server is not intercepted. Re-enable real caching with lesson pages.
 - **Dexie is installed and unused.** It is in the locked stack for later offline lesson storage. No Dexie code was added.
-- **`app/layout.tsx` was required.** Next.js will not render `app/page.tsx` without a root layout. Title and description use the LearnGrid name from `docs/living-doc.md` section 11.
+- **`app/layout.tsx` was required.** Next.js will not render `app/page.tsx` without a root layout. Title and description use the TerraLearn name from `docs/living-doc.md` section 11.
 - **Home page is `force-dynamic`.** Reading `headers()` already opts the route into dynamic rendering. The export keeps a future edit from accidentally static-rendering every host as `root`.
 - **`allowedDevOrigins: ["*.localhost"]`.** Lets the dev server accept `pilotschool.localhost`.
 - **`outputFileTracingRoot`.** A lockfile in the parent `dubardstudio` folder made Next treat that folder as the workspace root. Tracing is pinned to this app.
@@ -852,7 +860,7 @@ Items marked **Not in the prompt** need a human review. The others follow the se
 
 - **Routes live in `app/(student)/`, not `app/(tenant)/(student)/`.** This session's table asked for `app/(student)/feed` and the other three paths. The empty foundation group `app/(tenant)/(student)/` was left as-is. Route groups do not appear in the URL, so the pages are `/feed`, `/lessons/1`, `/assignments/1`, and `/assignments/1/status`.
 - **`app/(student)/layout.tsx`.** The phone frame and bottom nav are shared by all four mockups. A student layout keeps that chrome off the foundation home page.
-- **`getStudentFeed()` returns an object, not only an array.** `items` is the today array. Greeting, date, and recently viewed rows are on the same object so the page does not hardcode mockup copy.
+- **`getStudentFeed()` returns an object, not only an array.** `items` is the merged lesson and assignment list. The feed page groups it into "To hand in" and "Lessons". Greeting and date stay on the same object. Recently viewed is an empty line; `RecentlyViewedRow` is not rendered.
 - **Sample strings come from the HTML, not the prompt example.** The prompt mentioned "Mathematics — Week 3 Quiz". That sentence is not in the mockups. The feed lesson is "Mathematics — Fractions".
 - **Once-only blocks stayed in the page.** The extraction list named lesson body, instructions, answer field, and confirmation cards. Each is used on one screen, so they were not given their own files. `StatusBadge`, `MaterialRow`, and `RecentlyViewedRow` were extracted because the same markup is repeated.
 - **Submit Work does not navigate or save.** It is a button with no handler. Download, View Image, Watch Video, and Choose File are the same. Open Lesson, Open Assignment, and Back to Learning Feed are static links. Link versions add `block text-center` so the anchor fills the row the way the mockup button does.
@@ -902,3 +910,21 @@ Items marked **Not in the prompt** need a human review. The others follow the se
 - The hook function body matches `docs/data-model.md` §10. Grants for `supabase_auth_admin`, the three auth tables, and `auth_spike_exec` are in the same migration because the function cannot run without them.
 - Post-login navigation goes to `/feed` so the dev banner is the next screen. That is not role routing.
 - The RLS test did not pass. The project host in `.env.local` does not resolve, so no JWT was issued. See "What the auth spike proved". The hook was not registered.
+
+### 2026-11-10 — Persona journeys
+
+Playwright journeys for the four school roles, against the seeded Pilot School #1 accounts. Run `npx playwright test tests/e2e/` with the dev server on port 3000 (`reuseExistingServer` is on).
+
+| File | What it checks |
+| --- | --- |
+| `tests/e2e/sign-in.ts` | Shared sign-in. Password is the seed password for every `*@pilot1.test` account |
+| `tests/e2e/student-journey.spec.ts` | Feed, Classes (Grade 5), released Fractions grades, a lesson, and a display-name save that is then restored |
+| `tests/e2e/teacher-journey.spec.ts` | Home, a new draft lesson, a duplicate of that draft, and releasing a grade on the Fractions assignment |
+| `tests/e2e/admin-journey.spec.ts` | Dashboard, a pending teacher invite, and a branding color save that is then restored |
+| `tests/e2e/parent-journey.spec.ts` | Home for Pat and Sam, assignments, and the released Fractions grades |
+
+The older RLS specs now create a `memberships` row instead of `profiles.role`. `auth-jwt.spec.ts` checks the issued `tenant_id` and `app_roles` claims. Migration 0005 removed `auth_spike_exec`, so that spec no longer builds a throwaway table. `lesson_materials` inserts no longer send `file_size` (dropped in 0007).
+
+Two product bugs showed up while writing the journeys. Settings Save was enabled before hydration, so the browser submitted a GET and the display name never saved; the button stays disabled until the form is mounted. Branding updates were writing `updated_at`, which is not in the tenants column grant; the trigger sets that column, and the action now writes only the two colors.
+
+The teacher journey leaves extra draft lessons and re-releases the Fractions assignment (score 16). The admin journey leaves a pending `e2e.teacher.*@pilot1.test` invite. Student name and branding colors are restored at the end of those tests. Full `tests/e2e/` passed with `--workers=1` on 2026-11-10 (8 tests).

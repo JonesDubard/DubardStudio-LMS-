@@ -12,12 +12,12 @@ type TabBarProps = {
 
 export function TabBar({ tabs }: TabBarProps) {
   return (
-    <div className="mb-6 border-b border-[#E5E5E5]">
-      <nav className="flex gap-8 overflow-x-auto text-sm">
+    <div className="mb-6 border-b border-line">
+      <nav className="flex gap-6 overflow-x-auto text-sm">
         {tabs.map((tab) => {
           const className = tab.active
-            ? "border-b-2 border-[#333333] px-1 py-3 font-medium"
-            : "px-1 py-3 text-[#666666]";
+            ? "border-b-2 border-brand-primary px-1 py-3 font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
+            : "px-1 py-3 text-ink-secondary transition-colors duration-200 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring";
 
           if (tab.href === "#") {
             return (

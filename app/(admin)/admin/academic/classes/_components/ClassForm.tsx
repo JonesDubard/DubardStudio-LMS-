@@ -52,28 +52,16 @@ export function ClassForm({
       <ServerError message={serverError} />
       <div>
         <label htmlFor="class-name" className={labelClass}>
-          Name
+          Class name
         </label>
         <input
           id="class-name"
           className={inputClass}
+          placeholder="e.g., Grade 1, Grade 2, JSS 1"
           aria-invalid={form.formState.errors.name ? true : undefined}
           {...form.register("name")}
         />
         <FieldError message={form.formState.errors.name?.message} />
-      </div>
-      <div>
-        <label htmlFor="class-grade" className={labelClass}>
-          Grade level
-        </label>
-        <input
-          id="class-grade"
-          className={inputClass}
-          {...form.register("grade_level")}
-        />
-        <p className="mt-1 text-sm text-[#666666]">
-          Optional. Leave blank if this class has no separate grade label.
-        </p>
       </div>
       <FormActions pending={form.formState.isSubmitting} label="Save" />
     </form>
