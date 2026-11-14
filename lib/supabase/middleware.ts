@@ -2,7 +2,9 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { readAccessTokenClaims } from "@/lib/auth/claims";
 import { isPublicPath } from "@/lib/auth/public-paths";
+import { checkSchoolMatch } from "@/lib/auth/school-guard";
 import { allowsRootMarketing } from "@/lib/marketing/paths";
+import { lookupSchool, type SchoolLookup } from "@/lib/tenant/lookup";
 
 type PendingCookie = {
   name: string;
@@ -93,27 +95,49 @@ export async function updateSession(
     return finish(request, requestHeaders, null, pendingCookies, pendingHeaders);
   }
 
-  try {
-    const supabase = createServerClient(url, anonKey, {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet, headers) {
-          cookiesToSet.forEach(({ name, value }) => {
-            try {
-              request.cookies.set(name, value);
-            } catch {
-              console.error("Could not store the refreshed session cookie.");
-            }
-          });
-          pendingCookies.push(...cookiesToSet);
-          if (headers) Object.assign(pendingHeaders, headers);
-        },
+  const supabase = createServerClient(url, anonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
       },
-    });
+      setAll(cookiesToSet, headers) {
+        cookiesToSet.forEach(({ name, value }) => {
+          try {
+            request.cookies.set(name, value);
+          } catch {
+            console.error("Could not store the refreshed session cookie.");
+          }
+        });
+        pendingCookies.push(...cookiesToSet);
+        if (headers) Object.assign(pendingHeaders, headers);
+      },
+    },
+  });
 
+  // US-002.1: which school does this address belong to? middleware.ts sets
+  // x-tenant-subdomain from the hostname; it's null on the root address, which
+  // isn't checked here. Kept outside the session try/catch below on purpose:
+  // that one lets the site stay up when refresh fails, but if we can't tell
+  // which school this is, we must not serve the school's pages (fail closed).
+  const subdomain = requestHeaders.get("x-tenant-subdomain");
+  let school: SchoolLookup | null = null;
+  if (subdomain) {
+    try {
+      school = await lookupSchool(supabase, subdomain);
+    } catch {
+      console.error("Could not look up the school for this address.");
+      return new NextResponse("school_lookup_failed", { status: 503 });
+    }
+    if (school.kind === "not_found") {
+      return new NextResponse("not_found", { status: 404 });
+    }
+  }
+
+  let tokenTenantId: string | null = null;
+  try {
     // Validates the cookie and refreshes it when the access token is due.
+    // A suspended or cancelled school fails the refresh (0010 login hook),
+    // so the user comes back as signed out.
     const { data: userData } = await supabase.auth.getUser();
     user = userData.user;
 
@@ -124,6 +148,7 @@ export async function updateSession(
       const accessToken = sessionData.session?.access_token;
       if (accessToken) {
         const claims = readAccessTokenClaims(accessToken);
+        tokenTenantId = claims.tenantId;
         if (claims.app_roles.length > 0) {
           requestHeaders.set("x-app-roles", claims.app_roles.join(","));
         }
@@ -135,9 +160,31 @@ export async function updateSession(
   } catch {
     console.error("Could not refresh the session.");
     user = null;
+    tokenTenantId = null;
     requestHeaders.delete("x-app-role");
     requestHeaders.delete("x-app-roles");
     requestHeaders.delete("x-tenant-id");
+  }
+
+  // A token with no school (Platform Admin, no active membership) is refused too.
+  if (user && school && checkSchoolMatch(school, tokenTenantId) !== "allow") {
+    try {
+      // "local" ends only this browser's session. The default ("global")
+      // would also sign them out of their own school on other devices.
+      await supabase.auth.signOut({ scope: "local" });
+    } catch {
+      console.error("Could not sign out a user on the wrong school's address.");
+    }
+    requestHeaders.delete("x-app-roles");
+    requestHeaders.delete("x-tenant-id");
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/login";
+    redirectUrl.search = "?error=wrong_school";
+    return applyPending(
+      NextResponse.redirect(redirectUrl),
+      pendingCookies,
+      pendingHeaders,
+    );
   }
 
   return finish(request, requestHeaders, user, pendingCookies, pendingHeaders);
