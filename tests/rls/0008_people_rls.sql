@@ -230,7 +230,7 @@ SELECT rls_test.is('no leftover broad policy on lesson_materials',
 SELECT rls_test.is('no leftover broad policy on profiles',
   (SELECT string_agg(policyname, ',' ORDER BY policyname) FROM pg_policies
    WHERE schemaname = 'public' AND tablename = 'profiles'),
-  'profiles_admin_read,profiles_auth_hook_read,profiles_parent_read_children,profiles_self_read,profiles_teacher_read,tenant_isolation');
+  'profiles_admin_read,profiles_auth_hook_read,profiles_parent_read_children,profiles_self_read,profiles_self_update,profiles_teacher_read,tenant_isolation');
 
 -- ---------------------------------------------------------------------------
 -- Teacher tA1 (10A Maths)
