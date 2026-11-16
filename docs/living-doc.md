@@ -41,3 +41,75 @@ This is a repo-local mirror of Section 12 of the living doc. Update this file wh
 | Background job queue design | Edge Functions vs pgmq — needs spike | Backend (Gativa) | Before bulk invite (0005b / US-031) |
 | Subscription status transitions | Can a school go cancelled → active? Rules for suspension → reactivation | Product + Gativa | Before Platform Admin subscription UI ships |
 | Migration plan from Gativa | Awaiting their migration plan + timeline doc | Gativa | This week |
+
+## 6. Post-MVP Roadmap (Release 2 / P1)
+
+*Note: These features are not required for the initial pilot launch but are prioritized for Release 2 to increase daily active usage, parent engagement, and school stickiness.*
+
+### 6.1 The Notice Board (Announcements)
+**Owner:** Full Stack
+**Problem Solved:** Replaces chaotic WhatsApp groups for official communication.
+**Requirements:**
+- School Admins and Teachers can post text announcements.
+- Can be targeted to the whole school, specific classes, or specific roles (e.g., only Parents).
+- Appears prominently on the Student, Parent, and Teacher dashboards.
+- *Backend Need:* New `announcements` table with RLS policies.
+
+### 6.2 True Offline Mode (PWA Enhancement)
+**Owner:** Frontend / Backend
+**Problem Solved:** Allows students to study without an active internet connection.
+**Requirements:**
+- Students can click "Save Offline" on a lesson.
+- The lesson text, compressed images, and one PDF are cached to the phone (using IndexedDB/Dexie).
+- A clear "Offline Mode" indicator appears when the connection is lost.
+- *Backend Need:* Ensure CORS is enabled on the `tenant-files` storage bucket so the browser can cache the PDFs.
+
+### 6.3 Quick Grading Tools (Teacher Workload Reduction)
+**Owner:** Full Stack
+**Problem Solved:** Speeds up the time teachers spend on administrative tasks.
+**Requirements:**
+- "Mark All as Submitted" button for paper-based assignments.
+- Ability to duplicate a full assessment (instructions and attachments) from one class to another.
+- *Backend Need:* New Server Actions for bulk status updates.
+
+### 6.4 The Digital Library (School Resources)
+**Owner:** Full Stack
+**Problem Solved:** Provides a central repository for past exam papers (e.g., WAEC), study guides, and school policies.
+**Requirements:**
+- A separate section distinct from daily lessons.
+- Files organized by Grade Level, Subject, or general categories.
+- Accessible to Students and Parents.
+- *Backend Need:* New `library_resources` table linking to the `files` table.
+
+### 6.5 School Admin Usage Dashboard
+**Owner:** Backend
+**Source:** Original PRD §4.2
+**Problem Solved:** Allows principals to see if teachers are actually using the system.
+**Requirements:**
+- Simple overview of logins, lessons published, and submission rates.
+- *Backend Need:* Aggregation queries grouped by tenant.
+
+### 6.6 Platform Admin Usage Dashboard
+**Owner:** Backend
+**Source:** Original PRD §4.1
+**Problem Solved:** Allows DubardStudio to monitor platform health.
+**Requirements:**
+- Overview of total tenants, active users, and storage consumed across all schools.
+- *Backend Need:* Platform-level aggregation queries.
+
+### 6.7 Teacher Reusable Content Library
+**Owner:** Full Stack
+**Source:** Original PRD §4.3
+**Problem Solved:** Teachers prepare once and teach many times.
+**Requirements:**
+- Mark a lesson as "Reusable" in a personal library.
+- Add that lesson to any class the teacher is assigned to.
+- *Backend Need:* Add `is_reusable` boolean to the `lessons` table.
+
+### 6.8 Automated Email Digest for Parents
+**Owner:** Backend
+**Source:** Original PRD §4.5 (SMS removed, Email only)
+**Problem Solved:** Keeps parents informed even if they don't log in.
+**Requirements:**
+- Weekly automated email summarizing upcoming/overdue assignments and recent grades.
+- *Backend Need:* Background cron job (using Resend or similar) to aggregate data and send emails.
