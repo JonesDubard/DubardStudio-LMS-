@@ -2,34 +2,104 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { createTenant } from "@/app/(platform)/platform/actions";
 import { FormField } from "@/components/shared/FormField";
 import { alertError, buttonPrimary, buttonSecondary, fieldControl, fieldLabel } from "@/lib/ui/styles";
+import { CheckCircle2 } from "lucide-react";
 
 export default function CreateTenantPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [subdomain, setSubdomain] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  
+  // New states for the success screen
+  const [successLink, setSuccessLink] = useState<string | null>(null);
+  const [newSubdomain, setNewSubdomain] = useState<string>("");
+  const [copied, setCopied] = useState(false);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
     setPending(true);
+    
     const result = await createTenant({ name, subdomain, contactName, contactEmail });
     setPending(false);
+    
     if (!result.ok) {
       setError(result.error);
       return;
     }
-    router.push("/platform/tenants");
-    router.refresh();
+
+    // Instead of redirecting, show the magic link!
+    if (result.inviteLink) {
+      setSuccessLink(result.inviteLink);
+      setNewSubdomain(subdomain);
+    } else {
+      // Fallback if the link failed to generate (e.g., email already exists)
+      setError("Tenant created, but could not generate an invite link. The email might already be in use.");
+    }
   }
 
+  function copyLink() {
+    if (successLink) {
+      navigator.clipboard.writeText(successLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
+  // --- SUCCESS SCREEN ---
+  if (successLink) {
+    return (
+      <main className="min-w-0 flex-1">
+        <div className="mx-auto max-w-[600px] p-4 lg:p-8 mt-10">
+          <div className="rounded-lg border border-green-200 bg-green-50 p-6 shadow-sm">
+            <div className="flex items-center gap-3 text-green-800 mb-4">
+              <CheckCircle2 className="h-8 w-8" />
+              <h1 className="text-xl font-bold">School Provisioned Successfully</h1>
+            </div>
+            
+            <p className="text-sm text-green-700 mb-6">
+              The tenant for <strong>{name}</strong> has been created. Copy this secure invitation link and send it to the School Admin via WhatsApp.
+            </p>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <p className="text-xs font-semibold text-green-800 uppercase mb-1">School Login URL</p>
+                <code className="block p-3 bg-white rounded border text-sm text-slate-700">
+                  https://{newSubdomain}.terralearn.space/login
+                </code>
+              </div>
+              
+              <div>
+                <p className="text-xs font-semibold text-green-800 uppercase mb-1">Admin Invitation Link (One-time use)</p>
+                <code className="block p-3 bg-white rounded border text-xs break-all text-slate-700 h-24 overflow-y-auto">
+                  {successLink}
+                </code>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={copyLink}
+                className={`${buttonPrimary} flex-1 bg-green-600 hover:bg-green-700`}
+              >
+                {copied ? "Copied!" : "Copy Invite Link"}
+              </button>
+              <Link href="/platform/tenants" className={buttonSecondary}>
+                Done
+              </Link>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // --- FORM SCREEN ---
   return (
     <main className="min-w-0 flex-1">
       <div className="mx-auto max-w-[1100px] p-4 lg:p-8">
@@ -84,10 +154,7 @@ export default function CreateTenantPage() {
               </FormField>
 
               <div>
-                <label
-                  htmlFor="subdomain"
-                  className={fieldLabel}
-                >
+                <label htmlFor="subdomain" className={fieldLabel}>
                   Subdomain
                 </label>
                 <input
@@ -104,32 +171,14 @@ export default function CreateTenantPage() {
                   </span>
                 </div>
               </div>
-
-              <FormField id="subscription-status" label="Subscription Status">
-                <select
-                  id="subscription-status"
-                  defaultValue="Trial"
-                  disabled
-                  className={fieldControl}
-                >
-                  <option>Trial</option>
-                </select>
-                <p className="mt-2 text-xs text-ink-secondary">
-                  New schools start on a trial. Change the status after the school is created.
-                </p>
-              </FormField>
             </div>
           </section>
 
           <section className="mt-6 rounded-lg border border-line bg-surface-muted p-6">
             <h2 className="font-semibold">What happens on creation?</h2>
-            <p className="mt-2 text-sm text-ink-secondary">
-              On creation, the system will automatically:
-            </p>
-
-            <ul className="mt-4 space-y-3 text-sm">
-              <li>Create the tenant record</li>
-              <li>Set the default colours, a trial subscription, and provisioning status</li>
+            <ul className="mt-4 space-y-3 text-sm text-ink-secondary">
+              <li>1. Creates the tenant record</li>
+              <li>2. Generates a secure invitation link for the School Admin</li>
             </ul>
             {error ? (
               <p role="alert" className={`${alertError} mt-4`}>
@@ -139,10 +188,7 @@ export default function CreateTenantPage() {
           </section>
 
           <div className="mt-6 flex items-center justify-end gap-3">
-            <Link
-              href="/platform/tenants"
-              className={buttonSecondary}
-            >
+            <Link href="/platform/tenants" className={buttonSecondary}>
               Cancel
             </Link>
             <button type="submit" disabled={pending} className={buttonPrimary}>
