@@ -95,8 +95,8 @@ export async function createTenant(input: {
       email: parsed.data.contactEmail,
       options: {
         data: { full_name: parsed.data.contactName },
-        // Update this to your actual domain or callback URL
-        redirectTo: `https://${parsed.data.subdomain}.terralearn.space/auth/callback`, 
+        
+        redirectTo: `https://${parsed.data.subdomain}.terralearn.space/set-password`,
       },
     });
     
