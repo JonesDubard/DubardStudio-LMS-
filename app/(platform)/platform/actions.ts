@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { SubscriptionStatus } from "@/lib/platform/schools";
 
-type ActionResult = { ok: true; id?: string } | { ok: false; error: string };
+type ActionResult = { ok: true; id?: string; inviteLink?: string } | { ok: false; error: string };
 
 const STATUS_TO_DB: Record<SubscriptionStatus, string> = {
   Trial: "trial",
@@ -87,8 +87,32 @@ export async function createTenant(input: {
   if (created.error) return fail(provisionError(created.error.message));
   if (typeof created.data !== "string") return fail("The school was not created.");
 
+  // NEW: Generate the Invite Link for the School Admin
+  let inviteLink = "";
+  try {
+    const { data: invitation, error: inviteError } = await session.admin.auth.admin.generateLink({
+      type: "invite",
+      email: parsed.data.contactEmail,
+      options: {
+        data: { full_name: parsed.data.contactName },
+        // Update this to your actual domain or callback URL
+        redirectTo: `https://${parsed.data.subdomain}.terralearn.space/auth/callback`, 
+      },
+    });
+    
+    if (!inviteError && invitation) {
+      inviteLink = invitation.properties.action_link;
+    } else {
+      console.error("Failed to generate invite", inviteError);
+    }
+  } catch (err) {
+    console.error("Error generating link", err);
+  }
+
   revalidatePath("/platform/tenants");
-  return { ok: true, id: created.data };
+  
+  // Return the ID and the new link
+  return { ok: true, id: created.data, inviteLink };
 }
 
 export async function updateTenantSubscription(
