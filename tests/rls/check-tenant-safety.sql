@@ -21,7 +21,8 @@ BEGIN
   -- Exceptions list: tables allowed to have no tenant_id (they still need RLS).
   -- Add a row here, with a reason, in the same PR as the new table.
   INSERT INTO tenant_id_exceptions VALUES
-    ('tenants',         'The schools table itself: its id is the tenant id.'),
+    ('tenants', 'The schools table itself: its id is the tenant id.'),
+    ('rate_limit_counters', 'Technical request counters keyed by user, school or IP (NF-07a). Holds no school data.'),
     ('platform_admins', 'Platform staff work across all schools, so they belong to none.');
 
   -- 1. RLS on every table
