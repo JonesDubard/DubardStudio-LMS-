@@ -63,6 +63,15 @@ export default async function SettingsPage({
         )}
         <div className="mt-8 border-t border-line pt-6 pb-[env(safe-area-inset-bottom)]">
           <SignOutButton variant="menu" label="Sign Out" />
+          <div className="mt-6">
+            <p className="text-sm font-medium text-ink">Signed in somewhere else?</p>
+            <p className="mt-1 text-sm text-ink-secondary">
+              Log out on every phone and computer where this account is signed in.
+            </p>
+            <div className="mt-3">
+              <SignOutButton variant="menu" label="Log out of all devices" scope="global" />
+            </div>
+          </div>
         </div>
       </main>
     </div>

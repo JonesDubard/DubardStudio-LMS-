@@ -10,9 +10,18 @@ type SignOutButtonProps = {
   /** Sidebar control hides the words until the nav is wide. */
   variant?: "nav" | "ghost" | "menu";
   label?: string;
+  /**
+   * "local" ends this browser's session only (its refresh token is
+   * * revoked). "global" ends every session of this account on every device.
+   */
+  scope?: "local" | "global";
 };
 
-export function SignOutButton({ variant = "nav", label = "Sign out" }: SignOutButtonProps) {
+export function SignOutButton({
+  variant = "nav",
+  label = "Sign out",
+  scope = "local",
+}: SignOutButtonProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +31,7 @@ export function SignOutButton({ variant = "nav", label = "Sign out" }: SignOutBu
     setError(null);
     setPending(true);
     const supabase = createClient();
-    const { error: signOutError } = await supabase.auth.signOut();
+    const { error: signOutError } = await supabase.auth.signOut({ scope });
     if (signOutError) {
       setError(signOutError.message);
       setPending(false);

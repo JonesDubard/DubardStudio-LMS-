@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 import { AuthError, AuthField, AuthSubmit } from "@/components/auth/AuthField";
 import { homePathFromAccessToken } from "@/lib/auth/home-path";
 import { createClient } from "@/lib/supabase/client";
@@ -22,15 +22,8 @@ export function ResetConfirmForm() {
     const type = params.get("type");
 
     async function establishSession() {
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) {
-          setError(exchangeError.message);
-          return;
-        }
-        setReady(true);
-        return;
-      }
+      const invalid = "This reset link is invalid or has expired. Ask for a new one.";
+
 
       if (tokenHash && type === "recovery") {
         const { error: verifyError } = await supabase.auth.verifyOtp({
@@ -38,15 +31,25 @@ export function ResetConfirmForm() {
           type: "recovery",
         });
         if (verifyError) {
-          setError(verifyError.message);
+          setError(invalid);
           return;
         }
         setReady(true);
         return;
       }
 
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
+      if (code) {
+        const { error: linkError } = await supabase.auth.initialize();
+        if (linkError) {
+          setError(invalid);
+          return;
+        }
+        if (new URLSearchParams(window.location.search).has("code")) {
+          setError(
+            "Open this link in the same browser where you asked for it, or ask for a new one.",
+          );
+          return;
+        }
         setReady(true);
         return;
       }
@@ -57,7 +60,7 @@ export function ResetConfirmForm() {
     void establishSession();
   }, []);
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
