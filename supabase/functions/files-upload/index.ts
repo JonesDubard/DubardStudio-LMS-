@@ -17,14 +17,17 @@ import {
 import type { UploadType } from "../_shared/storage.ts";
 import { corsHeaders, errorResponse, json } from "../_shared/http.ts";
 import { authenticate } from "../_shared/auth.ts";
+import type { Caller } from "../_shared/auth.ts";
+import { reportError } from "../_shared/sentry.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  let caller: Caller | undefined;
   try {
     if (req.method !== "POST") {
       throw new StorageError("invalid_input", 405, "Use POST.");
     }
-    const caller = await authenticate(req);
+    caller = await authenticate(req);
 
     const type = req.headers.get("x-upload-type") ?? "";
     if (!(UPLOAD_TYPES as readonly string[]).includes(type)) {
@@ -68,6 +71,7 @@ Deno.serve(async (req) => {
       },
     }, 201);
   } catch (e) {
+    await reportError(e, { fn: "files-upload", tenantId: caller?.tenantId, roles: caller?.roles });
     return errorResponse(e);
   }
 });

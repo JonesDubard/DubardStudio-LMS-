@@ -3,6 +3,7 @@
   "specifiers": {
     "jsr:@std/assert@1": "1.0.19",
     "jsr:@std/internal@^1.0.12": "1.0.14",
+    "npm:@sentry/deno@8": "8.55.2",
     "npm:@supabase/supabase-js@2": "2.118.0"
   },
   "jsr": {
@@ -17,6 +18,15 @@
     }
   },
   "npm": {
+    "@sentry/core@8.55.2": {
+      "integrity": "sha512-YlEBwybUcOQ/KjMHDmof1vwweVnBtBxYlQp7DE3fOdtW4pqqdHWTnTntQs4VgYfxzjJYgtkd9LHlGtg8qy+JVQ=="
+    },
+    "@sentry/deno@8.55.2": {
+      "integrity": "sha512-IR0gmxsPq1pLFvF5Airqh53N52YHILuTisE8zr5sFCktun7Z0SlJqnpXwaj2hW111Pg61f3ttizzPi7LSy5igg==",
+      "dependencies": [
+        "@sentry/core"
+      ]
+    },
     "@supabase/auth-js@2.118.0": {
       "integrity": "sha512-xWfPXyhS2KDSfAneMtI6p/tBnbdiz/5vaRKXEqUfzfC9WCniKr2Ds5o5G7RIGig0bom4z6wUY9zaV07WDVTfnQ==",
       "dependencies": [
