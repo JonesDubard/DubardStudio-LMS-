@@ -24,7 +24,8 @@ export type StorageErrorCode =
   | "not_allowed"
   | "upload_failed"
   | "record_failed"
-  | "download_failed";
+  | "download_failed"
+  | "service_unavailable";
 
 export class StorageError extends Error {
   code: StorageErrorCode;
@@ -604,6 +605,14 @@ export async function getDownloadUrl(
         "wrong_school",
         403,
         "You do not have access to that file.",
+      );
+    }
+    // A storage outage is a real failure (502, reported), not "not found".
+    if (error && Number(error.statusCode ?? error.status) >= 500) {
+      throw new StorageError(
+        "download_failed",
+        502,
+        "Something went wrong opening the file. Try again.",
       );
     }
     throw new StorageError(

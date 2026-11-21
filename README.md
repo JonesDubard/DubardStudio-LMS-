@@ -61,3 +61,14 @@ Seed test data: `npx supabase db reset` applies `supabase/seed.sql` (pilot1 and 
 Rules:
 - New migrations go in `supabase/migrations/` named `NNNN_name.sql` (digits, then `_`).
 
+## Where to find errors and logs
+
+- **Errors:** Sentry, project `TerraLearn`. Each error is tagged with the function, the school id (`tenant_id`)
+  and the role. No names, emails or user ids are sent. Expected refusals (wrong file type, too large,
+  not allowed) are not reported. Alerts go to `<channel/email>`.
+- **Database logs:** Supabase dashboard, Logs, then Postgres.
+- **Edge Function logs:** Supabase dashboard, Edge Functions, then the function, then Logs.
+  Failed email sends and unexpected errors appear here with the function name.
+- **Uptime:** `<monitor name>` checks `/functions/v1/health` every `<N>` minutes and alerts `<channel>`.
+  `health` checks the Edge Functions and Supabase Auth, not the database.
+- **Secrets:** `SENTRY_DSN` and `SENTRY_ENVIRONMENT` are set with `supabase secrets set`, never in the repo.
