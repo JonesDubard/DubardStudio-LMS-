@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ContactForm } from "@/components/platform/ContactForm";
 import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { BackLink } from "@/components/shared/BackLink";
 import { ElevatedAccessBanner } from "@/components/shared/ElevatedAccessBanner";
@@ -95,6 +96,22 @@ export default async function TenantDetailPage({ params }: TenantDetailPageProps
                 <TenantStatusPill status={status} />
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className={`${surfaceCard} mt-6`}>
+          <div className="border-b border-line-subtle px-4 py-5 sm:px-6">
+            <h2 className="font-semibold">School Contact</h2>
+            <p className="mt-1 text-sm text-ink-secondary">
+              The person we contact about this school. Saving creates an audit event.
+            </p>
+          </div>
+          <div className="p-6">
+            <ContactForm
+              tenantId={school.id}
+              currentName={school.contact_name ?? ""}
+              currentEmail={school.contact_email ?? ""}
+            />
           </div>
         </section>
       </div>

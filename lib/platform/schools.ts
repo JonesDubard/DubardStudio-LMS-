@@ -13,6 +13,11 @@ export type SchoolRow = {
   created_at: string;
 };
 
+export type SchoolDetail = SchoolRow & {
+  contact_name: string | null;
+  contact_email: string | null;
+};
+
 const STATUS_LABEL: Record<string, SubscriptionStatus> = {
   trial: "Trial",
   active: "Active",
@@ -50,13 +55,15 @@ export async function listSchools(): Promise<SchoolRow[]> {
   return result.data ?? [];
 }
 
-export async function getSchool(id: string): Promise<SchoolRow | null> {
+export async function getSchool(id: string): Promise<SchoolDetail | null> {
   const admin = createAdminClient();
   const result = await admin
     .from("tenants")
-    .select("id, name, subdomain, subscription_status, onboarding_status, created_at")
+    .select(
+      "id, name, subdomain, subscription_status, onboarding_status, created_at, contact_name, contact_email",
+    )
     .eq("id", id)
-    .maybeSingle<SchoolRow>();
+    .maybeSingle<SchoolDetail>();
   if (result.error) throw new Error(`tenants: ${result.error.message}`);
   return result.data;
 }
