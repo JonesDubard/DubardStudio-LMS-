@@ -1,7 +1,6 @@
-/** Builds the Supabase client that acts AS THE CALLER, so the 0007 row-level
- * security and storage policies decide what is allowed. The service role key
- * is never used for uploads or downloads.
- */
+// Builds the Supabase client that acts AS THE CALLER, so the 0007 row-level
+// security and storage policies decide what is allowed. The service role key
+// is never used for uploads or downloads.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { StorageError } from "./storage.ts";
@@ -25,6 +24,8 @@ export interface FilesReader {
 
 export interface Caller extends TokenClaims {
   userId: string;
+  /** The signed-in user's own email. Use it for that user only; never log or tag it. */
+  email?: string;
   /** For uploadFile / getDownloadUrl. */
   client: StorageClient;
   /** For reading public.files rows. Same underlying client. */
@@ -42,8 +43,20 @@ export async function authenticate(req: Request): Promise<Caller> {
     },
   );
 
-  /** Asks the auth server, so a forged or expired token is refused here. */
+  // Asks the auth server, so a forged or expired token is refused here.
   const { data, error } = await supabase.auth.getUser(token);
+
+  // The Auth service itself failing is an outage (503, reported), not a user's
+  // expired session. Telling everyone to sign in again would hide it.
+  const down = error &&
+    (error.name === "AuthRetryableFetchError" || (error.status ?? 0) >= 500);
+  if (down) {
+    throw new StorageError(
+      "service_unavailable",
+      503,
+      "The service is temporarily unavailable. Try again in a moment.",
+    );
+  }
   if (error || !data.user) {
     throw new StorageError("unauthenticated", 401, "Your session has expired. Sign in again.");
   }
@@ -52,6 +65,7 @@ export async function authenticate(req: Request): Promise<Caller> {
   return {
     ...claims,
     userId: data.user.id,
+    email: data.user.email ?? undefined,
     client: supabase as unknown as StorageClient,
     db: supabase as unknown as FilesReader,
   };

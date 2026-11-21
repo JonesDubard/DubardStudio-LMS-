@@ -5,6 +5,8 @@
 //      function a client that is limited to that school (US-013.3),
 //   3. writes an audit_log row for every outcome with writeAudit() (US-013.4, US-014).
 // A function never creates its own service-role client; tests/admin_functions_test.ts checks that.
+// Unexpected errors and audit write failures are also reported to Sentry (NF-17.2),
+// tagged with the action, the school (when known) and the role, never a name or email.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import {
   type AuditResult,
@@ -13,13 +15,15 @@ import {
   writeAudit,
 } from "./audit.ts";
 import { serviceClient } from "./client.ts";
+import { reportError } from "./sentry.ts";
 
 export class HttpError extends Error {
   constructor(
     public status: number,
     public code: string,
     message?: string,
-    public headers?: Record<string, string>,
+    /** Extra response headers, e.g. Retry-After on a 429 (see rate_limit.ts). */
+    public headers: Record<string, string> = {},
   ) {
     super(message ?? code);
     this.name = "HttpError";
@@ -37,20 +41,22 @@ function corsHeaders(): Record<string, string> {
     "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
+    // The app must be able to read how long to wait after a 429.
+    "Access-Control-Expose-Headers": "Retry-After",
   };
 }
 
 function json(
   status: number,
   body: unknown,
-  extraHeaders?: Record<string, string>,
+  extraHeaders: Record<string, string> = {},
 ): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       ...corsHeaders(),
-      "Content-Type": "application/json",
       ...extraHeaders,
+      "Content-Type": "application/json",
     },
   });
 }
@@ -266,6 +272,14 @@ export function adminHandler(
         ipAddress: callerIp(req),
       });
 
+    // The Sentry tags: the action, the school once known, and the role. No names or emails.
+    const report = (e: unknown) =>
+      reportError(e, {
+        fn: opts.action,
+        tenantId: tenantId ?? undefined,
+        roles: actorId ? ["platform_admin"] : undefined,
+      });
+
     try {
       actorId = await callerId(req, db);
       if (!(await isActivePlatformAdmin(db, actorId)))
@@ -305,11 +319,15 @@ export function adminHandler(
     } catch (err) {
       if (err instanceof AuditWriteError) {
         console.error(err.message);
+        await report(err);
         return json(500, { error: "audit_write_failed" });
       }
       const status = err instanceof HttpError ? err.status : 500;
       const code = err instanceof HttpError ? err.code : "internal";
-      if (!(err instanceof HttpError)) console.error(err);
+      if (!(err instanceof HttpError)) {
+        console.error(err);
+        await report(err);
+      }
 
       // No row when nobody could be identified: a missing or bad token is
       // already refused by Supabase, and logging those would let anyone fill the log.
@@ -320,6 +338,7 @@ export function adminHandler(
           console.error(
             auditErr instanceof Error ? auditErr.message : auditErr,
           );
+          await report(auditErr);
           return json(500, { error: "audit_write_failed" });
         }
       }
@@ -327,11 +346,10 @@ export function adminHandler(
         err instanceof HttpError && err.message !== code && status < 500
           ? err.message
           : undefined;
-      const extraHeaders = err instanceof HttpError ? err.headers : undefined;
       return json(
         status,
         message ? { error: code, message } : { error: code },
-        extraHeaders,
+        err instanceof HttpError ? err.headers : {},
       );
     }
   };
