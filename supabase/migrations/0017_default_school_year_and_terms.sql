@@ -1,4 +1,4 @@
--- 0015: every new school starts with a current school year and its terms (US-007.3c, FR-2.2.2).
+-- 0017: every new school starts with a current school year and its terms (US-007.3c, FR-2.2.2).
 --   1. default_term_plan(date)   the agreed defaults as a pure function, so they can be
 --                                tested for any date and changed in one place
 --   2. provision_tenant()        same as 0010, plus: one current school year and its terms,
@@ -50,7 +50,7 @@ BEGIN
   END LOOP;
 
   IF array_length(missing, 1) > 0 THEN
-    RAISE EXCEPTION '0015 needs these columns: %. Adjust the INSERTs below to the real column names.',
+    RAISE EXCEPTION '0017 needs these columns: %. Adjust the INSERTs below to the real column names.',
       array_to_string(missing, ', ');
   END IF;
 END $$;

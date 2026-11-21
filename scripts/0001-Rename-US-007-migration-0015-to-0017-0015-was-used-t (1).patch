@@ -1,0 +1,66 @@
+From a21d01fb2c5f96cc0702634c73d97c4f9430ca96 Mon Sep 17 00:00:00 2001
+From: sosa <noreply@example.invalid>
+Date: Sat, 21 Nov 2026 11:41:07 +0000
+Subject: [PATCH 1/2] Rename US-007 migration 0015 to 0017: 0015 was used twice
+
+0015_school_status_contact.sql (US-012) and 0015_default_school_year_and_terms.sql
+(US-007) were both merged. The Supabase CLI uses the number as the version, so
+two 0015 files break db reset and db push. US-012 keeps 0015, US-001 keeps 0016,
+US-007 becomes 0017 (it does not depend on 0016). The SQL is unchanged.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_016PyR3W6Fe4SN2RynqktYzo
+---
+ ..._and_terms.sql => 0017_default_school_year_and_terms.sql} | 5 +++--
+ ..._default_terms_tests.sql => 0017_default_terms_tests.sql} | 4 ++--
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+ rename supabase/migrations/{0015_default_school_year_and_terms.sql => 0017_default_school_year_and_terms.sql} (97%)
+ rename tests/rls/{0015_default_terms_tests.sql => 0017_default_terms_tests.sql} (99%)
+
+diff --git a/supabase/migrations/0015_default_school_year_and_terms.sql b/supabase/migrations/0017_default_school_year_and_terms.sql
+similarity index 97%
+rename from supabase/migrations/0015_default_school_year_and_terms.sql
+rename to supabase/migrations/0017_default_school_year_and_terms.sql
+index 7cae790..9aa1183 100644
+--- a/supabase/migrations/0015_default_school_year_and_terms.sql
++++ b/supabase/migrations/0017_default_school_year_and_terms.sql
+@@ -1,4 +1,5 @@
+--- 0015: every new school starts with a current school year and its terms (US-007.3c, FR-2.2.2).
++-- 0017: every new school starts with a current school year and its terms (US-007.3c, FR-2.2.2).
++--   (First merged as 0015, renamed to 0017 because US-012 also used 0015. Same SQL.)
+ --   1. default_term_plan(date)   the agreed defaults as a pure function, so they can be
+ --                                tested for any date and changed in one place
+ --   2. provision_tenant()        same as 0010, plus: one current school year and its terms,
+@@ -50,7 +51,7 @@ BEGIN
+   END LOOP;
+ 
+   IF array_length(missing, 1) > 0 THEN
+-    RAISE EXCEPTION '0015 needs these columns: %. Adjust the INSERTs below to the real column names.',
++    RAISE EXCEPTION '0017 needs these columns: %. Adjust the INSERTs below to the real column names.',
+       array_to_string(missing, ', ');
+   END IF;
+ END $$;
+diff --git a/tests/rls/0015_default_terms_tests.sql b/tests/rls/0017_default_terms_tests.sql
+similarity index 99%
+rename from tests/rls/0015_default_terms_tests.sql
+rename to tests/rls/0017_default_terms_tests.sql
+index ed23d0e..206dc4c 100644
+--- a/tests/rls/0015_default_terms_tests.sql
++++ b/tests/rls/0017_default_terms_tests.sql
+@@ -1,4 +1,4 @@
+--- Tests for 0015 (US-007.3c): a new school gets a current school year with 3 terms,
++-- Tests for 0017 (US-007.3c): a new school gets a current school year with 3 terms,
+ -- and no classes or subjects.Everything runs in one transaction and is rolled back at the end.
+ -- Each check prints "ok - ..."; the first failure stops the script with "FAIL - ...".
+ -- Dates are checked through default_term_plan(date), so the tests give the same answer on any day.
+@@ -222,5 +222,5 @@ SELECT rls_test.is('the failed school left no school, year or terms behind',
+ SELECT rls_test.is('and its subdomain is still free',
+   (SELECT count(*)::text FROM public.tenants WHERE subdomain = 'test-0015-b'), '0');
+ 
+-\echo 'All 0015 tests passed. Rolling back.'
++\echo 'All 0017 tests passed. Rolling back.'
+ ROLLBACK;
+\ No newline at end of file
+-- 
+2.43.0
+

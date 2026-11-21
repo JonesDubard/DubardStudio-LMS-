@@ -1,4 +1,4 @@
--- Tests for 0015 (US-007.3c): a new school gets a current school year with 3 terms,
+-- Tests for 0017 (US-007.3c): a new school gets a current school year with 3 terms,
 -- and no classes or subjects.Everything runs in one transaction and is rolled back at the end.
 -- Each check prints "ok - ..."; the first failure stops the script with "FAIL - ...".
 -- Dates are checked through default_term_plan(date), so the tests give the same answer on any day.
@@ -222,5 +222,5 @@ SELECT rls_test.is('the failed school left no school, year or terms behind',
 SELECT rls_test.is('and its subdomain is still free',
   (SELECT count(*)::text FROM public.tenants WHERE subdomain = 'test-0015-b'), '0');
 
-\echo 'All 0015 tests passed. Rolling back.'
+\echo 'All 0017 tests passed. Rolling back.'
 ROLLBACK;
