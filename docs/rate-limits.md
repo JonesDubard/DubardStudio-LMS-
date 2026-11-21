@@ -25,6 +25,16 @@ Two layers:
 | `sms_sent`, `anonymous_users`, `web3` | defaults | unchanged | Not used. |
 
 
+**Password reset (US-004.3).** Reset requests are limited by Supabase Auth, not by our
+functions, because nobody is signed in yet:
+- `sign_in_sign_ups` above also counts password-recovery requests (100 per 5 min per IP)
+- `email_sent` caps all auth emails per hour
+- `[auth.email] max_frequency = "60s"`: one reset email per address per minute, so nobody
+  can flood someone's inbox. Set the same in the dashboard (Authentication → Rate Limits /
+  Email: minimum interval between emails); 60 seconds is the hosted default.
+
+`scripts/test-auth-sessions.ts` checks the per-address limit locally.
+
 These are starting values for the pilot. Tune them once there's real traffic.
 
 **Bursts:** Supabase Auth counts with a token bucket. The numbers above set how fast it refills,
