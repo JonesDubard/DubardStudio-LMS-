@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { createTenant } from "@/app/(platform)/platform/actions";
 import { FormField } from "@/components/shared/FormField";
+import { ResendInviteButton } from "@/components/platform/ResendInviteButton";
 import { alertError, buttonPrimary, buttonSecondary, fieldControl, fieldLabel } from "@/lib/ui/styles";
 import { CheckCircle2 } from "lucide-react";
 
@@ -15,17 +16,30 @@ export default function CreateTenantPage() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   
-  // New states for the success screen
-  const [successLink, setSuccessLink] = useState<string | null>(null);
-  const [newSubdomain, setNewSubdomain] = useState<string>("");
-  const [copied, setCopied] = useState(false);
+  // US-007.3: how many terms the school year has. 3 is the default.
+  const [termCount, setTermCount] = useState("3");
+
+  // Set once the school exists (US-008b: the invite is emailed, not shown)
+  const [created, setCreated] = useState<{
+    id: string;
+    inviteSent: boolean;
+    warning: string | null;
+    email: string;
+    subdomain: string;
+  } | null>(null);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
     setPending(true);
     
-    const result = await createTenant({ name, subdomain, contactName, contactEmail });
+    const result = await createTenant({
+      name,
+      subdomain,
+      contactName,
+      contactEmail,
+      termCount: Number(termCount),
+    });
     setPending(false);
     
     if (!result.ok) {
@@ -33,26 +47,20 @@ export default function CreateTenantPage() {
       return;
     }
 
-    // Instead of redirecting, show the magic link!
-    if (result.inviteLink) {
-      setSuccessLink(result.inviteLink);
-      setNewSubdomain(subdomain);
-    } else {
-      // Fallback if the link failed to generate (e.g., email already exists)
-      setError("Tenant created, but could not generate an invite link. The email might already be in use.");
-    }
-  }
-
-  function copyLink() {
-    if (successLink) {
-      navigator.clipboard.writeText(successLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    // The school exists. The invite email is sent by the server; if it failed, the
+    // warning says so and the Resend button below sends it again.
+    setCreated({
+      id: result.id ?? "",
+      inviteSent: result.inviteSent === true,
+      warning: result.inviteWarning ?? null,
+      email: contactEmail.trim(),
+      subdomain: subdomain.trim().toLowerCase(),
+    });
   }
 
   // --- SUCCESS SCREEN ---
-  if (successLink) {
+  if (created) {
+    const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN?.trim() || "terralearn.space";
     return (
       <main className="min-w-0 flex-1">
         <div className="mx-auto max-w-[600px] p-4 lg:p-8 mt-10">
@@ -61,34 +69,30 @@ export default function CreateTenantPage() {
               <CheckCircle2 className="h-8 w-8" />
               <h1 className="text-xl font-bold">School Provisioned Successfully</h1>
             </div>
-            
-            <p className="text-sm text-green-700 mb-6">
-              The tenant for <strong>{name}</strong> has been created. Copy this secure invitation link and send it to the School Admin via WhatsApp.
-            </p>
 
-            <div className="space-y-4 mb-6">
-              <div>
-                <p className="text-xs font-semibold text-green-800 uppercase mb-1">School Login URL</p>
-                <code className="block p-3 bg-white rounded border text-sm text-slate-700">
-                  https://{newSubdomain}.terralearn.space/login
-                </code>
-              </div>
-              
-              <div>
-                <p className="text-xs font-semibold text-green-800 uppercase mb-1">Admin Invitation Link (One-time use)</p>
-                <code className="block p-3 bg-white rounded border text-xs break-all text-slate-700 h-24 overflow-y-auto">
-                  {successLink}
-                </code>
-              </div>
+            {created.inviteSent ? (
+              <p className="text-sm text-green-700 mb-6">
+                <strong>{name}</strong> has been created. An invitation was emailed to{" "}
+                <strong>{created.email}</strong>.
+              </p>
+            ) : (
+              <p role="alert" className={`${alertError} mb-6`}>
+                {created.warning ??
+                  "The school was created, but the invite email did not go out."}
+              </p>
+            )}
+
+            <div className="mb-6">
+              <p className="text-xs font-semibold text-green-800 uppercase mb-1">School Login URL</p>
+              <code className="block p-3 bg-white rounded border text-sm text-slate-700">
+                https://{created.subdomain}.{root}/login
+              </code>
             </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={copyLink}
-                className={`${buttonPrimary} flex-1 bg-green-600 hover:bg-green-700`}
-              >
-                {copied ? "Copied!" : "Copy Invite Link"}
-              </button>
+            <div className="flex flex-wrap items-start gap-3">
+              {!created.inviteSent && created.id ? (
+                <ResendInviteButton tenantId={created.id} className={buttonPrimary} />
+              ) : null}
               <Link href="/platform/tenants" className={buttonSecondary}>
                 Done
               </Link>
@@ -171,6 +175,28 @@ export default function CreateTenantPage() {
                   </span>
                 </div>
               </div>
+
+              <div>
+                <label htmlFor="term-count" className={fieldLabel}>
+                  Terms per school year
+                </label>
+                <select
+                  id="term-count"
+                  value={termCount}
+                  onChange={(event) => setTermCount(event.target.value)}
+                  className={fieldControl}
+                >
+                  {[1, 2, 3, 4, 5, 6].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                      {n === 3 ? " (default)" : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs text-ink-secondary">
+                  The School Admin can change the term dates later.
+                </p>
+              </div>
             </div>
           </section>
 
@@ -178,7 +204,8 @@ export default function CreateTenantPage() {
             <h2 className="font-semibold">What happens on creation?</h2>
             <ul className="mt-4 space-y-3 text-sm text-ink-secondary">
               <li>1. Creates the tenant record</li>
-              <li>2. Generates a secure invitation link for the School Admin</li>
+              <li>2. Creates the current school year with its terms</li>
+              <li>3. Emails an invitation to the School Admin (you can resend it if it fails)</li>
             </ul>
             {error ? (
               <p role="alert" className={`${alertError} mt-4`}>
