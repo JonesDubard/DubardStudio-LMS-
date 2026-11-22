@@ -30,14 +30,9 @@ export function inviteFirstSchoolAdmin(school: SchoolRow, deps: InviteDeps): Pro
   );
 }
 
-// What the resend needs to look up, again only the part of the client we use.
-interface Reader {
-  from(table: string): {
-    select(cols: string): {
-      eq(col: string, v: string): any;
-    };
-  };
-}
+// What the resend needs to look up: a Supabase client (kept loose, see Rpc in sendInvite.ts).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Reader = { from: (table: any) => any };
 
 /**
  * US-008b.4: resend the School Admin invite of a school.

@@ -5,9 +5,21 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { SubscriptionStatus } from "@/lib/platform/schools";
+import {
+  inviteFirstSchoolAdmin,
+  resendSchoolAdminInvite,
+} from "@/lib/invitations/schoolAdminInvite";
 
 type ActionResult =
-  { ok: true; id?: string; inviteLink?: string } | { ok: false; error: string };
+  | {
+      ok: true;
+      id?: string;
+      /** US-008b: true when the School Admin invite email went out. */
+      inviteSent?: boolean;
+      /** Set when the school exists but the invite email did not go out. */
+      inviteWarning?: string;
+    }
+  | { ok: false; error: string };
 
 const STATUS_TO_DB: Record<SubscriptionStatus, string> = {
   Trial: "trial",
@@ -31,10 +43,35 @@ function provisionError(message: string): string {
   if (message.includes("invalid_contact"))
     return "Enter a contact name and a valid email.";
   if (message.includes("invalid_name")) return "Enter a school name.";
+  if (message.includes("invalid_term_count"))
+    return "Choose between 1 and 6 terms.";
   if (message.includes("not_platform_admin"))
     return "Only a platform admin can create a school.";
   return "The school was not created.";
 }
+
+// US-008b: what a refused invite means, in words for the Platform Admin.
+function inviteError(code: string): string {
+  switch (code) {
+    case "school_not_found":
+      return "That school was not found.";
+    case "no_open_invite":
+      return "There is no open invite to resend. The School Admin may have accepted it already.";
+    case "school_suspended":
+      return "This school is suspended, so no invite can be sent.";
+    case "school_cancelled":
+      return "This school is cancelled, so no invite can be sent.";
+    case "invalid_email":
+      return "The contact email is not valid.";
+    case "already_member":
+      return "That person already has this role at the school.";
+    default:
+      return "The invite was not sent.";
+  }
+}
+
+const INVITE_NOT_SENT =
+  "The school was created, but the invite email did not go out. Use Resend invite.";
 
 function schoolChangeError(message: string, fallback: string): string {
   if (message.includes("school_not_found")) return "That school was not found.";
@@ -83,6 +120,8 @@ const createSchema = z.object({
     .trim()
     .email("Enter a valid contact email.")
     .max(320),
+  // US-007.3: optional number of terms. Left out = the database default (3).
+  termCount: z.number().int().min(1, "Choose between 1 and 6 terms.").max(6, "Choose between 1 and 6 terms.").optional(),
 });
 
 export async function createTenant(input: {
@@ -90,6 +129,7 @@ export async function createTenant(input: {
   subdomain: string;
   contactName: string;
   contactEmail: string;
+  termCount?: number;
 }): Promise<ActionResult> {
   const parsed = createSchema.safeParse(input);
   if (!parsed.success) {
@@ -107,38 +147,60 @@ export async function createTenant(input: {
     p_contact_name: parsed.data.contactName,
     p_contact_email: parsed.data.contactEmail,
     p_actor_id: session.userId,
+    p_term_count: parsed.data.termCount ?? null, // null = default (3)
   });
   if (created.error) return fail(provisionError(created.error.message));
   if (typeof created.data !== "string")
     return fail("The school was not created.");
 
-  // Generate the Invite Link for the School Admin
-  let inviteLink = "";
-  try {
-    const { data: invitation, error: inviteError } =
-      await session.admin.auth.admin.generateLink({
-        type: "invite",
-        email: parsed.data.contactEmail,
-        options: {
-          data: { full_name: parsed.data.contactName },
-
-          redirectTo: `https://${parsed.data.subdomain}.terralearn.space/set-password`,
-        },
-      });
-
-    if (!inviteError && invitation) {
-      inviteLink = invitation.properties.action_link;
-    } else {
-      console.error("Failed to generate invite", inviteError);
-    }
-  } catch (err) {
-    console.error("Error generating link", err);
-  }
+  // US-008b.2: invite the first School Admin. The school already exists, so a failed
+  // email must not undo it: the school is reported as created, with a warning, and the
+  // invite can be resent (sent_at stays empty until an email really went out).
+  const invite = await inviteFirstSchoolAdmin(
+    {
+      id: created.data,
+      name: parsed.data.name,
+      subdomain: parsed.data.subdomain.toLowerCase(),
+      contact_email: parsed.data.contactEmail,
+      contact_name: parsed.data.contactName,
+    },
+    { db: session.admin },
+  );
 
   revalidatePath("/platform/tenants");
 
-  // Return the ID and the new link
-  return { ok: true, id: created.data, inviteLink };
+  if (!invite.ok) {
+    console.error("first School Admin invite refused", invite.code);
+    return { ok: true, id: created.data, inviteSent: false, inviteWarning: INVITE_NOT_SENT };
+  }
+  if (!invite.sent) {
+    return { ok: true, id: created.data, inviteSent: false, inviteWarning: INVITE_NOT_SENT };
+  }
+  return { ok: true, id: created.data, inviteSent: true };
+}
+
+/**
+ * US-008b.4: "Resend invite". Platform Admins only. Reuses the school's open School Admin
+ * invitation (new link, same invitation), so it never creates a second one.
+ */
+export async function resendFirstAdminInvite(
+  tenantId: string,
+): Promise<ActionResult> {
+  if (!z.string().uuid().safeParse(tenantId).success)
+    return fail("That school was not found.");
+
+  const session = await requirePlatformAdmin();
+  if (isDenied(session)) return session;
+
+  const result = await resendSchoolAdminInvite(tenantId, {
+    db: session.admin,
+    read: session.admin,
+  });
+  if (!result.ok) return fail(inviteError(result.code));
+  if (!result.sent) return fail("The email did not go out. Try again in a moment.");
+
+  revalidatePath(`/platform/tenants/${tenantId}`);
+  return { ok: true, id: result.invitationId, inviteSent: true };
 }
 
 export async function updateTenantSubscription(

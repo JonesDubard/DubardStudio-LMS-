@@ -7,9 +7,12 @@ import { sendEmail as defaultSend, type EmailSender } from "../email/resend";
 
 export type InviteRole = "school_admin" | "teacher" | "student" | "parent";
 
-// Only the part of the Supabase client we use, so tests can pass a fake.
+// Only the part of the Supabase client we use. Kept loose on purpose: the real client's
+// rpc() is heavily generic, and a precise type here makes TypeScript give up (TS2589).
+// Results are checked at runtime below.
 export interface Rpc {
-  rpc(fn: string, args: Record<string, unknown>): PromiseLike<{ data: unknown; error: { message: string } | null }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rpc: (fn: any, args?: any) => PromiseLike<{ data: any; error: { message: string } | null }>;
 }
 
 export interface InviteDeps {
