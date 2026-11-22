@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { DataTable } from "@/components/shared/DataTable";
+import { ResendInviteButton } from "@/components/platform/ResendInviteButton";
 import { assertPlatformAdmin, listSchools, subscriptionLabel } from "@/lib/platform/schools";
 import { buttonPrimary, buttonSecondary, fieldControl, fieldLabel, surfaceCard } from "@/lib/ui/styles";
 
@@ -17,6 +18,12 @@ function formatCreated(value: string): string {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+// A school whose first School Admin has not signed up yet. The server refuses a resend
+// when there is no open invite, so this only decides whether the button is shown.
+function awaitingFirstAdmin(onboardingStatus: string): boolean {
+  return onboardingStatus === "provisioning" || onboardingStatus === "invited";
 }
 
 const STATUS_OPTIONS = [
@@ -123,6 +130,9 @@ export default async function PlatformTenantsPage({
                 >
                   Subscription
                 </Link>
+                {awaitingFirstAdmin(tenant.onboarding_status) ? (
+                  <ResendInviteButton tenantId={tenant.id} className={`${buttonSecondary} w-full`} />
+                ) : null}
               </li>
             ))
           )}
@@ -156,13 +166,17 @@ export default async function PlatformTenantsPage({
               <span key="created" className="text-ink-secondary">
                 {formatCreated(tenant.created_at)}
               </span>,
-              <Link
-                key="action"
-                href={`/platform/tenants/${tenant.id}/subscription`}
-                className={buttonSecondary}
-              >
-                Subscription
-              </Link>,
+              <span key="action" className="flex flex-wrap items-start gap-2">
+                <Link
+                  href={`/platform/tenants/${tenant.id}/subscription`}
+                  className={buttonSecondary}
+                >
+                  Subscription
+                </Link>
+                {awaitingFirstAdmin(tenant.onboarding_status) ? (
+                  <ResendInviteButton tenantId={tenant.id} />
+                ) : null}
+              </span>,
             ],
           }))}
         />
