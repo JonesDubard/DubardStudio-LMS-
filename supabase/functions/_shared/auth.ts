@@ -24,6 +24,8 @@ export interface FilesReader {
 
 export interface Caller extends TokenClaims {
   userId: string;
+  /** The signed-in user's own email. Use it for that user only; never log or tag it. */
+  email?: string;
   /** For uploadFile / getDownloadUrl. */
   client: StorageClient;
   /** For reading public.files rows. Same underlying client. */
@@ -63,6 +65,7 @@ export async function authenticate(req: Request): Promise<Caller> {
   return {
     ...claims,
     userId: data.user.id,
+    email: data.user.email ?? undefined,
     client: supabase as unknown as StorageClient,
     db: supabase as unknown as FilesReader,
   };
