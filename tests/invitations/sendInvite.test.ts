@@ -186,7 +186,7 @@ function readerFor(_db: Rpc, rows: Inv[], sch: typeof school) {
 }
 
 test("buildAcceptUrl: default, token in the path, school address, and encoding", () => {
-  assert.equal(buildAcceptUrl("a b", null, { APP_URL: "https://app.test/" } as any), "https://app.test/invite?token=a%20b");
+  assert.equal(buildAcceptUrl("a b", null, { APP_URL: "https://app.test/" } as any), "https://app.test/invite/a%20b");
   assert.equal(buildAcceptUrl("tok", null, { INVITE_URL_TEMPLATE: "https://app.test/invite/{token}" } as any), "https://app.test/invite/tok");
   assert.equal(buildAcceptUrl("tok", "sint-jan", { INVITE_URL_TEMPLATE: "https://{subdomain}.app.test/invite?token={token}" } as any), "https://sint-jan.app.test/invite?token=tok");
   assert.throws(() => buildAcceptUrl("tok", null, { INVITE_URL_TEMPLATE: "https://{subdomain}.app.test/{token}" } as any));

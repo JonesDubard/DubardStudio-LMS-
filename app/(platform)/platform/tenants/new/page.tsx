@@ -15,9 +15,8 @@ export default function CreateTenantPage() {
   const [subdomain, setSubdomain] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  
-  // US-007.3: how many terms the school year has. 3 is the default.
-  const [termCount, setTermCount] = useState("3");
+
+
 
   // Set once the school exists (US-008b: the invite is emailed, not shown)
   const [created, setCreated] = useState<{
@@ -32,16 +31,15 @@ export default function CreateTenantPage() {
     event.preventDefault();
     setError(null);
     setPending(true);
-    
+
     const result = await createTenant({
       name,
       subdomain,
       contactName,
       contactEmail,
-      termCount: Number(termCount),
     });
     setPending(false);
-    
+
     if (!result.ok) {
       setError(result.error);
       return;
@@ -175,29 +173,8 @@ export default function CreateTenantPage() {
                   </span>
                 </div>
               </div>
-
-              <div>
-                <label htmlFor="term-count" className={fieldLabel}>
-                  Terms per school year
-                </label>
-                <select
-                  id="term-count"
-                  value={termCount}
-                  onChange={(event) => setTermCount(event.target.value)}
-                  className={fieldControl}
-                >
-                  {[1, 2, 3, 4, 5, 6].map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                      {n === 3 ? " (default)" : ""}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-2 text-xs text-ink-secondary">
-                  The School Admin can change the term dates later.
-                </p>
-              </div>
             </div>
+
           </section>
 
           <section className="mt-6 rounded-lg border border-line bg-surface-muted p-6">

@@ -12,13 +12,13 @@ import {
 
 type ActionResult =
   | {
-      ok: true;
-      id?: string;
-      /** US-008b: true when the School Admin invite email went out. */
-      inviteSent?: boolean;
-      /** Set when the school exists but the invite email did not go out. */
-      inviteWarning?: string;
-    }
+    ok: true;
+    id?: string;
+    /** US-008b: true when the School Admin invite email went out. */
+    inviteSent?: boolean;
+    /** Set when the school exists but the invite email did not go out. */
+    inviteWarning?: string;
+  }
   | { ok: false; error: string };
 
 const STATUS_TO_DB: Record<SubscriptionStatus, string> = {
@@ -43,8 +43,6 @@ function provisionError(message: string): string {
   if (message.includes("invalid_contact"))
     return "Enter a contact name and a valid email.";
   if (message.includes("invalid_name")) return "Enter a school name.";
-  if (message.includes("invalid_term_count"))
-    return "Choose between 1 and 6 terms.";
   if (message.includes("not_platform_admin"))
     return "Only a platform admin can create a school.";
   return "The school was not created.";
@@ -120,8 +118,6 @@ const createSchema = z.object({
     .trim()
     .email("Enter a valid contact email.")
     .max(320),
-  // US-007.3: optional number of terms. Left out = the database default (3).
-  termCount: z.number().int().min(1, "Choose between 1 and 6 terms.").max(6, "Choose between 1 and 6 terms.").optional(),
 });
 
 export async function createTenant(input: {
@@ -129,7 +125,6 @@ export async function createTenant(input: {
   subdomain: string;
   contactName: string;
   contactEmail: string;
-  termCount?: number;
 }): Promise<ActionResult> {
   const parsed = createSchema.safeParse(input);
   if (!parsed.success) {
@@ -147,7 +142,6 @@ export async function createTenant(input: {
     p_contact_name: parsed.data.contactName,
     p_contact_email: parsed.data.contactEmail,
     p_actor_id: session.userId,
-    p_term_count: parsed.data.termCount ?? null, // null = default (3)
   });
   if (created.error) return fail(provisionError(created.error.message));
   if (typeof created.data !== "string")

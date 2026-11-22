@@ -49,14 +49,14 @@ export const hashToken = (token: string) => createHash("sha256").update(token, "
 const defaultToken = () => randomBytes(32).toString("base64url"); // 43 chars; 0016 accepts 20-200
 /**
  * The link in the invite email, from the INVITE_URL_TEMPLATE setting. Examples:
- *   https://app.example.com/invite?token={token}          (token in the query)
+ *   https://app.example.com/invite/{token}                 (token in the query)
  *   https://app.example.com/invite/{token}                (token in the path)
- *   https://{subdomain}.example.com/invite?token={token}  (the school's own address)
- * Not set: APP_URL + /invite?token={token}. The token is URL-encoded for you.
+ *   https://{subdomain}.example.com/invite/{token}  (the school's own address)
+ * Not set: APP_URL + /invite/{token}. The token is URL-encoded for you.
  */
 export function buildAcceptUrl(token: string, schoolSubdomain?: string | null, env = process.env): string {
   const template = env.INVITE_URL_TEMPLATE
-    ?? `${(env.APP_URL ?? "").replace(/\/$/, "")}/invite?token={token}`;
+    ?? `${(env.APP_URL ?? "").replace(/\/$/, "")}/invite/{token}`;
   if (template.includes("{subdomain}") && !schoolSubdomain) {
     throw new Error("INVITE_URL_TEMPLATE needs {subdomain} but no schoolSubdomain was given");
   }
