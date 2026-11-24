@@ -36,6 +36,13 @@ export interface InviteInput {
   invitedBy?: string | null;
   inviterName?: string;
   inviteeName?: string;
+  /**
+   * US-030: true = create a NEW invitation only. If the person already has an open invite,
+   * the database refuses with already_invited and nothing is sent (resend is separate).
+   * The database also checks that invitedBy is an active School Admin of this school.
+   * Leave out (false) for "create or reuse", which is what a resend uses.
+   */
+  newOnly?: boolean;
 }
 
 export type InviteResult =
@@ -70,7 +77,8 @@ export async function sendInvite(input: InviteInput, deps: InviteDeps): Promise<
   const token = (deps.newToken ?? defaultToken)();
   const tokenHash = hashToken(token);
 
-  const up = await deps.db.rpc("upsert_invitation", {
+  // newOnly: create_school_invitation (0019). Otherwise: upsert_invitation (0018).
+  const up = await deps.db.rpc(input.newOnly ? "create_school_invitation" : "upsert_invitation", {
     p_tenant_id: input.tenantId,
     p_email: input.email,
     p_role: input.role,
