@@ -48,6 +48,7 @@ export default async function AdminTeachersPage() {
         .eq("role", "teacher")
         .eq("status", "pending")
         .order("created_at", { ascending: false })
+        .limit(100)
         .returns<
           {
             id: string;
