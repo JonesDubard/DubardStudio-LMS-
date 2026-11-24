@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { buttonSecondary } from "@/lib/ui/styles";
 import { resendTeacherInvite } from "./actions";
 
+/** US-030: resend a pending teacher invite (same invitation, new link, 7 new days). */
 export function ResendTeacherInviteButton({ invitationId }: { invitationId: string }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);

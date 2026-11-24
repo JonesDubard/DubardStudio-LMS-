@@ -15,7 +15,7 @@ test("admin can invite a teacher and save branding colors", async ({ page }) => 
   await expect(page.getByText("Tom Teacher (School 1)")).toBeVisible();
   await page.getByLabel("Teacher email").fill(email);
   await page.getByRole("button", { name: "Invite teacher" }).click();
-  /** with a Resend key the email goes out; without one the invite is saved as not sent. **/
+  // US-030: with a Resend key the email goes out; without one the invite is saved as not sent.
   await expect(
     page.getByText(/Invite sent to|The invite was saved, but the email did not go out/),
   ).toBeVisible();

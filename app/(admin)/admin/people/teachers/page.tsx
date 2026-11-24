@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   title: "Manage Teachers",
 };
 
+/** US-030: what the admin needs to know about an open invite. */
 function inviteLabel(invite: { sent_at: string | null; expires_at: string }, now: number): string {
   if (Date.parse(invite.expires_at) <= now) return "EXPIRED";
   return invite.sent_at ? "SENT" : "NOT SENT";
