@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { InvitePersonForm } from "@/components/admin/InvitePersonForm";
 import { PendingInvites } from "@/components/admin/PendingInvites";
 import { PeopleSubNav } from "@/components/admin/PeopleSubNav";
 import { RemoveAdminButton } from "@/components/admin/RemoveAdminButton";
@@ -32,16 +31,6 @@ export default async function AdminAdminsPage() {
       <div className="space-y-6 p-4 lg:p-8">
         <PeopleSubNav />
 
-        <section className={`${surfaceCard} p-5`}>
-          <h2 className="text-lg font-semibold">Invite a school admin</h2>
-          <p className="mt-1 text-sm text-ink-secondary">
-            Saves a pending invitation. No email is sent.
-          </p>
-          <div className="mt-4">
-            <InvitePersonForm role="school_admin" />
-          </div>
-        </section>
-
         <PendingInvites role="school_admin" />
 
         <DataTable
@@ -67,8 +56,8 @@ export default async function AdminAdminsPage() {
         <div className={`${surfaceCard} max-w-2xl p-5`}>
           <p className="font-medium">School Admin Access</p>
           <p className="mt-2 text-sm text-ink-secondary">
-            A school can have multiple admins. Any admin can invite another. The last active
-            admin cannot be removed.
+            A school can have multiple admins. New School Admins are invited by the platform
+            team: contact support to add one. The last active admin cannot be removed.
           </p>
         </div>
       </div>

@@ -26,7 +26,6 @@ function fail(error: string): InviteTeacherResult {
   return { ok: false, error };
 }
 
-/** The signed-in user, with the school and roles from their token. Null if not signed in. */
 async function currentCaller(): Promise<Caller | null> {
   const supabase = await createClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -40,11 +39,6 @@ async function currentCaller(): Promise<Caller | null> {
   return { userId: userData.user.id, tenantId: claims.tenantId, roles: claims.app_roles };
 }
 
-/**
- * US-030: invite one teacher by email into the School Admin's own school, and email the link.
- * Refuses (and sends nothing) if the email already has an open invite or is already a
- * teacher here. Resend is the separate action below.
- */
 export async function inviteTeacher(email: string): Promise<InviteTeacherResult> {
   const parsed = emailSchema.safeParse(email);
   if (!parsed.success) return fail(firstZodMessage(parsed.error));
@@ -56,7 +50,6 @@ export async function inviteTeacher(email: string): Promise<InviteTeacherResult>
   const result = await inviteTeacherFor(caller, parsed.data, { db: admin, read: admin });
   if (!result.ok) {
     const message = teacherInviteError(result.code);
-    // An unexpected database error gets the default sentence: log its code (no email address).
     if (message === teacherInviteError("")) console.error("teacher invite failed", result.code);
     return fail(message);
   }
@@ -66,7 +59,6 @@ export async function inviteTeacher(email: string): Promise<InviteTeacherResult>
   return { ok: true, notice: `Invite sent to ${parsed.data.toLowerCase()}.` };
 }
 
-/** US-030: "Resend" on a pending teacher invite (same invitation, new link). */
 export async function resendTeacherInvite(invitationId: string): Promise<InviteTeacherResult> {
   if (!z.string().uuid().safeParse(invitationId).success) {
     return fail(teacherInviteError("no_open_invite"));
@@ -84,16 +76,14 @@ export async function resendTeacherInvite(invitationId: string): Promise<InviteT
   return { ok: true, notice: "Invite sent again. The old link no longer works." };
 }
 
-/**
- * Creates a pending invitation for students, School Admins and parents. Does not send email
- * or reveal the token; those roles get their own stories (US-033, US-036).
- * Teachers go through inviteTeacher() above, which really sends the invite.
- */
 export async function invitePerson(
   email: string,
   role: InviteRole,
 ): Promise<InviteTeacherResult> {
   if (role === "teacher") return inviteTeacher(email);
+  if (role === "school_admin") {
+    return fail("Only the platform team can add a School Admin. Contact support to add one.");
+  }
 
   const parsed = emailSchema.safeParse(email);
   if (!parsed.success) return fail(firstZodMessage(parsed.error));
