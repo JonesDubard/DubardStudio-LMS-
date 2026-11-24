@@ -11,10 +11,17 @@ import { listPeople } from "@/lib/queries/people";
 import { createClient } from "@/lib/supabase/server";
 import { surfaceCard } from "@/lib/ui/styles";
 import { InviteTeacherForm } from "./InviteTeacherForm";
+import { ResendTeacherInviteButton } from "./ResendTeacherInviteButton";
 
 export const metadata: Metadata = {
   title: "Manage Teachers",
 };
+
+/** US-030: what the admin needs to know about an open invite. */
+function inviteLabel(invite: { sent_at: string | null; expires_at: string }, now: number): string {
+  if (Date.parse(invite.expires_at) <= now) return "EXPIRED";
+  return invite.sent_at ? "SENT" : "NOT SENT";
+}
 
 function countLabel(count: number, singular: string, plural: string): string {
   return `${count} ${count === 1 ? singular : plural}`;
@@ -37,11 +44,20 @@ export default async function AdminTeachersPage() {
         .returns<{ teacher_id: string; class_subject_id: string }[]>(),
       supabase
         .from("invitations")
-        .select("id, email, created_at")
+        .select("id, email, created_at, sent_at, expires_at")
         .eq("role", "teacher")
         .eq("status", "pending")
         .order("created_at", { ascending: false })
-        .returns<{ id: string; email: string | null; created_at: string }[]>(),
+        .limit(100)
+        .returns<
+          {
+            id: string;
+            email: string | null;
+            created_at: string;
+            sent_at: string | null;
+            expires_at: string;
+          }[]
+        >(),
     ]);
   if (linkResult.error) throw new Error(`class_subjects: ${linkResult.error.message}`);
   if (assignmentResult.error) {
@@ -72,6 +88,7 @@ export default async function AdminTeachersPage() {
     assignmentsByTeacher.set(row.teacher_id, list);
   }
   const pending = invitationResult.data ?? [];
+  const now = Date.now();
   const blockedMessage =
     options.length === 0
       ? "Link a subject to a class under Academic before assigning a teacher."
@@ -102,7 +119,7 @@ export default async function AdminTeachersPage() {
         <section className={`${surfaceCard} p-5`}>
           <h2 className="text-lg font-semibold">Invite a teacher</h2>
           <p className="mt-1 text-sm text-ink-secondary">
-            Saves a pending invitation. No email is sent.
+            We email them a link to join your school. The link works for 7 days.
           </p>
           <div className="mt-4">
             <InviteTeacherForm />
@@ -148,10 +165,15 @@ export default async function AdminTeachersPage() {
             columns={[
               { key: "email", header: "Email" },
               { key: "status", header: "Status" },
+              { key: "actions", header: "Actions" },
             ]}
             rows={pending.map((invite) => ({
               id: invite.id,
-              cells: [invite.email ?? "No email", <StatusBadge key="status" label="PENDING" />],
+              cells: [
+                invite.email ?? "No email",
+                <StatusBadge key="status" label={inviteLabel(invite, now)} />,
+                <ResendTeacherInviteButton key="resend" invitationId={invite.id} />,
+              ],
             }))}
           />
         </section>
