@@ -93,3 +93,28 @@ export async function subscriptionHistory(tenantId: string): Promise<Subscriptio
     to: subscriptionLabel(row.details?.to ?? ""),
   }));
 }
+
+export type PendingSchoolAdminInvite = {
+  id: string;
+  email: string | null;
+  created_at: string;
+  sent_at: string | null;
+  expires_at: string;
+};
+
+export async function listPendingSchoolAdminInvites(
+  tenantId: string,
+): Promise<PendingSchoolAdminInvite[]> {
+  const admin = createAdminClient();
+  const result = await admin
+    .from("invitations")
+    .select("id, email, created_at, sent_at, expires_at")
+    .eq("tenant_id", tenantId)
+    .eq("role", "school_admin")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(100)
+    .returns<PendingSchoolAdminInvite[]>();
+  if (result.error) throw new Error(`invitations: ${result.error.message}`);
+  return result.data ?? [];
+}

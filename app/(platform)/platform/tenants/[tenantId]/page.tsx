@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ContactForm } from "@/components/platform/ContactForm";
+import { InviteSchoolAdminForm } from "@/components/platform/InviteSchoolAdminForm";
+import { ResendSchoolAdminInviteButton } from "@/components/platform/ResendSchoolAdminInviteButton";
 import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { BackLink } from "@/components/shared/BackLink";
 import { ElevatedAccessBanner } from "@/components/shared/ElevatedAccessBanner";
+import { DataTable } from "@/components/shared/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { TabBar } from "@/components/shared/TabBar";
-import { assertPlatformAdmin, getSchool, subscriptionLabel } from "@/lib/platform/schools";
+import {
+  assertPlatformAdmin,
+  getSchool,
+  listPendingSchoolAdminInvites,
+  subscriptionLabel,
+} from "@/lib/platform/schools";
 import { surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
@@ -26,11 +35,18 @@ function formatCreated(value: string): string {
   }).format(date);
 }
 
+function inviteLabel(invite: { sent_at: string | null; expires_at: string }, now: number): string {
+  if (Date.parse(invite.expires_at) <= now) return "EXPIRED";
+  return invite.sent_at ? "SENT" : "NOT SENT";
+}
+
 export default async function TenantDetailPage({ params }: TenantDetailPageProps) {
   const { tenantId } = await params;
   await assertPlatformAdmin();
   const school = await getSchool(tenantId);
   if (!school) notFound();
+  const pendingAdmins = await listPendingSchoolAdminInvites(school.id);
+  const now = Date.now();
   const status = subscriptionLabel(school.subscription_status);
   const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN?.trim() || "localhost";
 
@@ -112,6 +128,48 @@ export default async function TenantDetailPage({ params }: TenantDetailPageProps
               currentName={school.contact_name ?? ""}
               currentEmail={school.contact_email ?? ""}
             />
+          </div>
+        </section>
+
+        <section className={`${surfaceCard} mt-6`}>
+          <div className="border-b border-line-subtle px-4 py-5 sm:px-6">
+            <h2 className="font-semibold">School Admins</h2>
+            <p className="mt-1 text-sm text-ink-secondary">
+              Invite another School Admin for this school. The link is emailed and works for 7
+              days, for this school only. Each invite creates an audit event.
+            </p>
+          </div>
+          <div className="space-y-6 p-6">
+            <InviteSchoolAdminForm tenantId={school.id} />
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold tracking-tight text-ink">
+                Pending School Admin invites
+              </h3>
+              {pendingAdmins.length === 0 ? (
+                <p className="text-sm text-ink-secondary">No pending invites.</p>
+              ) : (
+                <DataTable
+                  columns={[
+                    { key: "email", header: "Email" },
+                    { key: "status", header: "Status" },
+                    { key: "actions", header: "Actions" },
+                  ]}
+                  rows={pendingAdmins.map((invite) => ({
+                    id: invite.id,
+                    cells: [
+                      invite.email ?? "No email",
+                      <StatusBadge key="status" label={inviteLabel(invite, now)} />,
+                      <ResendSchoolAdminInviteButton
+                        key="resend"
+                        tenantId={school.id}
+                        invitationId={invite.id}
+                      />,
+                    ],
+                  }))}
+                />
+              )}
+            </div>
           </div>
         </section>
       </div>

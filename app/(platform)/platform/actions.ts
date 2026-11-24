@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { SubscriptionStatus } from "@/lib/platform/schools";
 import {
   inviteFirstSchoolAdmin,
+  inviteSchoolAdmin as inviteSchoolAdminFor,
   resendSchoolAdminInvite,
 } from "@/lib/invitations/schoolAdminInvite";
 
@@ -14,10 +15,9 @@ type ActionResult =
   | {
     ok: true;
     id?: string;
-    /** US-008b: true when the School Admin invite email went out. */
     inviteSent?: boolean;
-    /** Set when the school exists but the invite email did not go out. */
     inviteWarning?: string;
+    notice?: string;
   }
   | { ok: false; error: string };
 
@@ -60,9 +60,13 @@ function inviteError(code: string): string {
     case "school_cancelled":
       return "This school is cancelled, so no invite can be sent.";
     case "invalid_email":
-      return "The contact email is not valid.";
+      return "That email address is not valid.";
     case "already_member":
-      return "That person already has this role at the school.";
+      return "That person is already a School Admin at this school.";
+    case "already_invited":
+      return "This person already has an open invite. Use Resend under Pending School Admin invites to send it again.";
+    case "not_platform_admin":
+      return "Only a platform admin can do that.";
     default:
       return "The invite was not sent.";
   }
@@ -197,6 +201,77 @@ export async function resendFirstAdminInvite(
   return { ok: true, id: result.invitationId, inviteSent: true };
 }
 
+const emailSchema = z.string().trim().email("Enter a valid email address.").max(320);
+
+export async function inviteSchoolAdmin(
+  tenantId: string,
+  email: string,
+): Promise<ActionResult> {
+  if (!z.string().uuid().safeParse(tenantId).success)
+    return fail("That school was not found.");
+  const parsed = emailSchema.safeParse(email);
+  if (!parsed.success)
+    return fail(parsed.error.issues[0]?.message ?? "Enter a valid email address.");
+
+  const session = await requirePlatformAdmin();
+  if (isDenied(session)) return session;
+
+  const result = await inviteSchoolAdminFor(session.userId, tenantId, parsed.data, {
+    db: session.admin,
+    read: session.admin,
+  });
+  if (!result.ok) {
+    const message = inviteError(result.code);
+    if (message === inviteError("")) console.error("School Admin invite failed", result.code);
+    return fail(message);
+  }
+
+  revalidatePath(`/platform/tenants/${tenantId}`);
+  if (!result.sent) {
+    return {
+      ok: true,
+      id: result.invitationId,
+      inviteSent: false,
+      notice: "The invite was saved, but the email did not go out. Use Resend under Pending School Admin invites.",
+    };
+  }
+  return {
+    ok: true,
+    id: result.invitationId,
+    inviteSent: true,
+    notice: `Invite sent to ${parsed.data.toLowerCase()}.`,
+  };
+}
+
+export async function resendSchoolAdminInviteById(
+  tenantId: string,
+  invitationId: string,
+): Promise<ActionResult> {
+  if (!z.string().uuid().safeParse(tenantId).success)
+    return fail("That school was not found.");
+  if (!z.string().uuid().safeParse(invitationId).success)
+    return fail(inviteError("no_open_invite"));
+
+  const session = await requirePlatformAdmin();
+  if (isDenied(session)) return session;
+
+  const result = await resendSchoolAdminInvite(
+    tenantId,
+    { db: session.admin, read: session.admin },
+    invitationId,
+  );
+  if (!result.ok) return fail(inviteError(result.code));
+  if (!result.sent) return fail("The email did not go out. Try again in a moment.");
+
+  revalidatePath(`/platform/tenants/${tenantId}`);
+  return {
+    ok: true,
+    id: result.invitationId,
+    inviteSent: true,
+    notice: "Invite sent again. The old link no longer works.",
+  };
+}
+
 export async function updateTenantSubscription(
   tenantId: string,
   status: SubscriptionStatus,
@@ -209,8 +284,6 @@ export async function updateTenantSubscription(
   const session = await requirePlatformAdmin();
   if (isDenied(session)) return session;
 
-  // one database call changes the status and writes the audit row
-  // together. If either fails, neither is saved.
   const changed = await session.admin.rpc("set_school_status", {
     p_tenant_id: tenantId,
     p_status: next,
