@@ -27,6 +27,7 @@ export function inviteFirstSchoolAdmin(school: SchoolRow, deps: InviteDeps): Pro
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Reader = { from: (table: any) => any };
 
 type School = { id: string; name: string; subdomain: string | null; logo_url: string | null; primary_color: string | null };

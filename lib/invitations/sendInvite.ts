@@ -4,6 +4,7 @@ import { sendEmail as defaultSend, type EmailSender } from "../email/resend";
 export type InviteRole = "school_admin" | "teacher" | "student" | "parent";
 
 export interface Rpc {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rpc: (fn: any, args?: any) => PromiseLike<{ data: any; error: { message: string } | null }>;
 }
 
