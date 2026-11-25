@@ -10,6 +10,10 @@ import {
   inviteSchoolAdmin as inviteSchoolAdminFor,
   resendSchoolAdminInvite,
 } from "@/lib/invitations/schoolAdminInvite";
+import {
+  removeSchoolAdmin as removeSchoolAdminFor,
+  removeSchoolAdminError,
+} from "@/lib/people/removeSchoolAdmin";
 
 type ActionResult =
   | {
@@ -48,7 +52,6 @@ function provisionError(message: string): string {
   return "The school was not created.";
 }
 
-// US-008b: what a refused invite means, in words for the Platform Admin.
 function inviteError(code: string): string {
   switch (code) {
     case "school_not_found":
@@ -151,9 +154,6 @@ export async function createTenant(input: {
   if (typeof created.data !== "string")
     return fail("The school was not created.");
 
-  // US-008b.2: invite the first School Admin. The school already exists, so a failed
-  // email must not undo it: the school is reported as created, with a warning, and the
-  // invite can be resent (sent_at stays empty until an email really went out).
   const invite = await inviteFirstSchoolAdmin(
     {
       id: created.data,
@@ -177,10 +177,6 @@ export async function createTenant(input: {
   return { ok: true, id: created.data, inviteSent: true };
 }
 
-/**
- * US-008b.4: "Resend invite". Platform Admins only. Reuses the school's open School Admin
- * invitation (new link, same invitation), so it never creates a second one.
- */
 export async function resendFirstAdminInvite(
   tenantId: string,
 ): Promise<ActionResult> {
@@ -270,6 +266,31 @@ export async function resendSchoolAdminInviteById(
     inviteSent: true,
     notice: "Invite sent again. The old link no longer works.",
   };
+}
+
+export async function removeSchoolAdminFromSchool(
+  tenantId: string,
+  profileId: string,
+): Promise<ActionResult> {
+  if (!z.string().uuid().safeParse(tenantId).success)
+    return fail("That school was not found.");
+  if (!z.string().uuid().safeParse(profileId).success)
+    return fail(removeSchoolAdminError("admin_not_found"));
+
+  const session = await requirePlatformAdmin();
+  if (isDenied(session)) return session;
+
+  const result = await removeSchoolAdminFor(session.userId, tenantId, profileId, {
+    db: session.admin,
+  });
+  if (!result.ok) {
+    const message = removeSchoolAdminError(result.code);
+    if (message === removeSchoolAdminError("")) console.error("School Admin removal failed", result.code);
+    return fail(message);
+  }
+
+  revalidatePath(`/platform/tenants/${tenantId}`);
+  return { ok: true, notice: "School Admin removed." };
 }
 
 export async function updateTenantSubscription(

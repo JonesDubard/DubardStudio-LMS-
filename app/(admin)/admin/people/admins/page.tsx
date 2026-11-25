@@ -57,7 +57,8 @@ export default async function AdminAdminsPage() {
           <p className="font-medium">School Admin Access</p>
           <p className="mt-2 text-sm text-ink-secondary">
             A school can have multiple admins. New School Admins are invited by the platform
-            team: contact support to add one. The last active admin cannot be removed.
+            team: contact support to add one. Any admin can remove another, and each removal is
+            recorded in the audit log. The last active admin cannot be removed.
           </p>
         </div>
       </div>

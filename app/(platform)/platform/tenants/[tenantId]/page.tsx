@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ContactForm } from "@/components/platform/ContactForm";
 import { InviteSchoolAdminForm } from "@/components/platform/InviteSchoolAdminForm";
+import { RemoveSchoolAdminButton } from "@/components/platform/RemoveSchoolAdminButton";
 import { ResendSchoolAdminInviteButton } from "@/components/platform/ResendSchoolAdminInviteButton";
 import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
 import { BackLink } from "@/components/shared/BackLink";
@@ -13,6 +14,7 @@ import {
   assertPlatformAdmin,
   getSchool,
   listPendingSchoolAdminInvites,
+  listSchoolAdmins,
   subscriptionLabel,
 } from "@/lib/platform/schools";
 import { surfaceCard } from "@/lib/ui/styles";
@@ -45,7 +47,10 @@ export default async function TenantDetailPage({ params }: TenantDetailPageProps
   await assertPlatformAdmin();
   const school = await getSchool(tenantId);
   if (!school) notFound();
-  const pendingAdmins = await listPendingSchoolAdminInvites(school.id);
+  const [pendingAdmins, schoolAdmins] = await Promise.all([
+    listPendingSchoolAdminInvites(school.id),
+    listSchoolAdmins(school.id),
+  ]);
   const now = Date.now();
   const status = subscriptionLabel(school.subscription_status);
   const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN?.trim() || "localhost";
@@ -135,11 +140,37 @@ export default async function TenantDetailPage({ params }: TenantDetailPageProps
           <div className="border-b border-line-subtle px-4 py-5 sm:px-6">
             <h2 className="font-semibold">School Admins</h2>
             <p className="mt-1 text-sm text-ink-secondary">
-              Invite another School Admin for this school. The link is emailed and works for 7
-              days, for this school only. Each invite creates an audit event.
+              Invite or remove the School Admins of this school. An invite link is emailed and
+              works for 7 days, for this school only. Each invite and removal creates an audit
+              event. The last active School Admin can&apos;t be removed.
             </p>
           </div>
           <div className="space-y-6 p-6">
+            <DataTable
+              columns={[
+                { key: "name", header: "Name" },
+                { key: "email", header: "Email" },
+                { key: "status", header: "Status" },
+                { key: "actions", header: "Actions" },
+              ]}
+              rows={schoolAdmins.map((admin) => ({
+                id: admin.profileId,
+                cells: [
+                  <span key="name" className="font-medium">
+                    {admin.name}
+                  </span>,
+                  admin.email,
+                  <StatusBadge key="status" label={admin.status.toUpperCase()} />,
+                  <RemoveSchoolAdminButton
+                    key="remove"
+                    tenantId={school.id}
+                    profileId={admin.profileId}
+                    name={admin.name}
+                  />,
+                ],
+              }))}
+            />
+
             <InviteSchoolAdminForm tenantId={school.id} />
 
             <div className="space-y-3">
