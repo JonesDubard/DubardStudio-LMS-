@@ -20,8 +20,6 @@ function formatCreated(value: string): string {
   }).format(date);
 }
 
-// A school whose first School Admin has not signed up yet. The server refuses a resend
-// when there is no open invite, so this only decides whether the button is shown.
 function awaitingFirstAdmin(onboardingStatus: string): boolean {
   return onboardingStatus === "provisioning" || onboardingStatus === "invited";
 }
@@ -139,47 +137,47 @@ export default async function PlatformTenantsPage({
         </ul>
 
         <div className="hidden md:block">
-        <DataTable
-          wrapperClassName="overflow-x-auto rounded-lg border border-line bg-surface shadow-card"
-          tableClassName="w-full min-w-[1050px] border-collapse text-sm"
-          headerCellClassName="px-4 py-3 font-medium"
-          bodyCellClassName="px-4 py-3"
-          columns={[
-            { key: "name", header: "Tenant Name" },
-            { key: "subdomain", header: "Subdomain" },
-            { key: "status", header: "Subscription Status" },
-            { key: "onboarding", header: "Onboarding Progress" },
-            { key: "created", header: "Created" },
-            { key: "actions", header: "Actions" },
-          ]}
-          rows={schools.map((tenant) => ({
-            id: tenant.id,
-            cells: [
-              <span key="name" className="font-medium">
-                {tenant.name}
-              </span>,
-              <span key="subdomain" className="text-ink-secondary">
-                {tenant.subdomain}.{root}
-              </span>,
-              <TenantStatusPill key="status" status={subscriptionLabel(tenant.subscription_status)} />,
-              tenant.onboarding_status.replaceAll("_", " "),
-              <span key="created" className="text-ink-secondary">
-                {formatCreated(tenant.created_at)}
-              </span>,
-              <span key="action" className="flex flex-wrap items-start gap-2">
-                <Link
-                  href={`/platform/tenants/${tenant.id}/subscription`}
-                  className={buttonSecondary}
-                >
-                  Subscription
-                </Link>
-                {awaitingFirstAdmin(tenant.onboarding_status) ? (
-                  <ResendInviteButton tenantId={tenant.id} />
-                ) : null}
-              </span>,
-            ],
-          }))}
-        />
+          <DataTable
+            wrapperClassName="overflow-x-auto rounded-lg border border-line bg-surface shadow-card"
+            tableClassName="w-full min-w-[1050px] border-collapse text-sm"
+            headerCellClassName="px-4 py-3 font-medium"
+            bodyCellClassName="px-4 py-3"
+            columns={[
+              { key: "name", header: "Tenant Name" },
+              { key: "subdomain", header: "Subdomain" },
+              { key: "status", header: "Subscription Status" },
+              { key: "onboarding", header: "Onboarding Progress" },
+              { key: "created", header: "Created" },
+              { key: "actions", header: "Actions" },
+            ]}
+            rows={schools.map((tenant) => ({
+              id: tenant.id,
+              cells: [
+                <span key="name" className="font-medium">
+                  {tenant.name}
+                </span>,
+                <span key="subdomain" className="text-ink-secondary">
+                  {tenant.subdomain}.{root}
+                </span>,
+                <TenantStatusPill key="status" status={subscriptionLabel(tenant.subscription_status)} />,
+                tenant.onboarding_status.replaceAll("_", " "),
+                <span key="created" className="text-ink-secondary">
+                  {formatCreated(tenant.created_at)}
+                </span>,
+                <span key="action" className="flex flex-wrap items-start gap-2">
+                  <Link
+                    href={`/platform/tenants/${tenant.id}/subscription`}
+                    className={buttonSecondary}
+                  >
+                    Subscription
+                  </Link>
+                  {awaitingFirstAdmin(tenant.onboarding_status) ? (
+                    <ResendInviteButton tenantId={tenant.id} />
+                  ) : null}
+                </span>,
+              ],
+            }))}
+          />
         </div>
       </div>
     </main>

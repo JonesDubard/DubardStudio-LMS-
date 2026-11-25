@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client"; //  client helper
 
@@ -11,9 +11,8 @@ export default function SetPasswordPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // When the page loads, the user is already authenticated by the invite link.
-  // They just need to set a password.
-  
+
+
   async function handleSetPassword(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -27,8 +26,7 @@ export default function SetPasswordPage() {
       return;
     }
 
-    // Password set! Send them to their dashboard.
-    router.push("/admin/dashboard"); 
+    router.push("/admin/dashboard");
     router.refresh();
   }
 

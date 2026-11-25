@@ -93,3 +93,69 @@ export async function subscriptionHistory(tenantId: string): Promise<Subscriptio
     to: subscriptionLabel(row.details?.to ?? ""),
   }));
 }
+
+export type PendingSchoolAdminInvite = {
+  id: string;
+  email: string | null;
+  created_at: string;
+  sent_at: string | null;
+  expires_at: string;
+};
+
+export async function listPendingSchoolAdminInvites(
+  tenantId: string,
+): Promise<PendingSchoolAdminInvite[]> {
+  const admin = createAdminClient();
+  const result = await admin
+    .from("invitations")
+    .select("id, email, created_at, sent_at, expires_at")
+    .eq("tenant_id", tenantId)
+    .eq("role", "school_admin")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(100)
+    .returns<PendingSchoolAdminInvite[]>();
+  if (result.error) throw new Error(`invitations: ${result.error.message}`);
+  return result.data ?? [];
+}
+
+export type SchoolAdminRow = {
+  profileId: string;
+  name: string;
+  email: string;
+  status: string;
+};
+
+
+export async function listSchoolAdmins(tenantId: string): Promise<SchoolAdminRow[]> {
+  const admin = createAdminClient();
+  const memberships = await admin
+    .from("memberships")
+    .select("profile_id, status")
+    .eq("tenant_id", tenantId)
+    .eq("role", "school_admin")
+    .neq("status", "removed")
+    .limit(100)
+    .returns<{ profile_id: string; status: string }[]>();
+  if (memberships.error) throw new Error(`memberships: ${memberships.error.message}`);
+  const rows = memberships.data ?? [];
+  if (rows.length === 0) return [];
+
+  const profiles = await admin
+    .from("profiles")
+    .select("id, full_name, email")
+    .eq("tenant_id", tenantId)
+    .in("id", rows.map((row) => row.profile_id))
+    .returns<{ id: string; full_name: string | null; email: string }[]>();
+  if (profiles.error) throw new Error(`profiles: ${profiles.error.message}`);
+  const byId = new Map((profiles.data ?? []).map((row) => [row.id, row]));
+
+  return rows
+    .map((row) => ({
+      profileId: row.profile_id,
+      name: byId.get(row.profile_id)?.full_name?.trim() || "School Admin",
+      email: byId.get(row.profile_id)?.email ?? "",
+      status: row.status,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}

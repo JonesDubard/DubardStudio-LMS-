@@ -3,6 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { readAccessTokenClaims } from "@/lib/auth/claims";
+import {
+  removeSchoolAdmin as removeSchoolAdminFor,
+  removeSchoolAdminError,
+} from "@/lib/people/removeSchoolAdmin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const idSchema = z.string().uuid();
@@ -11,6 +16,7 @@ type ActionResult = { ok: true } | { ok: false; error: string };
 type AdminSession = {
   supabase: Awaited<ReturnType<typeof createClient>>;
   tenantId: string;
+  userId: string;
 };
 
 function fail(error: string): ActionResult {
@@ -40,7 +46,7 @@ async function requireSchoolAdmin(): Promise<AdminSession | ActionResult> {
   if (!claims.tenantId || !claims.app_roles.includes("school_admin")) {
     return fail("Only a school admin can do that.");
   }
-  return { supabase, tenantId: claims.tenantId };
+  return { supabase, tenantId: claims.tenantId, userId: userData.user.id };
 }
 
 function isDenied(value: AdminSession | ActionResult): value is ActionResult {
@@ -211,20 +217,14 @@ export async function removeSchoolAdmin(profileId: string): Promise<ActionResult
   const session = await requireSchoolAdmin();
   if (isDenied(session)) return session;
 
-  const updated = await session.supabase
-    .from("memberships")
-    .update({ status: "removed" })
-    .eq("profile_id", parsed.data)
-    .eq("role", "school_admin")
-    .neq("status", "removed")
-    .select("id");
-  if (updated.error) {
-    if (updated.error.message.toLowerCase().includes("last active school_admin")) {
-      return fail("This school needs at least one active school admin.");
-    }
-    return fail(updated.error.message);
+  const result = await removeSchoolAdminFor(session.userId, session.tenantId, parsed.data, {
+    db: createAdminClient(),
+  });
+  if (!result.ok) {
+    const message = removeSchoolAdminError(result.code);
+    if (message === removeSchoolAdminError("")) console.error("School Admin removal failed", result.code);
+    return fail(message);
   }
-  if (!updated.data || updated.data.length === 0) return fail("That admin was not found.");
 
   revalidatePeople();
   return { ok: true };

@@ -24,7 +24,7 @@ export function InviteTeacherForm() {
       return;
     }
     setEmail("");
-    setNotice("Invitation saved. No email was sent.");
+    setNotice(result.notice ?? "Invite sent.");
     router.refresh();
   }
 
@@ -45,7 +45,7 @@ export function InviteTeacherForm() {
         />
       </div>
       <button type="submit" disabled={pending} className={buttonPrimary}>
-        {pending ? "Saving..." : "Invite teacher"}
+        {pending ? "Sending..." : "Invite teacher"}
       </button>
       {error ? (
         <p role="alert" className={`${alertError} sm:basis-full`}>

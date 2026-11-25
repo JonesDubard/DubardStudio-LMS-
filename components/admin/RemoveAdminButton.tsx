@@ -46,7 +46,8 @@ export function RemoveAdminButton({ profileId, name }: { profileId: string; name
         >
           <div className="space-y-4">
             <p className="text-sm text-ink-secondary">
-              {name} will no longer be a school admin.
+              {name} will no longer be a school admin. They lose access within an hour. This is
+              recorded in the audit log.
             </p>
             {error ? (
               <p role="alert" className={alertError}>
