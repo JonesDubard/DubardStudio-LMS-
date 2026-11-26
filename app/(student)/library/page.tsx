@@ -1,31 +1,11 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/shared/PageHeader";
-import {
-  ResourceGrid,
-  type LibraryResource,
-} from "@/components/student/ResourceGrid";
+import { ResourceGrid } from "@/components/student/ResourceGrid";
+import { previewResources } from "@/lib/library/resources";
 
 export const metadata: Metadata = {
   title: "Digital Library",
 };
-
-const previewResources: LibraryResource[] = [
-  {
-    id: "math-study-guide",
-    title: "Daily Study Guide",
-    subject: "Mathematics",
-  },
-  {
-    id: "english-reading-guide",
-    title: "Reading Comprehension Practice",
-    subject: "English",
-  },
-  {
-    id: "science-review",
-    title: "End-of-Term Review",
-    subject: "Science",
-  },
-];
 
 export default function StudentLibraryPage() {
   return (

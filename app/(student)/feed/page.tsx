@@ -1,34 +1,20 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CalendarDays, ClipboardList, Inbox } from "lucide-react";
+import { Inbox } from "lucide-react";
 import { AnnouncementCard } from "@/components/shared/AnnouncementCard";
 import { FeedCard } from "@/components/student/FeedCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { getStudentFeed, type StudentFeedItem } from "@/lib/queries/student";
+import { previewAnnouncements } from "@/lib/announcements/preview";
 import { createClient } from "@/lib/supabase/server";
 import { buttonSecondary } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "Student Feed",
 };
-
-const previewAnnouncements = [
-  {
-    category: "Assignment",
-    title: "Reading response due soon",
-    description: "Remember to complete your English reading response.",
-    icon: ClipboardList,
-  },
-  {
-    category: "General Assembly",
-    title: "School assembly",
-    description: "Join your school community for the next general assembly.",
-    icon: CalendarDays,
-  },
-];
 
 function FeedSection({
   title,

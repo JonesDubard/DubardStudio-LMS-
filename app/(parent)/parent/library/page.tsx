@@ -1,0 +1,28 @@
+import type { Metadata } from "next";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { ResourceGrid } from "@/components/student/ResourceGrid";
+import { previewResources } from "@/lib/library/resources";
+
+export const metadata: Metadata = {
+  title: "Parent Library",
+};
+
+export default function ParentLibraryPage() {
+  return (
+    <>
+      <PageHeader variant="section" eyebrow="Parent" title="Digital Library" />
+      <main className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 md:px-8">
+        <section className="space-y-1">
+          <h2 className="text-base font-semibold tracking-tight text-ink">
+            Daily Study Guides
+          </h2>
+          <p className="text-sm text-ink-secondary">
+            These are the same resources shown in your child&apos;s library.
+            Sample resources are shown until the school library is connected.
+          </p>
+        </section>
+        <ResourceGrid resources={previewResources} />
+      </main>
+    </>
+  );
+}

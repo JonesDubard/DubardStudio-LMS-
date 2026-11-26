@@ -1,14 +1,20 @@
 "use client";
 
-import { Award, ClipboardList, Home, Settings } from "lucide-react";
+import { Award, BookOpen, ClipboardList, Home, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { SignOutButton } from "@/components/shared/SignOutButton";
-import { navLabel, navLink, navLinkActive, sideNavAside } from "@/lib/ui/styles";
+import {
+  navLabel,
+  navLink,
+  navLinkActive,
+  sideNavAside,
+} from "@/lib/ui/styles";
 
 const items = [
   { href: "/parent/home", label: "Home", icon: Home },
   { href: "/parent/assignments", label: "Assignments", icon: ClipboardList },
+  { href: "/parent/library", label: "Library", icon: BookOpen },
   { href: "/parent/grades", label: "Grades", icon: Award },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -18,7 +24,7 @@ export function ParentNav() {
   const child = useSearchParams().get("child");
 
   const dockClass =
-    "flex min-h-16 flex-col items-center justify-center gap-1 px-2 text-xs font-medium transition-colors duration-200 motion-reduce:transition-none";
+    "flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-xs font-medium transition-colors duration-200 motion-reduce:transition-none";
 
   function hrefFor(href: string) {
     return child ? `${href}?child=${encodeURIComponent(child)}` : href;
@@ -64,7 +70,7 @@ export function ParentNav() {
         aria-label="Parent"
         className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
       >
-        <div className="mx-auto grid w-full grid-cols-4">
+        <div className="mx-auto grid w-full grid-cols-5">
           {items.map((item) => {
             const active = isActive(item.href);
             const Icon = item.icon;

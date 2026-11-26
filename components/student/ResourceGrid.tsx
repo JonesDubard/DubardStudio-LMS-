@@ -1,13 +1,9 @@
 import { Download, FileText } from "lucide-react";
 import { Card } from "@/components/shared/Card";
+import type { LibraryResource } from "@/lib/library/resources";
 import { buttonSecondary } from "@/lib/ui/styles";
 
-export type LibraryResource = {
-  id: string;
-  title: string;
-  subject: string;
-  downloadUrl?: string;
-};
+export type { LibraryResource } from "@/lib/library/resources";
 
 export function ResourceGrid({
   resources,
