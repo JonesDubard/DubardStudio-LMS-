@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, Home, School, Settings } from "lucide-react";
+import { Award, BookOpen, Home, School, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/shared/SignOutButton";
@@ -21,6 +21,12 @@ const items = [
     label: "Classes",
     icon: School,
     active: (path: string) => path.startsWith("/classes"),
+  },
+  {
+    href: "/library",
+    label: "Library",
+    icon: BookOpen,
+    active: (path: string) => path.startsWith("/library"),
   },
   {
     href: "/grades",
@@ -78,7 +84,7 @@ export function BottomNav() {
         aria-label="Student"
         className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
       >
-        <div className="mx-auto grid w-full grid-cols-4">
+        <div className="mx-auto grid w-full grid-cols-5">
           {items.map((item) => {
             const active = item.active(pathname);
             const Icon = item.icon;

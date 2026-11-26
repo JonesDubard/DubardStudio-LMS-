@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Files, GraduationCap, Palette, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { CreateAnnouncementModal } from "@/components/admin/CreateAnnouncementModal";
 import { readShellBrand } from "@/lib/branding/shell";
 import {
   getAcademicYears,
@@ -67,22 +68,25 @@ export default async function AdminDashboardPage() {
   return (
     <main className="min-w-0 flex-1">
       <header className="border-b border-line bg-surface px-4 py-4 lg:px-8">
-        <div className="flex items-center gap-3">
-          <span className="h-8 w-1 shrink-0 rounded-full bg-brand-primary" aria-hidden />
-          <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
-              School Administration
-            </p>
-            <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
-              {schoolName}
-            </h1>
-            <p className="mt-1 text-sm text-ink-secondary">
-              {countLabel(years.length, "academic year", "academic years")} ·{" "}
-              {countLabel(terms.length, "term", "terms")} in the current year ·{" "}
-              {countLabel(classes.length, "class", "classes")} ·{" "}
-              {countLabel(subjects.length, "subject", "subjects")}
-            </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="h-8 w-1 shrink-0 rounded-full bg-brand-primary" aria-hidden />
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+                School Administration
+              </p>
+              <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
+                {schoolName}
+              </h1>
+              <p className="mt-1 text-sm text-ink-secondary">
+                {countLabel(years.length, "academic year", "academic years")} ·{" "}
+                {countLabel(terms.length, "term", "terms")} in the current year ·{" "}
+                {countLabel(classes.length, "class", "classes")} ·{" "}
+                {countLabel(subjects.length, "subject", "subjects")}
+              </p>
+            </div>
           </div>
+          <CreateAnnouncementModal />
         </div>
       </header>
 

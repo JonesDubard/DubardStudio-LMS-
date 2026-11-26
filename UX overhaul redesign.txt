@@ -1,0 +1,98 @@
+# TerraLearn — Pre-Implementation Codebase Audit
+
+Act as a Senior Software Architect and Frontend Engineer.
+
+We have completed the visual design phase for TerraLearn using Google Stitch. The approved mockups cover the Student, Teacher, Parent, School Administrator and Platform Administrator experiences, including desktop and mobile views.
+
+We are now preparing for a complete UX/UI overhaul of the existing application.
+
+**Your first task is to inspect and document the existing codebase. Do not modify any files yet.**
+
+## 1. Inspect the Project Structure
+
+Identify:
+- Application framework and project architecture.
+- Route and page organization.
+- Layouts and shared components.
+- Role-specific dashboards and navigation.
+- Global styles, fonts and design tokens.
+- Existing UI component library and dependencies.
+- Relevant hooks, utilities and providers.
+
+## 2. Map Each User Experience
+
+Identify the actual files responsible for:
+
+1. Student Dashboard and related pages.
+2. Teacher Dashboard and grading workflows.
+3. Parent Portal.
+4. School Administrator Dashboard.
+5. Platform Administrator Dashboard.
+
+Include relevant components used by each role.
+
+## 3. Identify Existing Functionality
+
+Inspect the implementation of:
+- Authentication and role-based access control.
+- Multi-tenant architecture and tenant isolation.
+- Supabase integration and Row Level Security.
+- Server actions and API interactions.
+- Database queries and mutations.
+- Lesson and assignment management.
+- Grading and submissions.
+- Attendance and academic records.
+- Announcements and communication.
+- Offline storage, caching and synchronization.
+- File storage and uploads.
+
+## 4. Identify Reusable Components
+
+Determine which existing components can be retained, restyled or extended.
+
+Identify unnecessary duplication and potential opportunities for shared components.
+
+Do not recommend replacing working functionality without a clear reason.
+
+## 5. Assess the Design Implementation Strategy
+
+Based on the existing architecture, recommend:
+
+- How to introduce the approved design system.
+- Which shared components should be implemented first.
+- How to reorganize layouts without disrupting existing routes.
+- How to implement responsive desktop and mobile navigation.
+- How to handle role-specific interfaces consistently.
+
+## 6. Identify Risks
+
+Highlight potential risks involving:
+- Tenant isolation.
+- Permissions and authorization.
+- Server-side functionality.
+- Offline synchronization.
+- Existing database relationships.
+- Performance and mobile responsiveness.
+
+## 7. Deliverables
+
+Provide:
+
+1. A concise architecture overview.
+2. A file map organized by user role.
+3. A list of reusable components.
+4. A list of files likely requiring UI modifications.
+5. A proposed implementation sequence.
+6. Technical risks and dependencies.
+7. Recommended testing procedures.
+
+**STRICT REQUIREMENTS**
+
+- Do not edit files.
+- Do not create new components.
+- Do not modify database schemas or migrations.
+- Do not remove or replace existing functionality.
+- Base all findings on the actual codebase.
+- Clearly identify anything you cannot verify.
+
+We will use this audit to plan the implementation of the approved Google Stitch designs.
