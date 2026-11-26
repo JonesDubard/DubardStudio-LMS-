@@ -7,7 +7,7 @@ import { AuthError, AuthField, AuthSubmit } from "@/components/auth/AuthField";
 import { homePathFromAccessToken } from "@/lib/auth/home-path";
 import { createClient } from "@/lib/supabase/client";
 
-export function LoginForm() {
+export function LoginForm({ schoolName }: { schoolName: string | null }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,7 +37,9 @@ export function LoginForm() {
 
   return (
     <form className="space-y-4" method="post" onSubmit={onSubmit}>
-      <h1 className="text-2xl font-semibold tracking-tight text-ink">Sign in</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-ink">
+        Welcome to {schoolName ?? "TerraLearn"}
+      </h1>
       {error ? <AuthError>{error}</AuthError> : null}
       <AuthField
         id="email"
