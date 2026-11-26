@@ -17,7 +17,7 @@ type QueryError = { message: string };
 const COURSE_COLUMNS =
   "id, tenant_id, class_subject_id, term_id, name, created_at";
 const LESSON_COLUMNS =
-  "id, tenant_id, course_id, title, description, status, published_at, created_by, created_at, updated_at";
+  "id, tenant_id, course_id, title, description, is_reusable, status, published_at, created_by, created_at, updated_at";
 const CLASS_SUBJECT_COLUMNS = "id, class_id, subject_id";
 const NAMED_COLUMNS = "id, name";
 
@@ -29,6 +29,7 @@ export type LessonListFilters = {
   subjectId?: string;
   termId?: string;
   status?: LessonStatus;
+  isReusable?: boolean;
   limit?: number;
 };
 
@@ -189,6 +190,7 @@ type LessonListRow = {
   status: string;
   updated_at: string;
   course_id: string;
+  is_reusable: boolean;
 };
 
 export async function getTeacherLessons(
@@ -211,6 +213,9 @@ export async function getTeacherLessons(
     .order("updated_at", { ascending: false });
 
   if (filters.status) query = query.eq("status", filters.status);
+  if (filters.isReusable !== undefined) {
+    query = query.eq("is_reusable", filters.isReusable);
+  }
   if (filters.limit && filters.limit > 0) query = query.limit(filters.limit);
 
   const rows = unwrap("lessons", await query.returns<LessonListRow[]>());

@@ -181,6 +181,7 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
         : {
             title: props.lesson.title,
             description: props.lesson.description ?? "",
+            is_reusable: props.lesson.is_reusable,
           },
   });
 
@@ -404,6 +405,32 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
             {...form.register("description")}
           />
           <FieldError message={descriptionError} />
+        </div>
+
+        <div className="mt-5">
+          <label
+            htmlFor="lesson-is-reusable"
+            className="flex cursor-pointer items-center gap-3"
+          >
+            <input
+              id="lesson-is-reusable"
+              type="checkbox"
+              className="peer sr-only"
+              {...form.register("is_reusable")}
+            />
+            <span
+              aria-hidden
+              className="relative h-6 w-11 shrink-0 rounded-full bg-line-strong transition-colors after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-brand-primary peer-checked:after:translate-x-5 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-brand-ring peer-focus-visible:ring-offset-2"
+            />
+            <span>
+              <span className="block text-sm font-medium text-ink">
+                Save to my Reusable Library
+              </span>
+              <span className="mt-0.5 block text-xs text-ink-secondary">
+                Keep this lesson available to duplicate into another class.
+              </span>
+            </span>
+          </label>
         </div>
       </section>
 

@@ -76,6 +76,7 @@ function isSessionFailure(
 function revalidateLessons(lessonId?: string) {
   revalidatePath("/teacher/home");
   revalidatePath("/teacher/lessons");
+  revalidatePath("/teacher/library");
   revalidatePath("/teacher/lessons/new");
   if (lessonId) revalidatePath(`/teacher/lessons/${lessonId}`);
 }
@@ -107,6 +108,7 @@ export async function createLesson(
       course_id: parsed.data.course_id,
       title: parsed.data.title,
       description: blankToNull(parsed.data.description),
+      is_reusable: parsed.data.is_reusable,
       status: publish ? "published" : "draft",
       published_at: publish ? now : null,
       created_by: session.userId,
@@ -144,12 +146,14 @@ export async function updateLesson(
   const changes: {
     title: string;
     description: string | null;
+    is_reusable: boolean;
     updated_at: string;
     status?: "published";
     published_at?: string;
   } = {
     title: parsed.data.title,
     description: blankToNull(parsed.data.description),
+    is_reusable: parsed.data.is_reusable,
     updated_at: now,
   };
   if (publish) {

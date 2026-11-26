@@ -15,6 +15,7 @@ const descriptionField = z
 export const lessonContentSchema = z.object({
   title: titleField,
   description: descriptionField,
+  is_reusable: z.boolean().default(false),
 });
 
 export type LessonContentInput = z.infer<typeof lessonContentSchema>;
@@ -28,4 +29,5 @@ export type CreateLessonInput = z.infer<typeof createLessonSchema>;
 export const emptyLessonContent: LessonContentInput = {
   title: "",
   description: "",
+  is_reusable: false,
 };

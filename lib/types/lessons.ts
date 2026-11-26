@@ -26,6 +26,7 @@ export type Lesson = {
   course_id: string;
   title: string;
   description: string | null;
+  is_reusable: boolean;
   status: LessonStatus;
   published_at: string | null;
   created_by: string;

@@ -43,6 +43,12 @@ const navItems: {
     match: (path: string) => path.startsWith("/teacher/lessons"),
   },
   {
+    label: "My Library",
+    href: "/teacher/library",
+    icon: BookOpen,
+    match: (path: string) => path.startsWith("/teacher/library"),
+  },
+  {
     label: "Assignments",
     href: "/teacher/assignments",
     icon: ClipboardList,
