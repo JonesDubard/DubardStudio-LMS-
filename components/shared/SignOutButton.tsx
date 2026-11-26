@@ -30,6 +30,17 @@ export function SignOutButton({
   async function onClick() {
     setError(null);
     setPending(true);
+    if ("caches" in window) {
+      try {
+        await caches.delete("pdf-cache");
+      } catch (cacheError) {
+        console.error("Could not clear the offline PDF cache.", cacheError);
+        setError("Offline PDFs could not be cleared. Sign-out was stopped.");
+        setPending(false);
+        return;
+      }
+    }
+
     const supabase = createClient();
     const { error: signOutError } = await supabase.auth.signOut({ scope });
     if (signOutError) {

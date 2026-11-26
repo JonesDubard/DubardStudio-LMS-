@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { OfflineIndicator } from "@/components/shared/OfflineIndicator";
 import { ParentNav } from "@/components/parent/ParentNav";
 
 export default function ParentLayout({ children }: { children: ReactNode }) {
@@ -8,6 +9,7 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
         <ParentNav />
       </Suspense>
       <div className="min-w-0 flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
+        <OfflineIndicator />
         {children}
       </div>
     </div>

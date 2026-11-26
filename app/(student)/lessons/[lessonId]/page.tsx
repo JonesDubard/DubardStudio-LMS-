@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LessonDownloadButton } from "@/components/student/LessonDownloadButton";
 import { MaterialRow } from "@/components/student/MaterialRow";
+import { SaveOfflineButton } from "@/components/student/SaveOfflineButton";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { readAccessTokenClaims } from "@/lib/auth/claims";
 import { getLessonDetails } from "@/lib/queries/student";
 import { createClient } from "@/lib/supabase/server";
 import { buttonSecondary } from "@/lib/ui/styles";
@@ -48,6 +50,21 @@ export default async function LessonPage({
   const lesson = await getLessonDetails(supabase, lessonId);
   if (!lesson) notFound();
 
+  const [{ data: userData, error: userError }, { data: sessionData, error: sessionError }] =
+    await Promise.all([supabase.auth.getUser(), supabase.auth.getSession()]);
+  if (userError) throw new Error(`auth: ${userError.message}`);
+  if (sessionError) throw new Error(`session: ${sessionError.message}`);
+  const accessToken = sessionData.session?.access_token;
+  const claims = accessToken ? readAccessTokenClaims(accessToken) : null;
+  const studentId = userData.user?.id;
+  const offlineIdentity =
+    studentId &&
+    sessionData.session?.user.id === studentId &&
+    claims?.tenantId &&
+    claims.app_roles.includes("student")
+      ? { studentId, tenantId: claims.tenantId }
+      : null;
+
   const paragraphs = (lesson.description ?? "")
     .split(/\n\s*\n/)
     .map((paragraph) => paragraph.trim())
@@ -61,6 +78,15 @@ export default async function LessonPage({
         title={lesson.title}
         backHref="/feed"
         backLabel="Back to Home"
+        action={
+          offlineIdentity ? (
+            <SaveOfflineButton
+              tenantId={offlineIdentity.tenantId}
+              studentId={offlineIdentity.studentId}
+              lesson={lesson}
+            />
+          ) : null
+        }
       />
 
       <main className="mx-auto w-full max-w-2xl space-y-8 px-4 py-6 md:px-8 md:py-8">

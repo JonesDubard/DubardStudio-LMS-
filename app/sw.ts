@@ -1,18 +1,67 @@
-import { Serwist } from "serwist";
+import { CacheFirst, NetworkOnly, RangeRequestsPlugin, Serwist } from "serwist";
 
-// Serwist replaces this identifier at build time. It is read and discarded so
-// the worker can compile, without precaching those URLs.
-// @ts-expect-error Injected into the service worker bundle. Not a window property.
-void self.__SW_MANIFEST;
+type OfflinePrecacheEntry =
+  | string
+  | { url: string; revision?: string; integrity?: string };
 
-// Foundation stub. The worker can register, but it precaches nothing and
-// applies no runtime caching. Offline lesson caching waits for real pages.
+// @ts-expect-error Serwist injects this manifest into the worker at build time.
+const buildAssets = self.__SW_MANIFEST as OfflinePrecacheEntry[];
+const assetManifest = buildAssets
+  .map((entry) =>
+    typeof entry === "string"
+      ? entry
+      : `${entry.url}:${entry.revision ?? ""}`,
+  )
+  .join("|");
+let offlineShellRevision = 0;
+for (let index = 0; index < assetManifest.length; index += 1) {
+  offlineShellRevision = Math.imul(31, offlineShellRevision) + assetManifest.charCodeAt(index);
+}
+
+const offlineFallback = {
+  handlerDidError: async () =>
+    Response.redirect(new URL("/offline", self.location.origin).href, 302),
+};
+
 const serwist = new Serwist({
-  precacheEntries: [],
+  precacheEntries: [
+    ...buildAssets,
+    // This route contains no user data and renders lesson contents from Dexie.
+    { url: "/offline", revision: (offlineShellRevision >>> 0).toString(36) },
+  ],
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: false,
-  runtimeCaching: [],
+  runtimeCaching: [
+    {
+      matcher: ({ request, sameOrigin, url }) =>
+        sameOrigin &&
+        request.mode === "navigate" &&
+        url.pathname !== "/offline" &&
+        !url.pathname.startsWith("/api/") &&
+        !url.pathname.startsWith("/__offline-pdf/") &&
+        [
+          "/feed",
+          "/classes",
+          "/library",
+          "/grades",
+          "/assignments",
+          "/lessons",
+        ].some(
+          (prefix) =>
+            url.pathname === prefix || url.pathname.startsWith(`${prefix}/`),
+        ),
+      handler: new NetworkOnly({ plugins: [offlineFallback] }),
+    },
+    {
+      matcher: ({ sameOrigin, url }) =>
+        sameOrigin && url.pathname.startsWith("/__offline-pdf/"),
+      handler: new CacheFirst({
+        cacheName: "pdf-cache",
+        plugins: [new RangeRequestsPlugin()],
+      }),
+    },
+  ],
 });
 
 serwist.addEventListeners();
