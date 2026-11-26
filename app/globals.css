@@ -69,6 +69,14 @@
   }
 }
 
+.auth-field {
+  @apply bg-slate-50;
+}
+
+.auth-field:focus {
+  @apply bg-white;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   @keyframes motion-rise {
     from {

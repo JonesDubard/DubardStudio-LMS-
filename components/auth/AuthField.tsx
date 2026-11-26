@@ -10,6 +10,7 @@ export function AuthField({
   autoComplete,
   value,
   onChange,
+  className,
 }: {
   id: string;
   label: string;
@@ -17,6 +18,7 @@ export function AuthField({
   autoComplete: string;
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }) {
   const [visible, setVisible] = useState(false);
   const inputType = type === "password" && visible ? "text" : type;
@@ -35,7 +37,11 @@ export function AuthField({
           required
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className={type === "password" ? `${fieldControl} pr-16` : fieldControl}
+          className={
+            type === "password"
+              ? `${fieldControl} ${className ?? ""} pr-16`
+              : `${fieldControl} ${className ?? ""}`
+          }
         />
         {type === "password" ? (
           <button
@@ -78,7 +84,7 @@ export function AuthSubmit({
     <button
       type="submit"
       disabled={pending || !ready}
-      className={`${buttonPrimary} min-h-12 w-full`}
+      className={`${buttonPrimary} min-h-12 w-full py-3`}
     >
       {pending ? pendingLabel : label}
     </button>

@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Logo } from "@/components/shared/Logo";
 import { readShellBrand } from "@/lib/branding/shell";
-import { surfaceCard } from "@/lib/ui/styles";
 
 function schoolInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
@@ -27,10 +26,16 @@ export default async function AuthLayout({
   const brand = await readShellBrand();
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-canvas px-4 py-10 text-ink">
-      <div className="w-full max-w-sm">
-        <div className={`p-6 sm:p-8 ${surfaceCard}`}>
-          <div className="mb-6 flex min-h-12 items-center justify-center">
+    <main
+      className="flex min-h-dvh w-full min-w-0 items-center justify-center overflow-x-hidden bg-slate-50 px-4 py-10 text-ink"
+      style={{
+        backgroundImage:
+          "radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--brand-primary) 5%, transparent), transparent 100%)",
+      }}
+    >
+      <div className="w-full min-w-0 max-w-md">
+        <div className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/50 sm:p-10">
+          <div className="mb-8 flex h-20 items-center justify-center">
             {!brand.schoolName ? (
               <Logo />
             ) : brand.schoolLogoUrl ? (
@@ -52,7 +57,7 @@ export default async function AuthLayout({
           Powered by{" "}
           <a
             href={marketingSiteUrl()}
-            className="font-medium text-ink-secondary underline-offset-2 hover:underline"
+            className="font-medium text-slate-500 underline-offset-2 transition-colors hover:text-brand-primary hover:underline"
           >
             TerraLearn
           </a>

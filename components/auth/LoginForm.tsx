@@ -37,8 +37,11 @@ export function LoginForm({ schoolName }: { schoolName: string | null }) {
 
   return (
     <form className="space-y-4" method="post" onSubmit={onSubmit}>
-      <h1 className="text-2xl font-semibold tracking-tight text-ink">
-        Welcome to {schoolName ?? "TerraLearn"}
+      <h1 className="text-center text-lg font-medium leading-7 text-slate-500">
+        Welcome to
+        <span className="mt-1 block break-words text-2xl font-semibold tracking-tight text-slate-900">
+          {schoolName ?? "TerraLearn"}
+        </span>
       </h1>
       {error ? <AuthError>{error}</AuthError> : null}
       <AuthField
@@ -48,6 +51,7 @@ export function LoginForm({ schoolName }: { schoolName: string | null }) {
         autoComplete="username"
         value={email}
         onChange={setEmail}
+        className="auth-field"
       />
       <AuthField
         id="password"
@@ -56,10 +60,14 @@ export function LoginForm({ schoolName }: { schoolName: string | null }) {
         autoComplete="current-password"
         value={password}
         onChange={setPassword}
+        className="auth-field"
       />
       <AuthSubmit pending={pending} label="Sign in" pendingLabel="Signing in..." />
-      <p className="text-sm text-ink-secondary">
-        <Link href="/reset" className="underline">
+      <p className="text-sm text-slate-500">
+        <Link
+          href="/reset"
+          className="underline underline-offset-2 transition-colors hover:text-brand-primary"
+        >
           Forgot password
         </Link>
       </p>
