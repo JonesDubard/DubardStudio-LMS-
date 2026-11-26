@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
+import { Database, School, Users } from "lucide-react";
+import {
+  TenantStatusPill,
+  tenantAccentClass,
+  tenantAvatarClass,
+} from "@/components/platform/TenantStatusPill";
 import { TenantSummaryTile } from "@/components/platform/TenantSummaryTile";
+import { UsageKpiCard } from "@/components/shared/UsageKpiCard";
 import { assertPlatformAdmin, listSchools, subscriptionLabel } from "@/lib/platform/schools";
 import { buttonSecondary, surfaceCard } from "@/lib/ui/styles";
 
@@ -10,6 +16,14 @@ export const metadata: Metadata = {
 };
 
 const STATUSES = ["trial", "active", "suspended", "cancelled"] as const;
+
+// MOCK DATA: Replace with the Platform Admin usage RPC response when ready.
+// TODO: Connect to backend RPC when ready.
+const platformUsagePreview = {
+  activeSchools: 32,
+  activeUsers: 14680,
+  storageUsedGb: 1.8,
+};
 
 export default async function PlatformDashboardPage() {
   await assertPlatformAdmin();
@@ -35,6 +49,45 @@ export default async function PlatformDashboardPage() {
           <p className="mt-2 text-sm text-ink-secondary">Schools on this platform.</p>
         </header>
 
+        <section aria-labelledby="platform-usage-title" className="mb-8 space-y-4">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2
+                id="platform-usage-title"
+                className="text-lg font-semibold tracking-tight text-ink"
+              >
+                Platform usage
+              </h2>
+              <p className="mt-1 text-sm text-ink-secondary">
+                Aggregate activity across all schools.
+              </p>
+            </div>
+            <span className="w-fit rounded-full border border-brand-border bg-brand-subtle px-2.5 py-1 text-xs font-medium text-brand-primary">
+              Preview metrics · Sample data
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <UsageKpiCard
+              label="Total Active Schools"
+              value={platformUsagePreview.activeSchools.toLocaleString()}
+              detail="Active subscriptions"
+              icon={School}
+            />
+            <UsageKpiCard
+              label="Total Active Users"
+              value={platformUsagePreview.activeUsers.toLocaleString()}
+              detail="Across active schools"
+              icon={Users}
+            />
+            <UsageKpiCard
+              label="Total Storage Used (GB)"
+              value={platformUsagePreview.storageUsedGb.toFixed(1)}
+              detail="Aggregate file storage"
+              icon={Database}
+            />
+          </div>
+        </section>
+
         <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <TenantSummaryTile label="Total tenants" value={String(schools.length)} />
           <TenantSummaryTile label="Trial" value={String(counts.trial)} />
@@ -55,23 +108,39 @@ export default async function PlatformDashboardPage() {
           ) : (
             <>
               <ul className="grid gap-3 md:hidden">
-                {schools.map((school) => (
-                  <li key={school.id} className={`${surfaceCard} space-y-3 p-4`}>
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="font-semibold tracking-tight text-ink">{school.name}</p>
-                      <TenantStatusPill status={subscriptionLabel(school.subscription_status)} />
-                    </div>
-                    <p className="text-sm capitalize text-ink-secondary">
-                      {school.onboarding_status.replaceAll("_", " ")}
-                    </p>
-                    <Link
-                      href={`/platform/tenants/${school.id}/subscription`}
-                      className={`${buttonSecondary} w-full`}
+                {schools.map((school) => {
+                  const status = subscriptionLabel(school.subscription_status);
+                  return (
+                    <li
+                      key={school.id}
+                      className={`${surfaceCard} space-y-3 border-l-4 ${tenantAccentClass(status)} p-4`}
                     >
-                      Subscription
-                    </Link>
-                  </li>
-                ))}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${tenantAvatarClass(status)}`}
+                            aria-hidden
+                          >
+                            {school.name.charAt(0).toUpperCase()}
+                          </span>
+                          <p className="break-words font-semibold tracking-tight text-ink">
+                            {school.name}
+                          </p>
+                        </div>
+                        <TenantStatusPill status={status} />
+                      </div>
+                      <p className="text-sm capitalize text-ink-secondary">
+                        {school.onboarding_status.replaceAll("_", " ")}
+                      </p>
+                      <Link
+                        href={`/platform/tenants/${school.id}`}
+                        className={`${buttonSecondary} w-full`}
+                      >
+                        Overview
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
               <div className={`hidden overflow-x-auto md:block ${surfaceCard}`}>
                 <table className="w-full border-collapse text-sm">
@@ -86,7 +155,14 @@ export default async function PlatformDashboardPage() {
                   <tbody>
                     {schools.map((school) => (
                       <tr key={school.id} className="border-t border-line-subtle">
-                        <td className="px-4 py-4 font-medium">{school.name}</td>
+                        <td className="px-4 py-4 font-medium">
+                          <Link
+                            href={`/platform/tenants/${school.id}`}
+                            className="text-brand-primary hover:underline"
+                          >
+                            {school.name}
+                          </Link>
+                        </td>
                         <td className="px-4 py-4">
                           <TenantStatusPill status={subscriptionLabel(school.subscription_status)} />
                         </td>
@@ -95,10 +171,10 @@ export default async function PlatformDashboardPage() {
                         </td>
                         <td className="px-4 py-4">
                           <Link
-                            href={`/platform/tenants/${school.id}/subscription`}
+                            href={`/platform/tenants/${school.id}`}
                             className={buttonSecondary}
                           >
-                            Subscription
+                            Overview
                           </Link>
                         </td>
                       </tr>

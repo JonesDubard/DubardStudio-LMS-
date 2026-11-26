@@ -1,8 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Files, GraduationCap, Palette, Users } from "lucide-react";
+import {
+  Activity,
+  BookOpen,
+  Files,
+  GraduationCap,
+  Palette,
+  Users,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { LessonsPublishedChart } from "@/components/admin/LessonsPublishedChart";
 import { CreateAnnouncementModal } from "@/components/admin/CreateAnnouncementModal";
+import { UsageKpiCard } from "@/components/shared/UsageKpiCard";
 import { readShellBrand } from "@/lib/branding/shell";
 import {
   getAcademicYears,
@@ -15,6 +24,18 @@ import { surfaceCard } from "@/lib/ui/styles";
 
 export const metadata: Metadata = {
   title: "School Admin Dashboard",
+};
+
+// MOCK DATA: Replace with the School Admin usage RPC response when ready.
+// TODO: Connect to backend RPC when ready.
+const schoolUsagePreview = {
+  totalStudents: 1248,
+  lessonsPublished: 36,
+  studentLogins: 2418,
+  dailyLessonsPublished: [
+    1, 0, 2, 1, 0, 2, 1, 0, 1, 3, 0, 1, 2, 0, 1,
+    2, 1, 0, 1, 2, 1, 0, 4, 1, 0, 2, 1, 1, 2, 3,
+  ],
 };
 
 function countLabel(count: number, singular: string, plural: string): string {
@@ -91,6 +112,48 @@ export default async function AdminDashboardPage() {
       </header>
 
       <div className="space-y-8 p-4 lg:p-8">
+        <section aria-labelledby="school-usage-title" className="space-y-4">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2
+                id="school-usage-title"
+                className="text-lg font-semibold tracking-tight text-ink"
+              >
+                Usage overview
+              </h2>
+              <p className="mt-1 text-sm text-ink-secondary">
+                School activity at a glance.
+              </p>
+            </div>
+            <span className="w-fit rounded-full border border-brand-border bg-brand-subtle px-2.5 py-1 text-xs font-medium text-brand-primary">
+              Preview metrics · Sample data
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <UsageKpiCard
+              label="Total Students"
+              value={schoolUsagePreview.totalStudents.toLocaleString()}
+              detail="Across the school"
+              icon={Users}
+            />
+            <UsageKpiCard
+              label="Lessons Published (Last 30 Days)"
+              value={String(schoolUsagePreview.lessonsPublished)}
+              detail="Daily publication activity"
+              icon={BookOpen}
+            />
+            <UsageKpiCard
+              label="Student Logins (Last 7 Days)"
+              value={schoolUsagePreview.studentLogins.toLocaleString()}
+              detail="Student sign-ins"
+              icon={Activity}
+            />
+          </div>
+          <LessonsPublishedChart
+            dailyCounts={schoolUsagePreview.dailyLessonsPublished}
+          />
+        </section>
+
         <section>
           <h2 className="text-lg font-semibold tracking-tight text-ink">School setup</h2>
           <p className="mt-1 text-sm text-ink-secondary">

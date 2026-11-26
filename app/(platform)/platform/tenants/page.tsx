@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TenantStatusPill } from "@/components/platform/TenantStatusPill";
+import {
+  TenantStatusPill,
+  tenantAccentClass,
+  tenantAvatarClass,
+} from "@/components/platform/TenantStatusPill";
 import { DataTable } from "@/components/shared/DataTable";
 import { ResendInviteButton } from "@/components/platform/ResendInviteButton";
 import { assertPlatformAdmin, listSchools, subscriptionLabel } from "@/lib/platform/schools";
@@ -110,31 +114,51 @@ export default async function PlatformTenantsPage({
           {schools.length === 0 ? (
             <li className={`${surfaceCard} px-4 py-6 text-sm text-ink-secondary`}>No schools yet.</li>
           ) : (
-            schools.map((tenant) => (
-              <li key={tenant.id} className={`${surfaceCard} space-y-3 p-4`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold tracking-tight text-ink">{tenant.name}</p>
-                    <p className="mt-1 break-all text-sm text-ink-secondary">
-                      {tenant.subdomain}.{root}
-                    </p>
-                  </div>
-                  <TenantStatusPill status={subscriptionLabel(tenant.subscription_status)} />
-                </div>
-                <p className="text-sm capitalize text-ink-secondary">
-                  {tenant.onboarding_status.replaceAll("_", " ")} · {formatCreated(tenant.created_at)}
-                </p>
-                <Link
-                  href={`/platform/tenants/${tenant.id}/subscription`}
-                  className={`${buttonSecondary} w-full`}
+            schools.map((tenant) => {
+              const status = subscriptionLabel(tenant.subscription_status);
+              return (
+                <li
+                  key={tenant.id}
+                  className={`${surfaceCard} space-y-3 border-l-4 ${tenantAccentClass(status)} p-4`}
                 >
-                  Subscription
-                </Link>
-                {awaitingFirstAdmin(tenant.onboarding_status) ? (
-                  <ResendInviteButton tenantId={tenant.id} className={`${buttonSecondary} w-full`} />
-                ) : null}
-              </li>
-            ))
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${tenantAvatarClass(status)}`}
+                        aria-hidden
+                      >
+                        {tenant.name.charAt(0).toUpperCase()}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-semibold tracking-tight text-ink">
+                          {tenant.name}
+                        </p>
+                        <p className="mt-1 break-all text-sm text-ink-secondary">
+                          {tenant.subdomain}.{root}
+                        </p>
+                      </div>
+                    </div>
+                    <TenantStatusPill status={status} />
+                  </div>
+                  <p className="text-sm capitalize text-ink-secondary">
+                    {tenant.onboarding_status.replaceAll("_", " ")} ·{" "}
+                    {formatCreated(tenant.created_at)}
+                  </p>
+                  <Link
+                    href={`/platform/tenants/${tenant.id}`}
+                    className={`${buttonSecondary} w-full`}
+                  >
+                    Overview
+                  </Link>
+                  {awaitingFirstAdmin(tenant.onboarding_status) ? (
+                    <ResendInviteButton
+                      tenantId={tenant.id}
+                      className={`${buttonSecondary} w-full`}
+                    />
+                  ) : null}
+                </li>
+              );
+            })
           )}
         </ul>
 
@@ -156,7 +180,12 @@ export default async function PlatformTenantsPage({
             id: tenant.id,
             cells: [
               <span key="name" className="font-medium">
-                {tenant.name}
+                <Link
+                  href={`/platform/tenants/${tenant.id}`}
+                  className="text-brand-primary hover:underline"
+                >
+                  {tenant.name}
+                </Link>
               </span>,
               <span key="subdomain" className="text-ink-secondary">
                 {tenant.subdomain}.{root}
@@ -168,10 +197,10 @@ export default async function PlatformTenantsPage({
               </span>,
               <span key="action" className="flex flex-wrap items-start gap-2">
                 <Link
-                  href={`/platform/tenants/${tenant.id}/subscription`}
+                  href={`/platform/tenants/${tenant.id}`}
                   className={buttonSecondary}
                 >
-                  Subscription
+                  Overview
                 </Link>
                 {awaitingFirstAdmin(tenant.onboarding_status) ? (
                   <ResendInviteButton tenantId={tenant.id} />
