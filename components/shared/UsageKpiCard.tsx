@@ -6,13 +6,21 @@ type UsageKpiCardProps = {
   value: string;
   detail: string;
   icon: LucideIcon;
+  iconTone?: "neutral" | "success" | "info";
 };
+
+const iconToneClasses = {
+  neutral: "bg-surface-muted text-ink-secondary",
+  success: "bg-success-subtle text-success",
+  info: "bg-info-subtle text-info",
+} as const;
 
 export function UsageKpiCard({
   label,
   value,
   detail,
   icon: Icon,
+  iconTone = "neutral",
 }: UsageKpiCardProps) {
   return (
     <Card className="flex min-h-32 items-start justify-between gap-4 p-5">
@@ -28,7 +36,9 @@ export function UsageKpiCard({
           Preview Data
         </span>
       </div>
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-subtle text-brand-primary">
+      <span
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconToneClasses[iconTone]}`}
+      >
         <Icon size={19} strokeWidth={1.8} aria-hidden />
       </span>
     </Card>

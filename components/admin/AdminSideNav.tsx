@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { MobileNavBar } from "@/components/shared/MobileNavDrawer";
+import { NavIconBadge } from "@/components/shared/NavIconBadge";
 import { PersonaShell } from "@/components/shared/PersonaShell";
 import { SchoolMark } from "@/components/shared/SchoolMark";
 import { SignOutButton } from "@/components/shared/SignOutButton";
@@ -120,7 +121,6 @@ function DesktopLinks({
   return (
     <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto">
       {items.map((item) => {
-        const Icon = item.icon;
         return (
           <Link
             key={item.href}
@@ -129,7 +129,7 @@ function DesktopLinks({
             title={item.label}
             aria-current={item.active ? "page" : undefined}
           >
-            <Icon size={18} strokeWidth={1.75} aria-hidden />
+            <NavIconBadge icon={item.icon} active={item.active} />
             <span className={navLabel}>{item.label}</span>
           </Link>
         );

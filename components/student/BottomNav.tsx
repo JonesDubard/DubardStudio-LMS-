@@ -3,6 +3,7 @@
 import { Award, BookOpen, Download, Home, School, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { NavIconBadge } from "@/components/shared/NavIconBadge";
 import { SignOutButton } from "@/components/shared/SignOutButton";
 import { desktopSideNav, navLabel, navLink, navLinkActive } from "@/lib/ui/styles";
 
@@ -75,7 +76,7 @@ export function BottomNav() {
                 title={item.label}
                 aria-current={active ? "page" : undefined}
               >
-                <Icon size={18} strokeWidth={1.75} aria-hidden />
+                <NavIconBadge icon={Icon} active={active} />
                 <span className={navLabel}>{item.label}</span>
               </Link>
             );
@@ -88,9 +89,9 @@ export function BottomNav() {
 
       <nav
         aria-label="Student"
-        className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] shadow-md md:hidden"
       >
-          <div className="mx-auto grid w-full grid-cols-6">
+        <div className="mx-auto grid w-full grid-cols-6">
           {items.map((item) => {
             const active = item.active(pathname);
             const Icon = item.icon;
@@ -100,12 +101,20 @@ export function BottomNav() {
                 href={item.href}
                 className={
                   active
-                    ? `${dockClass} border-t-2 border-brand-primary font-semibold text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring`
-                    : `${dockClass} border-t-2 border-transparent text-ink-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring`
+                    ? `${dockClass} font-semibold text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring`
+                    : `${dockClass} text-ink-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring`
                 }
                 aria-current={active ? "page" : undefined}
               >
-                <Icon size={18} strokeWidth={1.75} aria-hidden />
+                <span
+                  className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                    active
+                      ? "bg-brand-primary/10 text-brand-primary"
+                      : "text-ink-muted"
+                  }`}
+                >
+                  <Icon size={18} strokeWidth={1.75} aria-hidden />
+                </span>
                 <span>{item.label}</span>
               </Link>
             );

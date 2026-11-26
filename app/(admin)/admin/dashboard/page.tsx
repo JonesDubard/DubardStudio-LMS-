@@ -141,12 +141,14 @@ export default async function AdminDashboardPage() {
               value={String(schoolUsagePreview.lessonsPublished)}
               detail="Daily publication activity"
               icon={BookOpen}
+              iconTone="success"
             />
             <UsageKpiCard
               label="Student Logins (Last 7 Days)"
               value={schoolUsagePreview.studentLogins.toLocaleString()}
               detail="Student sign-ins"
               icon={Activity}
+              iconTone="info"
             />
           </div>
           <LessonsPublishedChart
