@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import {
@@ -74,40 +74,47 @@ function ReadOnlyValue({ label, value }: { label: string; value: string }) {
 function LessonMaterials({
   lessonId,
   materials,
+  file,
+  onFileChange,
+  onUploadFile,
+  uploadingFile,
 }: {
   lessonId: string;
   materials: LessonMaterialItem[];
+  file: File | null;
+  onFileChange: (file: File | null) => void;
+  onUploadFile: () => Promise<{ ok: true } | { ok: false; error: string }>;
+  uploadingFile: boolean;
 }) {
   const router = useRouter();
-  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [linkPending, setLinkPending] = useState(false);
 
-  async function onFile(event: FormEvent) {
-    event.preventDefault();
+  useEffect(() => {
+    if (!file && fileInputRef.current) fileInputRef.current.value = "";
+  }, [file]);
+
+  async function onFile() {
     if (!file) {
       setError("Choose a file to attach.");
       return;
     }
     setError(null);
-    setPending(true);
-    const result = await addLessonFile(lessonId, file);
-    setPending(false);
+    const result = await onUploadFile();
     if (!result.ok) {
       setError(result.error);
       return;
     }
-    setFile(null);
     router.refresh();
   }
 
-  async function onLink(event: FormEvent) {
-    event.preventDefault();
+  async function onLink() {
     setError(null);
-    setPending(true);
+    setLinkPending(true);
     const result = await addLessonLink(lessonId, url);
-    setPending(false);
+    setLinkPending(false);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -130,29 +137,41 @@ function LessonMaterials({
         </ul>
       )}
       {error ? <p className={alertError}>{error}</p> : null}
-      <form onSubmit={(event) => void onFile(event)} className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <input
+          ref={fileInputRef}
           type="file"
           accept=".pdf,.doc,.docx,.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/jpeg,image/png,image/webp"
           className="block min-w-0 flex-1 text-sm"
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+          onChange={(event) => onFileChange(event.currentTarget.files?.[0] ?? null)}
         />
-        <button type="submit" className={buttonSecondary} disabled={pending}>
-          Add file
+        <button
+          type="button"
+          className={buttonSecondary}
+          disabled={uploadingFile}
+          onClick={() => void onFile()}
+        >
+          {uploadingFile ? "Uploading file..." : "Add file"}
         </button>
-      </form>
-      <form onSubmit={(event) => void onLink(event)} className="flex flex-wrap items-center gap-3">
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
         <input
           type="url"
           value={url}
           onChange={(event) => setUrl(event.target.value)}
           placeholder="https://"
           className={`${fieldControl} min-w-0 flex-1`}
+          disabled={linkPending}
         />
-        <button type="submit" className={buttonSecondary} disabled={pending}>
-          Add link
+        <button
+          type="button"
+          className={buttonSecondary}
+          disabled={linkPending || !url.trim()}
+          onClick={() => void onLink()}
+        >
+          {linkPending ? "Adding link..." : "Add link"}
         </button>
-      </form>
+      </div>
     </div>
   );
 }
@@ -162,6 +181,8 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
   const publishRef = useRef(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   const initialCourse =
     props.mode === "create" ? props.courses[0] : props.course;
@@ -240,10 +261,33 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
     form.setValue("course_id", nextCourse?.id ?? "", { shouldValidate: true });
   }
 
+  async function uploadSelectedFile(): Promise<
+    { ok: true } | { ok: false; error: string }
+  > {
+    if (props.mode !== "edit" || !selectedFile) return { ok: true };
+
+    setUploadingFile(true);
+    try {
+      const result = await addLessonFile(props.lesson.id, selectedFile);
+      if (result.ok) setSelectedFile(null);
+      return result;
+    } finally {
+      setUploadingFile(false);
+    }
+  }
+
   async function onSubmit(values: CreateLessonInput | LessonContentInput) {
     setServerError(null);
     setSaved(false);
     const publish = publishRef.current;
+    if (props.mode === "edit" && selectedFile) {
+      const uploadResult = await uploadSelectedFile();
+      if (!uploadResult.ok) {
+        setServerError(uploadResult.error);
+        return;
+      }
+    }
+
     const result =
       props.mode === "create"
         ? await createLesson(values as CreateLessonInput, publish)
@@ -253,6 +297,11 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
       return;
     }
     if (props.mode === "create") {
+      router.push("/teacher/lessons");
+      router.refresh();
+      return;
+    }
+    if (publish) {
       router.push("/teacher/lessons");
       router.refresh();
       return;
@@ -441,7 +490,14 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
             Save the lesson, then add a file or a link.
           </p>
         ) : (
-          <LessonMaterials lessonId={props.lesson.id} materials={props.materials} />
+          <LessonMaterials
+            lessonId={props.lesson.id}
+            materials={props.materials}
+            file={selectedFile}
+            onFileChange={setSelectedFile}
+            onUploadFile={uploadSelectedFile}
+            uploadingFile={uploadingFile}
+          />
         )}
       </section>
 
@@ -449,7 +505,7 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
-            disabled={form.formState.isSubmitting}
+            disabled={form.formState.isSubmitting || uploadingFile}
             onClick={() => {
               publishRef.current = false;
             }}
@@ -460,13 +516,13 @@ export function LessonEditorForm(props: LessonEditorFormProps) {
 
           <button
             type="submit"
-            disabled={form.formState.isSubmitting}
+            disabled={form.formState.isSubmitting || uploadingFile}
             onClick={() => {
               publishRef.current = true;
             }}
             className={buttonPrimary}
           >
-            Publish Lesson
+            {uploadingFile ? "Uploading file..." : "Publish Lesson"}
           </button>
         </div>
       </div>
