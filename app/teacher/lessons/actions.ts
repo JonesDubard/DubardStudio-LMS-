@@ -332,7 +332,7 @@ export async function addLessonFile(
   if ("ok" in lesson) return lesson;
 
   const fileId = crypto.randomUUID();
-  const storagePath = `${session.tenantId}/lessons/${lesson.id}/${fileId}/${safeFileName(file.name)}`;
+  const storagePath = `${session.tenantId}/${lesson.id}/${fileId}-${safeFileName(file.name)}`;
   const uploaded = await supabase.storage.from("tenant-files").upload(storagePath, file, {
     contentType: file.type,
     upsert: false,
