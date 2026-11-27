@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { classDisplayName } from "@/lib/academic/labels";
 import type { Class as SchoolClass } from "@/lib/types/academic";
 import { deleteClass } from "../../actions";
 import { DeleteConfirm } from "../../_components/DeleteConfirm";
-import { quietButtonClass } from "../../_components/FormControls";
 import { Modal } from "../../_components/Modal";
 import { AddClassButton } from "./AddClassButton";
 import { ClassForm } from "./ClassForm";
@@ -74,26 +74,30 @@ export function ClassesPanel({
                   </td>
                   <td className="px-4 py-3">{studentCountByClass[row.id] ?? 0}</td>
                   <td className="px-4 py-3">
-                    {(teachersByClass[row.id] ?? []).join(", ") || "No teachers"}
+                    {(teachersByClass[row.id] ?? []).join(", ") || "Unassigned"}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-nowrap items-center gap-1">
                       <button
                         type="button"
-                        className={quietButtonClass}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
                         onClick={() => setEditing(row)}
+                        aria-label={`Edit ${row.name}`}
+                        title="Edit"
                       >
-                        Edit
+                        <Pencil size={16} aria-hidden />
                       </button>
                       <button
                         type="button"
-                        className={quietButtonClass}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-danger-subtle hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-border"
                         onClick={() => {
                           setDeleteError(null);
                           setRemoving(row);
                         }}
+                        aria-label={`Delete ${row.name}`}
+                        title="Delete"
                       >
-                        Delete
+                        <Trash2 size={16} aria-hidden />
                       </button>
                     </div>
                   </td>

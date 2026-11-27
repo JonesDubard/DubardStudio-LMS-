@@ -43,7 +43,7 @@ export default async function TeacherLibraryPage() {
             {lessons.map((lesson) => (
               <article
                 key={lesson.id}
-                className={`${surfaceCard} group flex min-h-64 flex-col rounded-2xl p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-brand-border hover:shadow-lift`}
+                className={`${surfaceCard} flex min-h-64 flex-col rounded-2xl p-5 transition-[border-color,box-shadow] duration-200 hover:border-brand-border hover:shadow-md`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-subtle text-brand-primary">

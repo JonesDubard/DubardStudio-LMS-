@@ -133,7 +133,7 @@ function LessonMaterials({
       <form onSubmit={(event) => void onFile(event)} className="flex flex-wrap items-center gap-3">
         <input
           type="file"
-          accept=".pdf,.doc,.docx,image/jpeg,image/png,image/webp"
+          accept=".pdf,.doc,.docx,.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/jpeg,image/png,image/webp"
           className="block min-w-0 flex-1 text-sm"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
         />

@@ -270,6 +270,7 @@ const MATERIAL_FILE_TYPES = new Set([
   "image/webp",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 ]);
 const MATERIAL_FILE_LIMIT = 10 * 1024 * 1024;
 const materialUrlSchema = z.string().trim().url("Enter a valid link.").max(2000);
@@ -321,7 +322,7 @@ export async function addLessonFile(
   if (!(file instanceof File) || file.size <= 0) return fail("Choose a file to attach.");
   if (file.size > MATERIAL_FILE_LIMIT) return fail("That file is larger than 10 MB.");
   if (!MATERIAL_FILE_TYPES.has(file.type)) {
-    return fail("Use a PDF, Word document, or JPEG, PNG, or WebP image.");
+    return fail("Use a PDF, Word or PowerPoint document, or JPEG, PNG, or WebP image.");
   }
 
   const supabase = await createClient();

@@ -13,7 +13,7 @@ export function ClassCard({ name, subject, studentCountLabel, href }: ClassCardP
   return (
     <Link
       href={href}
-      className={`${surfaceCard} block p-5 hover:border-brand-border hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring`}
+      className={`${surfaceCard} block p-5 transition-[border-color,box-shadow] duration-200 hover:border-brand-border hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>

@@ -53,6 +53,12 @@ export default async function AdminTeachersPage() {
   const className = new Map(
     classes.map((row) => [row.id, classDisplayName(row.name, row.id, classNames)]),
   );
+  const classNameByLink = new Map(
+    (linkResult.data ?? []).map((row) => [
+      row.id,
+      className.get(row.class_id) ?? "Class",
+    ]),
+  );
   const subjectName = new Map(subjects.map((row) => [row.id, row.name]));
   const linkLabel = new Map(
     (linkResult.data ?? []).map((row) => [
@@ -63,13 +69,13 @@ export default async function AdminTeachersPage() {
   const options = [...linkLabel.entries()]
     .map(([id, label]) => ({ id, label }))
     .sort((a, b) => a.label.localeCompare(b.label));
-  const assignmentsByTeacher = new Map<string, string[]>();
+  const assignmentsByTeacher = new Map<string, Set<string>>();
   for (const row of assignmentResult.data ?? []) {
-    const label = linkLabel.get(row.class_subject_id);
-    if (!label) continue;
-    const list = assignmentsByTeacher.get(row.teacher_id) ?? [];
-    list.push(label);
-    assignmentsByTeacher.set(row.teacher_id, list);
+    const assignedClass = classNameByLink.get(row.class_subject_id);
+    if (!assignedClass) continue;
+    const assignedClasses = assignmentsByTeacher.get(row.teacher_id) ?? new Set<string>();
+    assignedClasses.add(assignedClass);
+    assignmentsByTeacher.set(row.teacher_id, assignedClasses);
   }
   const pending = invitationResult.data ?? [];
   const blockedMessage =
@@ -126,7 +132,9 @@ export default async function AdminTeachersPage() {
                   {teacher.name}
                 </span>,
                 teacher.email,
-                (assignmentsByTeacher.get(teacher.id) ?? []).sort().join(", ") || "Not assigned",
+                [...(assignmentsByTeacher.get(teacher.id) ?? [])]
+                  .sort((left, right) => left.localeCompare(right))
+                  .join(", ") || "Not assigned",
                 <StatusBadge key="status" label={teacher.status.toUpperCase()} />,
                 <AssignPersonButton
                   key="action"
@@ -135,6 +143,7 @@ export default async function AdminTeachersPage() {
                   options={options}
                   fieldName="Class and subject"
                   blockedMessage={blockedMessage}
+                  isAssigned={(assignmentsByTeacher.get(teacher.id)?.size ?? 0) > 0}
                   assign={assignTeacherClass}
                 />,
               ],
