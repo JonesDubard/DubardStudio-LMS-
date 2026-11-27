@@ -75,6 +75,7 @@ const navItems: {
 
 type TeacherSideNavProps = {
   teacherName?: string;
+  schoolName?: string;
   portalLabel?: string;
   logoUrl?: string | null;
   children: ReactNode;
@@ -82,6 +83,7 @@ type TeacherSideNavProps = {
 
 export function TeacherSideNav({
   teacherName = "",
+  schoolName = "School",
   portalLabel = "Teacher Portal",
   logoUrl = null,
   children,
@@ -99,7 +101,7 @@ export function TeacherSideNav({
       sidebar={
         <aside className={desktopSideNav} aria-label="Teacher">
           <div className="mb-6 flex flex-col items-center lg:mb-8 lg:items-start lg:px-2">
-            <SchoolMark src={logoUrl} />
+            <SchoolMark src={logoUrl} schoolName={schoolName} />
             <p className={`mt-3 text-xs font-medium text-ink-muted ${navLabel}`}>{portalLabel}</p>
             {teacherName ? (
               <p className={`font-semibold tracking-tight text-ink ${navLabel}`}>{teacherName}</p>
@@ -130,7 +132,7 @@ export function TeacherSideNav({
         <MobileNavBar
           title={teacherName || portalLabel}
           subtitle={teacherName ? portalLabel : undefined}
-          renderLogo={() => <SchoolMark src={logoUrl} />}
+          renderLogo={() => <SchoolMark src={logoUrl} schoolName={schoolName} />}
           items={items}
         />
       }

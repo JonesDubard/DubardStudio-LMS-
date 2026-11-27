@@ -74,7 +74,12 @@ export default async function StudentFeedPage() {
 
   return (
     <>
-      <PageHeader variant="greeting" eyebrow={feed.eyebrow} title={feed.greeting} />
+      <PageHeader
+        variant="greeting"
+        eyebrow={feed.eyebrow}
+        title={feed.greeting}
+        subtitle={feed.className ?? undefined}
+      />
 
       <main className="mx-auto grid w-full max-w-[1440px] grid-cols-1 items-start gap-5 px-4 py-4 md:px-8 md:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.42fr)] lg:gap-6">
         <p className="col-span-full text-xs text-ink-muted">{feed.todayDate}</p>

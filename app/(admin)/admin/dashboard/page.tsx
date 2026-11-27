@@ -11,6 +11,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { LessonsPublishedChart } from "@/components/admin/LessonsPublishedChart";
 import { CreateAnnouncementModal } from "@/components/admin/CreateAnnouncementModal";
+import { ProfileSettingsLink } from "@/components/shared/ProfileSettingsLink";
 import { UsageKpiCard } from "@/components/shared/UsageKpiCard";
 import { readShellBrand } from "@/lib/branding/shell";
 import {
@@ -107,7 +108,10 @@ export default async function AdminDashboardPage() {
               </p>
             </div>
           </div>
-          <CreateAnnouncementModal />
+          <div className="flex shrink-0 items-center gap-3">
+            <CreateAnnouncementModal />
+            <ProfileSettingsLink />
+          </div>
         </div>
       </header>
 

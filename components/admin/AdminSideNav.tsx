@@ -89,7 +89,7 @@ export function AdminSideNav({
       sidebar={
         <aside className={desktopSideNav} aria-label="School Admin">
           <div className="mb-6 flex flex-col items-center lg:mb-8 lg:items-start lg:px-2">
-            <SchoolMark src={logoUrl} />
+            <SchoolMark src={logoUrl} schoolName={schoolName} />
             <p className={`mt-3 text-xs font-medium text-ink-muted ${navLabel}`}>{portalLabel}</p>
             <p className={`font-semibold tracking-tight text-ink ${navLabel}`}>{schoolName}</p>
           </div>
@@ -103,7 +103,7 @@ export function AdminSideNav({
         <MobileNavBar
           title={schoolName}
           subtitle={portalLabel}
-          renderLogo={() => <SchoolMark src={logoUrl} />}
+          renderLogo={() => <SchoolMark src={logoUrl} schoolName={schoolName} />}
           items={items}
         />
       }

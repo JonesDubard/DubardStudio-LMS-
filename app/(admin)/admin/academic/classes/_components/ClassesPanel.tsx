@@ -14,9 +14,11 @@ import { ClassForm } from "./ClassForm";
 export function ClassesPanel({
   classes,
   teachersByClass,
+  studentCountByClass,
 }: {
   classes: SchoolClass[];
   teachersByClass: Record<string, string[]>;
+  studentCountByClass: Record<string, number>;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<SchoolClass | null>(null);
@@ -48,6 +50,7 @@ export function ClassesPanel({
           <thead className="border-b border-line bg-surface text-left text-xs font-medium text-ink-secondary">
             <tr>
               <th className="px-4 py-3">Class</th>
+              <th className="px-4 py-3">Students</th>
               <th className="px-4 py-3">Teachers</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
@@ -55,7 +58,7 @@ export function ClassesPanel({
           <tbody className="divide-y divide-line">
             {classes.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-sm text-ink-secondary" colSpan={3}>
+                <td className="px-4 py-6 text-sm text-ink-secondary" colSpan={4}>
                   No classes yet.
                 </td>
               </tr>
@@ -69,6 +72,7 @@ export function ClassesPanel({
                       classes.map((item) => item.name),
                     )}
                   </td>
+                  <td className="px-4 py-3">{studentCountByClass[row.id] ?? 0}</td>
                   <td className="px-4 py-3">
                     {(teachersByClass[row.id] ?? []).join(", ") || "No teachers"}
                   </td>

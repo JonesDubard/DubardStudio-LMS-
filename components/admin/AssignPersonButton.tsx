@@ -19,6 +19,7 @@ export function AssignPersonButton({
   options,
   fieldName,
   blockedMessage,
+  isAssigned = false,
   assign,
 }: {
   personId: string;
@@ -26,6 +27,7 @@ export function AssignPersonButton({
   options: { id: string; label: string }[];
   fieldName: string;
   blockedMessage: string | null;
+  isAssigned?: boolean;
   assign: (personId: string, optionId: string) => Promise<AssignResult>;
 }) {
   const router = useRouter();
@@ -65,7 +67,7 @@ export function AssignPersonButton({
           setOpen(true);
         }}
       >
-        Assign class
+        {isAssigned ? "Reassign" : "Assign class"}
       </button>
       {open ? (
         <Modal title={`Assign ${personName}`} onClose={close}>

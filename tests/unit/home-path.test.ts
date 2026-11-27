@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { homePathForRoles, homePathFromAccessToken } from "../../lib/auth/home-path";
+import {
+  homePathForRoles,
+  homePathFromAccessToken,
+  tenantRootRedirectPath,
+} from "../../lib/auth/home-path";
 
 function token(payload: Record<string, unknown>): string {
   const segment = Buffer.from(JSON.stringify(payload)).toString("base64url");
@@ -26,5 +30,21 @@ describe("homePathForRoles", () => {
       "/admin/dashboard",
     );
     expect(homePathFromAccessToken(undefined)).toBe("/feed");
+  });
+});
+
+describe("tenantRootRedirectPath", () => {
+  it("sends unauthenticated tenant visitors to login", () => {
+    expect(tenantRootRedirectPath("pilot1", false, [])).toBe("/login");
+  });
+
+  it("sends authenticated tenant visitors to their role home", () => {
+    expect(tenantRootRedirectPath("pilot1", true, ["teacher"])).toBe(
+      "/teacher/home",
+    );
+  });
+
+  it("does not redirect the root domain", () => {
+    expect(tenantRootRedirectPath(null, false, [])).toBeNull();
   });
 });

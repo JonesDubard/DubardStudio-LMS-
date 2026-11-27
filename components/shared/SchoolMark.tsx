@@ -1,10 +1,34 @@
-import { School } from "lucide-react";
+function schoolInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const firstWord = words.find((word) => !/\d/.test(word));
+  const number = words.find((word) => /\d/.test(word))?.match(/\d+/)?.[0];
+  if (firstWord && number) {
+    return `${firstWord.charAt(0)}${number}`.toUpperCase();
+  }
 
-export function SchoolMark({ src }: { src?: string | null }) {
+  const initials = words
+    .slice(0, 2)
+    .map((word) => word.charAt(0))
+    .join("")
+    .toUpperCase();
+  return initials || name.trim().slice(0, 2).toUpperCase() || "S";
+}
+
+export function SchoolMark({
+  src,
+  schoolName = "School",
+}: {
+  src?: string | null;
+  schoolName?: string;
+}) {
   if (!src) {
     return (
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-subtle text-brand-primary">
-        <School size={18} strokeWidth={1.75} aria-hidden />
+      <div
+        className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-primary text-xs font-semibold text-white"
+        role="img"
+        aria-label={`${schoolName} initials`}
+      >
+        {schoolInitials(schoolName)}
       </div>
     );
   }

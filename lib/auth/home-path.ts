@@ -16,6 +16,15 @@ export function homePathForRoles(roles: readonly string[]): string {
   return "/feed";
 }
 
+export function tenantRootRedirectPath(
+  tenantSubdomain: string | null,
+  authenticated: boolean,
+  roles: readonly string[],
+): string | null {
+  if (!tenantSubdomain) return null;
+  return authenticated ? homePathForRoles(roles) : "/login";
+}
+
 export function homePathFromAccessToken(accessToken: string | undefined): string {
   if (!accessToken) return "/feed";
   return homePathForRoles(readAccessTokenClaims(accessToken).app_roles);

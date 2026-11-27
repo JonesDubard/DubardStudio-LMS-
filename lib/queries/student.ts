@@ -39,6 +39,7 @@ export type StudentFeed = {
   enrolled: boolean;
   eyebrow: string;
   greeting: string;
+  className: string | null;
   todayLabel: string;
   todayDate: string;
   items: StudentFeedItem[];
@@ -316,6 +317,7 @@ export async function getStudentFeed(
     enrolled,
     eyebrow: "Student Home",
     greeting: greetingFor(displayName, now),
+    className: null,
     todayLabel: "TODAY",
     todayDate: formatToday(now),
     items: [],
@@ -323,6 +325,7 @@ export async function getStudentFeed(
     recentlyViewedCountLabel: "0 lessons",
     recentlyViewed: [],
   };
+  shell.className = unique(courses.map((course) => course.className)).join(", ") || null;
   if (!enrolled || courses.length === 0) return shell;
 
   const courseIds = courses.map((course) => course.id);

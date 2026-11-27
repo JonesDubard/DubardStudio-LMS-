@@ -5,6 +5,7 @@ import { ClipboardList, Inbox } from "lucide-react";
 import { ClassCard } from "@/components/teacher/ClassCard";
 import { DataTable } from "@/components/shared/DataTable";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ProfileSettingsLink } from "@/components/shared/ProfileSettingsLink";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { getTeacherAssessments } from "@/lib/queries/assessments";
 import {
@@ -146,6 +147,9 @@ export default async function TeacherHomePage() {
     teacherFullName(supabase),
     getTeacherCourses(supabase),
   ]);
+  const assignedClassNames = [
+    ...new Set(courses.map((course) => course.class_name)),
+  ];
   const [recentLessons, assessments] = await Promise.all([
     getTeacherLessons(supabase, { teacherId, limit: 5 }),
     recentAssessments(supabase, courses),
@@ -154,15 +158,23 @@ export default async function TeacherHomePage() {
   return (
     <main className="min-w-0 flex-1">
       <header className="border-b border-line bg-surface px-4 py-4 lg:px-8">
-        <div className="flex items-center gap-3">
-          <span className="h-8 w-1 shrink-0 rounded-full bg-brand-primary" aria-hidden />
-          <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Teacher Home</p>
-            <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
-              {greetingFor(teacherName, now)}
-            </h1>
-            <p className="mt-1 text-sm text-ink-secondary">{formatToday(now)}</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="h-8 w-1 shrink-0 rounded-full bg-brand-primary" aria-hidden />
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Teacher Home</p>
+              <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
+                {greetingFor(teacherName, now)}
+              </h1>
+              {assignedClassNames.length > 0 ? (
+                <p className="mt-1 text-sm font-medium text-ink-secondary">
+                  {assignedClassNames.join(", ")}
+                </p>
+              ) : null}
+              <p className="mt-1 text-sm text-ink-secondary">{formatToday(now)}</p>
+            </div>
           </div>
+          <ProfileSettingsLink />
         </div>
       </header>
 

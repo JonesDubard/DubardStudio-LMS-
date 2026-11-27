@@ -120,6 +120,7 @@ export default async function AdminStudentsPage() {
                 options={options}
                 fieldName="Class"
                 blockedMessage={blockedMessage}
+                isAssigned={classByStudent.has(student.id)}
                 assign={assignStudentClass}
               />,
             ],

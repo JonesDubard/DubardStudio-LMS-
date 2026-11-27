@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { readAccessTokenClaims } from "@/lib/auth/claims";
+import { tenantRootRedirectPath } from "@/lib/auth/home-path";
 import { isPublicPath } from "@/lib/auth/public-paths";
 import { checkSchoolMatch } from "@/lib/auth/school-guard";
 import { allowsRootMarketing } from "@/lib/marketing/paths";
@@ -50,6 +51,24 @@ function finish(
   cookies: PendingCookie[],
   headers: Record<string, string>,
 ) {
+  if (request.nextUrl.pathname === "/") {
+    const subdomain = requestHeaders.get("x-tenant-subdomain");
+    const roles = (requestHeaders.get("x-app-roles") ?? "")
+      .split(",")
+      .filter(Boolean);
+    const destination = tenantRootRedirectPath(subdomain, Boolean(user), roles);
+    if (destination) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = destination;
+      redirectUrl.search = "";
+      return applyPending(
+        NextResponse.redirect(redirectUrl),
+        cookies,
+        headers,
+      );
+    }
+  }
+
   const marketingOnRoot = allowsRootMarketing(
     request.nextUrl.pathname,
     requestHeaders.get("x-tenant-subdomain"),

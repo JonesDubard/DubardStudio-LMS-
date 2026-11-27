@@ -4,6 +4,7 @@ import { Award, BookOpen, ClipboardList, Home, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { NavIconBadge } from "@/components/shared/NavIconBadge";
+import { SchoolMark } from "@/components/shared/SchoolMark";
 import { SignOutButton } from "@/components/shared/SignOutButton";
 import {
   navLabel,
@@ -20,7 +21,13 @@ const items = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function ParentNav() {
+export function ParentNav({
+  schoolName = "School",
+  logoUrl = null,
+}: {
+  schoolName?: string;
+  logoUrl?: string | null;
+}) {
   const pathname = usePathname();
   const child = useSearchParams().get("child");
 
@@ -39,9 +46,7 @@ export function ParentNav() {
     <>
       <aside className={`${sideNavAside} max-md:hidden`} aria-label="Parent">
         <div className="mb-6 flex flex-col items-center lg:mb-8 lg:items-start lg:px-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-subtle text-brand-primary">
-            <Home size={18} strokeWidth={1.75} aria-hidden />
-          </div>
+          <SchoolMark src={logoUrl} schoolName={schoolName} />
           <p className={`mt-3 text-xs font-medium text-ink-muted ${navLabel}`}>Parent</p>
         </div>
         <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto">

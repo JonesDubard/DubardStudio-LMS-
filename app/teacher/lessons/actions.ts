@@ -100,7 +100,6 @@ export async function createLesson(
   const course = courses.find((row) => row.id === parsed.data.course_id);
   if (!course) return fail("Choose a course you are assigned to.");
 
-  const now = new Date().toISOString();
   const { data, error } = await supabase
     .from("lessons")
     .insert({
@@ -110,7 +109,6 @@ export async function createLesson(
       description: blankToNull(parsed.data.description),
       is_reusable: parsed.data.is_reusable,
       status: publish ? "published" : "draft",
-      published_at: publish ? now : null,
       created_by: session.userId,
     })
     .select("id")
@@ -149,7 +147,6 @@ export async function updateLesson(
     is_reusable: boolean;
     updated_at: string;
     status?: "published";
-    published_at?: string;
   } = {
     title: parsed.data.title,
     description: blankToNull(parsed.data.description),
@@ -158,7 +155,6 @@ export async function updateLesson(
   };
   if (publish) {
     changes.status = "published";
-    changes.published_at = now;
   }
 
   const { data, error } = await supabase
@@ -214,7 +210,6 @@ export async function duplicateLesson(
       title: lesson.title,
       description: lesson.description,
       status: "draft",
-      published_at: null,
       created_by: session.userId,
     })
     .select("id")

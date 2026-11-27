@@ -16,6 +16,9 @@ export default function OfflinePage() {
         backHref="/feed"
         backLabel="Back to Home"
       />
+      <p className="mx-auto w-full max-w-3xl px-4 pt-4 text-xs text-ink-muted md:px-8">
+        Lessons saved for offline viewing are stored on this device only.
+      </p>
       <OfflineLibrary />
     </>
   );

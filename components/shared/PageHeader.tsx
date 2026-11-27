@@ -1,11 +1,12 @@
-import { UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { BackLink } from "@/components/shared/BackLink";
+import { ProfileSettingsLink } from "@/components/shared/ProfileSettingsLink";
 
 type GreetingHeader = {
   variant: "greeting";
   eyebrow: string;
   title: string;
+  subtitle?: string;
 };
 
 type SectionHeader = {
@@ -32,10 +33,11 @@ export function PageHeader(props: PageHeaderProps) {
             <h1 className="mt-1 break-words text-xl font-semibold tracking-tight text-ink md:text-2xl">
               {props.title}
             </h1>
+            {props.subtitle ? (
+              <p className="mt-1 text-sm text-ink-secondary">{props.subtitle}</p>
+            ) : null}
           </div>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-brand-primary">
-            <UserRound size={18} strokeWidth={1.75} aria-hidden />
-          </div>
+          <ProfileSettingsLink />
         </div>
       </header>
     );

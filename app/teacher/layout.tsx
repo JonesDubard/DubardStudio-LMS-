@@ -22,7 +22,11 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
   const [teacherName, brand] = await Promise.all([teacherFullName(), readShellBrand()]);
 
   return (
-    <TeacherSideNav teacherName={teacherName} logoUrl={brand.logoUrl}>
+    <TeacherSideNav
+      teacherName={teacherName}
+      schoolName={brand.schoolName ?? "School"}
+      logoUrl={brand.logoUrl}
+    >
       {children}
     </TeacherSideNav>
   );

@@ -1,14 +1,24 @@
 import { Suspense, type ReactNode } from "react";
 import { OfflineIndicator } from "@/components/shared/OfflineIndicator";
 import { ParentNav } from "@/components/parent/ParentNav";
+import { readShellBrand } from "@/lib/branding/shell";
 
-export default function ParentLayout({ children }: { children: ReactNode }) {
+export default async function ParentLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const brand = await readShellBrand();
+
   return (
-    <div className="flex min-h-screen min-w-0 overflow-x-hidden bg-canvas text-ink">
+    <div className="flex h-dvh min-w-0 overflow-hidden bg-canvas text-ink">
       <Suspense fallback={null}>
-        <ParentNav />
+        <ParentNav
+          schoolName={brand.schoolName ?? "School"}
+          logoUrl={brand.logoUrl}
+        />
       </Suspense>
-      <div className="min-w-0 flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
         <OfflineIndicator />
         {children}
       </div>

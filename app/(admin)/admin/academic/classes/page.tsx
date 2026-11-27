@@ -10,7 +10,8 @@ export const metadata: Metadata = {
 
 export default async function AcademicClassesPage() {
   const supabase = await createClient();
-  const [classes, subjects, linkResult, assignmentResult] = await Promise.all([
+  const [classes, subjects, linkResult, assignmentResult, enrollmentResult] =
+    await Promise.all([
     getClasses(supabase),
     getSubjects(supabase),
     supabase
@@ -21,10 +22,21 @@ export default async function AcademicClassesPage() {
       .from("teacher_assignments")
       .select("teacher_id, class_subject_id")
       .returns<{ teacher_id: string; class_subject_id: string }[]>(),
+    supabase
+      .from("enrollments")
+      .select("class_id")
+      .returns<{ class_id: string }[]>(),
   ]);
   if (linkResult.error) throw new Error(`class_subjects: ${linkResult.error.message}`);
   if (assignmentResult.error) {
     throw new Error(`teacher_assignments: ${assignmentResult.error.message}`);
+  }
+  if (enrollmentResult.error) {
+    throw new Error(`enrollments: ${enrollmentResult.error.message}`);
+  }
+  const studentCountByClass: Record<string, number> = {};
+  for (const row of enrollmentResult.data ?? []) {
+    studentCountByClass[row.class_id] = (studentCountByClass[row.class_id] ?? 0) + 1;
   }
   const teacherIds = [...new Set((assignmentResult.data ?? []).map((row) => row.teacher_id))];
   const profileResult =
@@ -67,7 +79,11 @@ export default async function AcademicClassesPage() {
       <div className="space-y-6 p-4 lg:p-8">
         <AcademicSubNav />
 
-        <ClassesPanel classes={classes} teachersByClass={teachersByClass} />
+        <ClassesPanel
+          classes={classes}
+          teachersByClass={teachersByClass}
+          studentCountByClass={studentCountByClass}
+        />
       </div>
     </main>
   );
